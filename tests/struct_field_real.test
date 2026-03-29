@@ -1,0 +1,62 @@
+=== field sub field ===
+struct range { unsigned long base; unsigned long length; }; void f(struct range *r) { unsigned long end = r->base + r->length; }
+---
+struct range { unsigned long base; unsigned long length; }; void f(struct range *r) { unsigned long end = ckd_narrow(ckd_add(r->base, r->length, 107), unsigned long, 107); }
+
+
+
+
+
+
+=== field minus sizeof ===
+struct dir { unsigned char length; unsigned char filename_size; }; void f(struct dir *e) { unsigned long s = e->length - sizeof(struct dir) - e->filename_size; }
+---
+struct dir { unsigned char length; unsigned char filename_size; }; void f(struct dir *e) { unsigned long s = ckd_narrow(ckd_sub(ckd_sub(e->length, sizeof(struct dir), 110), e->filename_size, 110), unsigned long, 110); }
+
+
+
+
+
+
+=== field cast mul ===
+struct fat { unsigned data_start; unsigned sectors; unsigned bps; }; void f(struct fat *c, unsigned cl) { unsigned long long base = ((unsigned long long)c->data_start + (unsigned long long)(cl - 2) * c->sectors) * c->bps; }
+---
+struct fat { unsigned data_start; unsigned sectors; unsigned bps; }; void f(struct fat *c, unsigned cl) { unsigned long long base = ckd_narrow(ckd_mul((ckd_add(ckd_narrow(c->data_start, unsigned long long, 134), ckd_mul(ckd_narrow((ckd_sub(cl, 2, 191)), unsigned long long, 170), c->sectors, 170), 134)), c->bps, 133), unsigned long long, 133); }
+
+=== field ptr add ===
+struct file { char *data; unsigned long size; }; void f(struct file *fd, unsigned long loc) { char *p = fd->data + loc; }
+---
+struct file { char *data; unsigned long size; }; void f(struct file *fd, unsigned long loc) { char *p = ckd_ptr_add(fd->data, loc, 105); }
+
+
+
+
+
+
+=== field compare ===
+struct memmap { unsigned long base; unsigned long length; }; int f(struct memmap *m, int i) { return m[i+1].base == m[i].base + m[i].length; }
+---
+struct memmap { unsigned long base; unsigned long length; }; int f(struct memmap *m, int i) { return ckd_narrow(m[ckd_add(i, 1, 104)].base == ckd_add(m[i].base, m[i].length, 117), int, 102); }
+
+
+
+
+
+
+=== void ptr field plus ===
+struct hdr { unsigned short phoff; unsigned short phdr_size; }; void f(char *elf, struct hdr *h, int i) { char *phdr = elf + (h->phoff + i * h->phdr_size); }
+---
+struct hdr { unsigned short phoff; unsigned short phdr_size; }; void f(char *elf, struct hdr *h, int i) { char *phdr = ckd_ptr_add(elf, (ckd_add(h->phoff, ckd_mul(i, h->phdr_size, 138), 127)), 120); }
+
+
+
+
+
+
+=== field incr ===
+struct ctx { unsigned long offset; }; void f(struct ctx *c, unsigned long n) { c->offset += n; }
+---
+struct ctx { unsigned long offset; }; void f(struct ctx *c, unsigned long n) { ckd_compound_narrow(c->offset, ckd_add, n, unsigned long, 80); }
+
+
+

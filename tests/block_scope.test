@@ -1,0 +1,152 @@
+=== shadow ptr with int ===
+void f(char *p) {
+    char *q = p + 1;
+    {
+        int p;
+        int x = p + 1;
+    }
+    char *r = p + 1;
+}
+---
+void f(char *p) {
+    char *q = ckd_ptr_add(p, 1, 15);
+    {
+        int p;
+        int x = ckd_narrow(ckd_add(p, 1, 17), int, 17);
+    }
+    char *r = ckd_ptr_add(p, 1, 15);
+}
+
+
+
+
+
+
+=== shadow int with ptr ===
+void f(int x) {
+    int y = x + 1;
+    {
+        char *x;
+        char *z = x + 1;
+    }
+    int w = x + 1;
+}
+---
+void f(int x) {
+    int y = ckd_narrow(ckd_add(x, 1, 13), int, 13);
+    {
+        char *x;
+        char *z = ckd_ptr_add(x, 1, 19);
+    }
+    int w = ckd_narrow(ckd_add(x, 1, 13), int, 13);
+}
+
+
+
+
+
+
+=== shadow array size ===
+void f(int i) {
+    int arr[10];
+    arr[i] = 0;
+    {
+        int arr[5];
+        arr[i] = 0;
+    }
+    arr[i] = 1;
+}
+---
+void f(int i) {
+    int arr[10];
+    ckd_bounds(arr, i, 10, 5) = 0;
+    {
+        int arr[5];
+        ckd_bounds(arr, i, 5, 9) = 0;
+    }
+    ckd_bounds(arr, i, 10, 5) = 1;
+}
+
+
+
+
+
+
+=== for loop scope ===
+void f(int n) {
+    char *p = (char *)0;
+    for (int p = 0; p < n; p++) {
+        int x = p + 1;
+    }
+    char *q = p + 1;
+}
+---
+void f(int n) {
+    char *p = (char *)0;
+    for (int p = 0; p < n; ckd_preinc(p, 28)) {
+        int x = ckd_narrow(ckd_add(p, 1, 17), int, 17);
+    }
+    char *q = ckd_ptr_add(p, 1, 15);
+}
+
+
+
+
+
+
+=== nested blocks ===
+void f(int a) {
+    int x = a + 1;
+    {
+        char *a;
+        char *p = a + 1;
+        {
+            int a;
+            int y = a + 1;
+        }
+        char *q = a + 1;
+    }
+    int z = a + 1;
+}
+---
+void f(int a) {
+    int x = ckd_narrow(ckd_add(a, 1, 13), int, 13);
+    {
+        char *a;
+        char *p = ckd_ptr_add(a, 1, 19);
+        {
+            int a;
+            int y = ckd_narrow(ckd_add(a, 1, 21), int, 21);
+        }
+        char *q = ckd_ptr_add(a, 1, 19);
+    }
+    int z = ckd_narrow(ckd_add(a, 1, 13), int, 13);
+}
+
+
+
+
+
+
+=== multi decl shadow ===
+void f(char *a, char *b) {
+    char *p = a + b;
+    {
+        int a, b;
+        int x = a + b;
+    }
+    char *q = a + b;
+}
+---
+void f(char *a, char *b) {
+    char *p = ckd_ptr_add(a, b, 15);
+    {
+        int a, b;
+        int x = ckd_narrow(ckd_add(a, b, 17), int, 17);
+    }
+    char *q = ckd_ptr_add(a, b, 15);
+}
+
+
+
+

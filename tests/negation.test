@@ -1,0 +1,162 @@
+=== neg var ===
+void f(int a) { int x = -a; }
+---
+void f(int a) { int x = ckd_narrow(ckd_neg(a, 25), int, 25); }
+
+
+
+
+
+
+=== neg const ===
+void f(void) { int x = -42; }
+---
+void f(void) { int x = -42; }
+
+
+
+
+
+
+=== neg zero ===
+void f(void) { int x = -0; }
+---
+void f(void) { int x = -0; }
+
+
+
+
+
+
+=== neg in add ===
+void f(int a, int b) { int x = -a + b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_add(ckd_neg(a, 32), b, 32), int, 32); }
+
+
+
+
+
+=== neg in sub ===
+void f(int a, int b) { int x = a - -b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_sub(a, ckd_neg(b, 36), 32), int, 32); }
+
+
+
+
+
+
+=== neg in mul ===
+void f(int a) { int x = -a * 3; }
+---
+void f(int a) { int x = ckd_narrow(ckd_mul(ckd_neg(a, 25), 3, 25), int, 25); }
+
+
+
+
+
+
+=== double neg ===
+void f(int a) { int x = -(-a); }
+---
+void f(int a) { int x = ckd_narrow(ckd_neg((ckd_neg(a, 27)), 25), int, 25); }
+
+
+
+
+
+
+=== neg long ===
+void f(long a) { long x = -a; }
+---
+void f(long a) { long x = ckd_narrow(ckd_neg(a, 27), long, 27); }
+
+
+
+
+
+
+=== neg unsigned ===
+void f(unsigned a) { unsigned x = -a; }
+---
+void f(unsigned a) { unsigned x = ckd_narrow(ckd_neg(a, 35), unsigned, 35); }
+
+
+
+
+
+
+=== neg in return ===
+int f(int a) { return -a; }
+---
+int f(int a) { return ckd_narrow(ckd_neg(a, 23), int, 23); }
+
+
+
+
+
+
+=== neg in call ===
+void g(int); void f(int a) { g(-a); }
+---
+void g(int); void f(int a) { g(ckd_narrow(ckd_neg(a, 32), int, 32)); }
+
+
+
+
+
+
+=== neg in assign ===
+void f(int a) { int x = 0; x = -a; }
+---
+void f(int a) { int x = 0; x = ckd_narrow(ckd_neg(a, 32), int, 32); }
+
+
+
+
+
+
+=== suppress neg ===
+void f(int a) { int x = @-a; }
+---
+void f(int a) { int x = ckd_narrow(-a, int, 26); }
+
+
+
+
+
+
+=== neg cast not const ===
+void f(long a) { int x = -(int)a; }
+---
+void f(long a) { int x = ckd_narrow(ckd_neg(ckd_narrow(a, int, 27), 26), int, 26); }
+
+=== complement not neg ===
+void f(int a) { int x = ~a; }
+---
+void f(int a) { int x = ckd_narrow(~a, int, 25); }
+
+
+
+
+
+
+=== not not neg ===
+void f(int a) { int x = !a; }
+---
+void f(int a) { int x = ckd_narrow(!a, int, 25); }
+
+
+
+
+
+
+=== neg of expr ===
+void f(int a, int b) { int x = -(a + b); }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_neg((ckd_add(a, b, 34)), 32), int, 32); }
+
+
+
+

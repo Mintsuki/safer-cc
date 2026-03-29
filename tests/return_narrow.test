@@ -1,0 +1,169 @@
+=== char return ===
+char f(int x) { return x; }
+---
+char f(int x) { return ckd_narrow(x, char, 24); }
+
+
+
+
+
+
+=== unsigned char return ===
+unsigned char f(int x) { return x; }
+---
+unsigned char f(int x) { return ckd_narrow(x, unsigned char, 33); }
+
+
+
+
+
+
+=== short return ===
+short f(int x) { return x; }
+---
+short f(int x) { return ckd_narrow(x, short, 25); }
+
+
+
+
+
+
+=== typedef return ===
+typedef unsigned char uint8_t;
+uint8_t f(int x) { return x; }
+---
+typedef unsigned char uint8_t;
+uint8_t f(int x) { return ckd_narrow(x, uint8_t, 27); }
+
+
+
+
+
+
+=== int return no narrow ===
+int f(int x) { return x; }
+---
+int f(int x) { return ckd_narrow(x, int, 23); }
+
+
+
+
+
+
+=== long return no narrow ===
+long f(int x) { return x; }
+---
+long f(int x) { return ckd_narrow(x, long, 24); }
+
+
+
+
+
+
+=== ptr return no narrow ===
+char *f(char *p) { return p; }
+---
+char *f(char *p) { return p; }
+
+
+
+
+
+
+=== return const skip ===
+typedef unsigned char uint8_t;
+uint8_t f(void) { return 42; }
+---
+typedef unsigned char uint8_t;
+uint8_t f(void) { return 42; }
+
+
+
+
+
+
+=== return void skip ===
+void f(int x) { if (x) return; }
+---
+void f(int x) { if (x) return; }
+
+
+
+
+
+
+=== return expr narrow ===
+typedef unsigned char uint8_t;
+uint8_t f(int a, int b) { return a + b; }
+---
+typedef unsigned char uint8_t;
+uint8_t f(int a, int b) { return ckd_narrow(ckd_add(a, b, 34), uint8_t, 34); }
+
+
+
+
+
+
+=== return neg narrow ===
+char f(int x) { return -x; }
+---
+char f(int x) { return ckd_narrow(ckd_neg(x, 24), char, 24); }
+
+
+
+
+
+
+=== return div narrow ===
+typedef unsigned short uint16_t;
+uint16_t f(int a, int b) { return a / b; }
+---
+typedef unsigned short uint16_t;
+uint16_t f(int a, int b) { return ckd_narrow(ckd_div(a, b, 35), uint16_t, 35); }
+
+
+
+
+
+
+=== two funcs different return ===
+typedef unsigned char uint8_t;
+uint8_t narrow(int x) {
+    return x;
+}
+int wide(int x) {
+    return x;
+}
+---
+typedef unsigned char uint8_t;
+uint8_t narrow(int x) {
+    return ckd_narrow(x, uint8_t, 12);
+}
+int wide(int x) {
+    return ckd_narrow(x, int, 12);
+}
+
+
+
+
+
+
+=== return multiline ===
+typedef unsigned char uint8_t;
+uint8_t clamp(int x) {
+    if (x < 0) return 0;
+    if (x > 255) return 255;
+    return x;
+}
+---
+typedef unsigned char uint8_t;
+uint8_t clamp(int x) {
+    if (x < 0) return 0;
+    if (x > 255) return 255;
+    return ckd_narrow(x, uint8_t, 12);
+}
+
+
+
+
+

@@ -1,0 +1,71 @@
+=== everything at once ===
+struct ctx { void (*fn)(int *x); };
+typedef char *str_t;
+void *alloc(unsigned long);
+void process(str_t data, int count) {
+    int arr[100];
+    unsigned long total = 0;
+    for (int i = 0; i < count; i++) {
+        arr[i] = data[i];
+        total += arr[i];
+        data++;
+    }
+    unsigned long size = count * sizeof(int);
+    char *buf = (char *)alloc(size);
+    char *end = buf + size;
+    int neg = -count;
+    unsigned half = total / 2;
+    unsigned rem = total % count;
+    unsigned bits = total << 2;
+    unsigned back = bits >> 2;
+}
+---
+struct ctx { void (*fn)(int *x); };
+typedef char *str_t;
+void *alloc(unsigned long);
+void process(str_t data, int count) {
+    int arr[100];
+    unsigned long total = 0;
+    for (int i = 0; i < count; ckd_preinc(i, 32)) {
+        ckd_bounds(arr, i, 100, 9) = ckd_narrow(data[i], int, 18);
+        ckd_compound_narrow(total, ckd_add, ckd_bounds(arr, i, 100, 18), unsigned long, 9);
+        ckd_ptr_preinc(data, 9);
+    }
+    unsigned long size = ckd_narrow(ckd_mul(count, sizeof(int), 26), unsigned long, 26);
+    char *buf = (char *)alloc(ckd_narrow(size, unsigned long, 31));
+    char *end = ckd_ptr_add(buf, size, 17);
+    int neg = ckd_narrow(ckd_neg(count, 15), int, 15);
+    unsigned half = ckd_narrow(ckd_div(total, 2, 21), unsigned, 21);
+    unsigned rem = ckd_narrow(ckd_mod(total, count, 20), unsigned, 20);
+    unsigned bits = ckd_narrow(ckd_shl(total, 2, 21), unsigned, 21);
+    unsigned back = ckd_narrow(ckd_shr(bits, 2, 21), unsigned, 21);
+}
+
+
+
+=== nested scopes with all ops ===
+void f(int n) {
+    int arr[50];
+    for (int i = 0; i < n; i++) {
+        arr[i] = i * i;
+        {
+            char buf[10];
+            buf[i % 10] = (char)(arr[i] >> 8);
+        }
+        int neg = -arr[i];
+        arr[i] = neg / 2;
+    }
+}
+---
+void f(int n) {
+    int arr[50];
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        ckd_bounds(arr, i, 50, 9) = ckd_narrow(ckd_mul(i, i, 18), int, 18);
+        {
+            char buf[10];
+            ckd_bounds(buf, ckd_mod(i, 10, 17), 10, 13) = ckd_narrow((ckd_shr(ckd_bounds(arr, i, 50, 34), 8, 34)), char, 27);
+        }
+        int neg = ckd_narrow(ckd_neg(ckd_bounds(arr, i, 50, 20), 19), int, 19);
+        ckd_bounds(arr, i, 50, 9) = ckd_narrow(ckd_div(neg, 2, 18), int, 18);
+    }
+}

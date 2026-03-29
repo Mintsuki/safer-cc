@@ -1,0 +1,151 @@
+=== loop over array ===
+void f(int n) {
+    int arr[100];
+    for (int i = 0; i < n; i++) {
+        arr[i] = i;
+    }
+}
+---
+void f(int n) {
+    int arr[100];
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        ckd_bounds(arr, i, 100, 9) = ckd_narrow(i, int, 18);
+    }
+}
+
+
+
+
+
+
+=== accumulate array ===
+void f(int n) {
+    int arr[50];
+    int sum = 0;
+    for (int i = 0; i < n; i++) {
+        sum += arr[i];
+    }
+}
+---
+void f(int n) {
+    int arr[50];
+    int sum = 0;
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        ckd_compound_narrow(sum, ckd_add, ckd_bounds(arr, i, 50, 16), int, 9);
+    }
+}
+
+
+
+
+=== swap elements ===
+void f(int i, int j) {
+    int arr[16];
+    int tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+}
+---
+void f(int i, int j) {
+    int arr[16];
+    int tmp = ckd_narrow(ckd_bounds(arr, i, 16, 15), int, 15);
+    ckd_bounds(arr, i, 16, 5) = ckd_narrow(ckd_bounds(arr, j, 16, 14), int, 14);
+    ckd_bounds(arr, j, 16, 5) = ckd_narrow(tmp, int, 14);
+}
+
+
+
+
+
+
+=== struct array field ===
+struct point { int x; int y; };
+void f(int i) {
+    struct point pts[32];
+    pts[i].x = 0;
+    pts[i].y = 0;
+}
+---
+struct point { int x; int y; };
+void f(int i) {
+    struct point pts[32];
+    ckd_bounds(pts, i, 32, 5).x = 0;
+    ckd_bounds(pts, i, 32, 5).y = 0;
+}
+
+
+
+
+
+
+=== array in conditional ===
+void f(int i, int cond) {
+    int arr[10];
+    int x = cond ? arr[i] : 0;
+}
+---
+void f(int i, int cond) {
+    int arr[10];
+    int x = ckd_narrow(cond ? ckd_bounds(arr, i, 10, 20) : 0, int, 13);
+}
+
+
+
+
+
+
+=== array with arith index ===
+void f(int base, int off) {
+    unsigned char tbl[256];
+    unsigned char v = tbl[base + off];
+}
+---
+void f(int base, int off) {
+    unsigned char tbl[256];
+    unsigned char v = ckd_narrow(ckd_bounds(tbl, ckd_add(base, off, 27), 256, 23), unsigned char, 23);
+}
+
+
+
+
+
+
+=== device path pattern ===
+struct hdr { int type; int subtype; unsigned char len[2]; };
+void f(void) {
+    struct hdr path[2];
+    path[0].type = 1;
+    path[0].len[0] = sizeof(struct hdr);
+    path[0].len[1] = sizeof(struct hdr) >> 8;
+    path[1].type = 0;
+}
+---
+struct hdr { int type; int subtype; unsigned char len[2]; };
+void f(void) {
+    struct hdr path[2];
+    ckd_bounds(path, 0, 2, 5).type = 1;
+    ckd_bounds(path, 0, 2, 5).len[0] = sizeof(struct hdr);
+    ckd_bounds(path, 0, 2, 5).len[1] = sizeof(struct hdr) >> 8;
+    ckd_bounds(path, 1, 2, 5).type = 0;
+}
+
+
+
+
+
+
+=== palette array ===
+void f(int i, unsigned col) {
+    unsigned colours[8];
+    colours[i] = col & 0xffffff;
+}
+---
+void f(int i, unsigned col) {
+    unsigned colours[8];
+    ckd_bounds(colours, i, 8, 5) = ckd_narrow(col & 0xffffff, unsigned, 18);
+}
+
+
+
+
+

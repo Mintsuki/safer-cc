@@ -1,0 +1,162 @@
+=== div mod in loop ===
+void f(int n) {
+    for (int i = 0; i < n; i++) {
+        int q = i / 10;
+        int r = i % 10;
+    }
+}
+---
+void f(int n) {
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        int q = ckd_narrow(ckd_div(i, 10, 17), int, 17);
+        int r = ckd_narrow(ckd_mod(i, 10, 17), int, 17);
+    }
+}
+
+
+
+
+
+
+=== shift rotate ===
+unsigned rotate_left(unsigned val, unsigned n) {
+    return (val << n) | (val >> (32 - n));
+}
+---
+unsigned rotate_left(unsigned val, unsigned n) {
+    return ckd_narrow((ckd_shl(val, n, 13)) | (ckd_shr(val, (ckd_sub(32, n, 34)), 26)), unsigned, 12);
+}
+
+
+
+
+
+=== neg abs ===
+int abs_val(int x) {
+    if (x < 0) {
+        return -x;
+    }
+    return x;
+}
+---
+int abs_val(int x) {
+    if (x < 0) {
+        return ckd_narrow(ckd_neg(x, 16), int, 16);
+    }
+    return ckd_narrow(x, int, 12);
+}
+
+
+
+
+
+
+=== vla in loop ===
+void f(int rows, int cols) {
+    int grid[rows];
+    for (int i = 0; i < rows; i++) {
+        grid[i] = i * cols;
+    }
+}
+---
+void f(int rows, int cols) {
+    int grid[rows];
+    for (int i = 0; i < rows; ckd_preinc(i, 31)) {
+        ckd_bounds(grid, i, rows, 9) = ckd_narrow(ckd_mul(i, cols, 19), int, 19);
+    }
+}
+
+
+
+
+
+=== multidim write pattern ===
+void f(int rows, int cols) {
+    int m[10][20];
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            m[i][j] = i * cols + j;
+        }
+    }
+}
+---
+void f(int rows, int cols) {
+    int m[10][20];
+    for (int i = 0; i < rows; ckd_preinc(i, 31)) {
+        for (int j = 0; j < cols; ckd_preinc(j, 35)) {
+            ckd_bounds(ckd_bounds(m, i, 10, 13), j, 20, 13) = ckd_add(ckd_mul(i, cols, 23), j, 23);
+        }
+    }
+}
+
+
+
+
+
+
+=== block scope with bounds ===
+void f(int i) {
+    int arr[10];
+    arr[i] = 0;
+    {
+        int arr[5];
+        arr[i] = 0;
+    }
+}
+---
+void f(int i) {
+    int arr[10];
+    ckd_bounds(arr, i, 10, 5) = 0;
+    {
+        int arr[5];
+        ckd_bounds(arr, i, 5, 9) = 0;
+    }
+}
+
+
+
+
+
+
+=== ptr walk with div ===
+void f(char *buf, int total, int chunk) {
+    int nchunks = total / chunk;
+    for (int i = 0; i < nchunks; i++) {
+        char *p = buf + i * chunk;
+    }
+}
+---
+void f(char *buf, int total, int chunk) {
+    int nchunks = ckd_narrow(ckd_div(total, chunk, 19), int, 19);
+    for (int i = 0; i < nchunks; ckd_preinc(i, 34)) {
+        char *p = ckd_ptr_add(buf, ckd_mul(i, chunk, 25), 19);
+    }
+}
+
+
+
+
+
+=== scoped neg ===
+void f(int x) {
+    int a = -x;
+    {
+        unsigned x;
+        unsigned b = -x;
+    }
+    int c = -x;
+}
+---
+void f(int x) {
+    int a = ckd_narrow(ckd_neg(x, 13), int, 13);
+    {
+        unsigned x;
+        unsigned b = ckd_narrow(ckd_neg(x, 22), unsigned, 22);
+    }
+    int c = ckd_narrow(ckd_neg(x, 13), int, 13);
+}
+
+
+
+
+

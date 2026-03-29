@@ -1,0 +1,335 @@
+=== two structs same field ===
+struct a { char val; };
+struct b { int val; };
+void f(struct a *a, struct b *b, int x) {
+    a->val = x;
+    b->val = x;
+}
+---
+struct a { char val; };
+struct b { int val; };
+void f(struct a *a, struct b *b, int x) {
+    a->val = ckd_narrow(x, char, 14);
+    b->val = ckd_narrow(x, int, 14);
+}
+
+
+
+
+
+
+=== typedef struct chain ===
+typedef unsigned char uint8_t;
+struct foo { uint8_t val; };
+typedef struct foo foo_t;
+void f(foo_t *s, int x) { s->val = x; }
+---
+typedef unsigned char uint8_t;
+struct foo { uint8_t val; };
+typedef struct foo foo_t;
+void f(foo_t *s, int x) { s->val = ckd_narrow(x, uint8_t, 36); }
+
+
+
+
+
+
+=== anon struct narrow ===
+struct { char c; } g;
+void f(int x) { g.c = x; }
+---
+struct { char c; } g;
+void f(int x) { g.c = ckd_narrow(x, char, 23); }
+
+
+
+
+
+
+=== anon typedef struct ===
+typedef unsigned char uint8_t;
+typedef struct { uint8_t val; } my_t;
+void f(my_t *s, int x) { s->val = x; }
+---
+typedef unsigned char uint8_t;
+typedef struct { uint8_t val; } my_t;
+void f(my_t *s, int x) { s->val = ckd_narrow(x, uint8_t, 35); }
+
+
+
+
+
+
+=== struct field shift expr ===
+typedef unsigned char uint8_t;
+struct reg { uint8_t lo; uint8_t hi; };
+void f(struct reg *r, unsigned v) {
+    r->lo = v;
+    r->hi = v >> 8;
+}
+---
+typedef unsigned char uint8_t;
+struct reg { uint8_t lo; uint8_t hi; };
+void f(struct reg *r, unsigned v) {
+    r->lo = ckd_narrow(v, uint8_t, 13);
+    r->hi = ckd_narrow(ckd_shr(v, 8, 13), uint8_t, 13);
+}
+
+
+
+
+
+
+=== struct field add expr ===
+struct s { short sum; };
+void f(struct s *s, int a, int b) {
+    s->sum = a + b;
+}
+---
+struct s { short sum; };
+void f(struct s *s, int a, int b) {
+    s->sum = ckd_narrow(ckd_add(a, b, 14), short, 14);
+}
+
+
+
+
+
+
+=== struct two narrow one assign ===
+struct pixel { unsigned char r; unsigned char g; };
+void f(struct pixel *p, int c) {
+    p->r = c;
+}
+---
+struct pixel { unsigned char r; unsigned char g; };
+void f(struct pixel *p, int c) {
+    p->r = ckd_narrow(c, unsigned char, 12);
+}
+
+
+
+
+
+
+=== struct field const skip ===
+struct s { char c; };
+void f(struct s *s) {
+    s->c = 0;
+}
+---
+struct s { char c; };
+void f(struct s *s) {
+    s->c = 0;
+}
+
+
+
+
+
+
+=== struct suppress field ===
+struct s { char c; };
+void f(struct s *s, int x) {
+    s->c @= x;
+}
+---
+struct s { char c; };
+void f(struct s *s, int x) {
+    s->c = x;
+}
+
+
+
+
+
+
+=== struct unknown no narrow ===
+void f(void *opaque, int x) {
+    struct unknown *s = opaque;
+    s->field = x;
+}
+---
+void f(void *opaque, int x) {
+    struct unknown *s = opaque;
+    s->field = x;
+}
+
+
+
+
+
+
+=== struct non narrow int ===
+struct s { int val; };
+void f(struct s *s, int x) {
+    s->val = x;
+}
+---
+struct s { int val; };
+void f(struct s *s, int x) {
+    s->val = ckd_narrow(x, int, 14);
+}
+
+
+
+
+
+
+=== struct ptr field no narrow ===
+struct s { char *name; };
+void f(struct s *s, char *p) {
+    s->name = p;
+}
+---
+struct s { char *name; };
+void f(struct s *s, char *p) {
+    s->name = p;
+}
+
+
+
+
+
+
+=== struct field from div ===
+struct s { char q; };
+void f(struct s *s, int a, int b) {
+    s->q = a / b;
+}
+---
+struct s { char q; };
+void f(struct s *s, int a, int b) {
+    s->q = ckd_narrow(ckd_div(a, b, 12), char, 12);
+}
+
+
+
+
+
+
+=== struct dot with expr ===
+struct s { short val; };
+void f(struct s s, int a, int b) {
+    s.val = a - b;
+}
+---
+struct s { short val; };
+void f(struct s s, int a, int b) {
+    s.val = ckd_narrow(ckd_sub(a, b, 13), short, 13);
+}
+
+
+
+
+
+
+=== struct field sub expr ===
+struct s { unsigned char diff; };
+void f(struct s *s, int a, int b) {
+    s->diff = a - b;
+}
+---
+struct s { unsigned char diff; };
+void f(struct s *s, int a, int b) {
+    s->diff = ckd_narrow(ckd_sub(a, b, 15), unsigned char, 15);
+}
+
+
+
+
+
+
+=== struct field mul expr ===
+struct s { short prod; };
+void f(struct s *s, int a, int b) {
+    s->prod = a * b;
+}
+---
+struct s { short prod; };
+void f(struct s *s, int a, int b) {
+    s->prod = ckd_narrow(ckd_mul(a, b, 15), short, 15);
+}
+
+
+
+
+
+
+=== struct multiple fields multiline ===
+struct color { unsigned char r; unsigned char g; unsigned char b; unsigned char a; };
+void f(struct color *c, int rv, int gv, int bv, int av) {
+    c->r = rv;
+    c->g = gv;
+    c->b = bv;
+    c->a = av;
+}
+---
+struct color { unsigned char r; unsigned char g; unsigned char b; unsigned char a; };
+void f(struct color *c, int rv, int gv, int bv, int av) {
+    c->r = ckd_narrow(rv, unsigned char, 12);
+    c->g = ckd_narrow(gv, unsigned char, 12);
+    c->b = ckd_narrow(bv, unsigned char, 12);
+    c->a = ckd_narrow(av, unsigned char, 12);
+}
+
+
+
+
+
+
+=== struct field from neg ===
+struct s { char neg; };
+void f(struct s *s, int x) {
+    s->neg = -x;
+}
+---
+struct s { char neg; };
+void f(struct s *s, int x) {
+    s->neg = ckd_narrow(ckd_neg(x, 14), char, 14);
+}
+
+
+
+
+
+
+=== struct field from mod ===
+struct s { char rem; };
+void f(struct s *s, int v, int m) {
+    s->rem = v % m;
+}
+---
+struct s { char rem; };
+void f(struct s *s, int v, int m) {
+    s->rem = ckd_narrow(ckd_mod(v, m, 14), char, 14);
+}
+
+
+
+
+
+
+=== three structs same field ===
+struct x { char c; };
+struct y { short c; };
+struct z { int c; };
+void f(struct x *x, struct y *y, struct z *z, int v) {
+    x->c = v;
+    y->c = v;
+    z->c = v;
+}
+---
+struct x { char c; };
+struct y { short c; };
+struct z { int c; };
+void f(struct x *x, struct y *y, struct z *z, int v) {
+    x->c = ckd_narrow(v, char, 12);
+    y->c = ckd_narrow(v, short, 12);
+    z->c = ckd_narrow(v, int, 12);
+}
+
+
+
+
+

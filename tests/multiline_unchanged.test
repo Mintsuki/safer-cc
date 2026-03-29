@@ -1,0 +1,153 @@
+=== pure bitwise ===
+unsigned f(unsigned a, unsigned b) {
+    unsigned x = a & b;
+    unsigned y = a | b;
+    unsigned z = a ^ b;
+    return x | y | z;
+}
+---
+unsigned f(unsigned a, unsigned b) {
+    unsigned x = ckd_narrow(a & b, unsigned, 18);
+    unsigned y = ckd_narrow(a | b, unsigned, 18);
+    unsigned z = ckd_narrow(a ^ b, unsigned, 18);
+    return ckd_narrow(x | y | z, unsigned, 12);
+}
+
+
+
+
+
+
+=== pure shifts ===
+unsigned f(unsigned a) {
+    unsigned x = a << 1;
+    unsigned y = a >> 1;
+    x <<= 2;
+    y >>= 2;
+    return x | y;
+}
+---
+unsigned f(unsigned a) {
+    unsigned x = ckd_narrow(ckd_shl(a, 1, 18), unsigned, 18);
+    unsigned y = ckd_narrow(ckd_shr(a, 1, 18), unsigned, 18);
+    ckd_compound_narrow(x, ckd_shl, 2, unsigned, 5);
+    ckd_compound_narrow(y, ckd_shr, 2, unsigned, 5);
+    return ckd_narrow(x | y, unsigned, 12);
+}
+
+
+
+=== pure comparisons ===
+int f(int a, int b) {
+    int x = a < b;
+    int y = a > b;
+    int z = a == b;
+    int w = a != b;
+    return x + y + z + w;
+}
+---
+int f(int a, int b) {
+    int x = ckd_narrow(a < b, int, 13);
+    int y = ckd_narrow(a > b, int, 13);
+    int z = ckd_narrow(a == b, int, 13);
+    int w = ckd_narrow(a != b, int, 13);
+    return ckd_narrow(ckd_add(ckd_add(ckd_add(x, y, 12), z, 12), w, 12), int, 12);
+}
+
+
+
+
+
+=== const only function ===
+int f(void) {
+    int x = 1 + 2;
+    int y = 3 * 4;
+    int z = 10 - 5;
+    return x + y + z;
+}
+---
+int f(void) {
+    int x = 1 + 2;
+    int y = 3 * 4;
+    int z = 10 - 5;
+    return ckd_narrow(ckd_add(ckd_add(x, y, 12), z, 12), int, 12);
+}
+
+
+
+
+
+=== struct init no arith ===
+struct point { int x; int y; };
+struct point f(int a, int b) {
+    struct point p;
+    p.x = a;
+    p.y = b;
+    return p;
+}
+---
+struct point { int x; int y; };
+struct point f(int a, int b) {
+    struct point p;
+    p.x = ckd_narrow(a, int, 11);
+    p.y = ckd_narrow(b, int, 11);
+    return p;
+}
+
+
+
+
+
+
+=== empty multiline ===
+void f(void) {
+
+}
+---
+void f(void) {
+
+}
+
+
+
+
+
+
+=== only declarations ===
+void f(void) {
+    int a;
+    int b;
+    char *p;
+    unsigned long x;
+}
+---
+void f(void) {
+    int a;
+    int b;
+    char *p;
+    unsigned long x;
+}
+
+
+
+
+
+
+=== division and modulo only ===
+int f(int a, int b) {
+    int q = a / b;
+    int r = a % b;
+    a /= b;
+    a %= b;
+    return q + r;
+}
+---
+int f(int a, int b) {
+    int q = ckd_narrow(ckd_div(a, b, 13), int, 13);
+    int r = ckd_narrow(ckd_mod(a, b, 13), int, 13);
+    ckd_compound_narrow(a, ckd_div, b, int, 5);
+    ckd_compound_narrow(a, ckd_mod, b, int, 5);
+    return ckd_narrow(ckd_add(q, r, 12), int, 12);
+}
+
+

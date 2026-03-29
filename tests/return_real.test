@@ -1,0 +1,70 @@
+=== return add ===
+int f(int a, int b) { return a + b; }
+---
+int f(int a, int b) { return ckd_narrow(ckd_add(a, b, 30), int, 30); }
+
+
+
+
+
+=== return mul div ===
+unsigned long long f(unsigned long long cc, unsigned mul, unsigned div) { return cc * mul / div; }
+---
+unsigned long long f(unsigned long long cc, unsigned mul, unsigned div) { return ckd_narrow(ckd_div(ckd_mul(cc, mul, 82), div, 82), unsigned long long, 82); }
+
+
+
+
+
+=== return cast shift add ===
+unsigned char f(unsigned r, unsigned g, unsigned b) { return (unsigned char)(((r * 77) + (g * 150) + (29 * b)) >> 8); }
+---
+unsigned char f(unsigned r, unsigned g, unsigned b) { return ckd_narrow((ckd_shr((ckd_add(ckd_add((ckd_mul(r, 77, 80)), (ckd_mul(g, 150, 91)), 79), (ckd_mul(29, b, 103)), 79)), 8, 78)), unsigned char, 62); }
+
+=== return ptr diff ===
+long f(char *a, char *b) { return a - b; }
+---
+long f(char *a, char *b) { return ckd_narrow(ckd_ptr_diff(a, b, 35), long, 35); }
+
+
+
+
+
+=== return neg ===
+unsigned long f(int x) { return x < 0 ? (unsigned long)0 - (unsigned long)x : (unsigned long)x; }
+---
+unsigned long f(int x) { return ckd_narrow(x < 0 ? ckd_sub((unsigned long)0, ckd_narrow(x, unsigned long, 60), 41) : ckd_narrow(x, unsigned long, 79), unsigned long, 33); }
+
+=== return complex ===
+unsigned long f(unsigned long addr, unsigned long off) { return (unsigned long)(addr + off); }
+---
+unsigned long f(unsigned long addr, unsigned long off) { return ckd_narrow((ckd_add(addr, off, 81)), unsigned long, 65); }
+
+=== return field arith ===
+struct s { unsigned a; unsigned b; }; unsigned f(struct s *s) { return s->a + s->b; }
+---
+struct s { unsigned a; unsigned b; }; unsigned f(struct s *s) { return ckd_narrow(ckd_add(s->a, s->b, 72), unsigned, 72); }
+
+
+
+
+
+
+=== return zero ===
+int f(void) { return 0; }
+---
+int f(void) { return 0; }
+
+
+
+
+
+
+=== return paren ===
+int f(int a, int b) { return (a + b); }
+---
+int f(int a, int b) { return ckd_narrow((ckd_add(a, b, 31)), int, 30); }
+
+
+
+

@@ -1,0 +1,96 @@
+=== add in arg ===
+void g(int); void f(int a, int b) { g(a + b); }
+---
+void g(int); void f(int a, int b) { g(ckd_narrow(ckd_add(a, b, 39), int, 39)); }
+
+
+
+
+
+=== mul in arg ===
+void g(int); void f(int a, int b) { g(a * b); }
+---
+void g(int); void f(int a, int b) { g(ckd_narrow(ckd_mul(a, b, 39), int, 39)); }
+
+
+
+
+
+=== two args arith ===
+void g(int, int); void f(int a, int b) { g(a + 1, b - 1); }
+---
+void g(int, int); void f(int a, int b) { g(ckd_narrow(ckd_add(a, 1, 44), int, 44), ckd_narrow(ckd_sub(b, 1, 51), int, 51)); }
+
+
+
+
+
+
+=== nested call arith ===
+int g(int); void f(int a) { int x = g(ckd_add(a, 1, 39)) + 2; }
+---
+int g(int); void f(int a) { int x = ckd_narrow(ckd_add(g(ckd_narrow(ckd_add(a, 1, 39), int, 39)), 2, 37), int, 37); }
+
+
+
+
+
+
+=== ptr in call ===
+void g(char *); void f(char *p) { g(p + 5); }
+---
+void g(char *); void f(char *p) { g(ckd_ptr_add(p, 5, 37)); }
+
+
+
+
+
+
+=== call ret ptr add ===
+char *g(int); void f(int a) { char *p = g(a) + 10; }
+---
+char *g(int); void f(int a) { char *p = ckd_ptr_add(g(ckd_narrow(a, int, 43)), 10, 41); }
+
+
+
+
+
+
+=== call no arith ===
+int g(int); void f(int a) { int x = g(a); }
+---
+int g(int); void f(int a) { int x = ckd_narrow(g(ckd_narrow(a, int, 39)), int, 37); }
+
+
+
+
+
+
+=== inc in arg ===
+void g(int); void f(int x) { g(x++); }
+---
+void g(int); void f(int x) { g(ckd_narrow(ckd_postinc(x, 32), int, 32)); }
+
+
+
+
+
+
+=== arith in array index ===
+void f(int *a, int i) { int x = a[i + 1]; }
+---
+void f(int *a, int i) { int x = ckd_narrow(a[ckd_add(i, 1, 35)], int, 33); }
+
+
+
+
+
+
+=== arith in both index and val ===
+void f(int *a, int i, int b) { int x = a[i + 1] + b; }
+---
+void f(int *a, int i, int b) { int x = ckd_narrow(ckd_add(a[ckd_add(i, 1, 42)], b, 40), int, 40); }
+
+
+
+

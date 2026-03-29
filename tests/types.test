@@ -1,0 +1,94 @@
+=== unsigned char ===
+void f(unsigned char a, unsigned char b) { unsigned char c = a + b; }
+---
+void f(unsigned char a, unsigned char b) { unsigned char c = ckd_narrow(ckd_add(a, b, 62), unsigned char, 62); }
+
+
+
+
+
+
+=== unsigned short ===
+void f(unsigned short a, unsigned short b) { unsigned short c = a + b; }
+---
+void f(unsigned short a, unsigned short b) { unsigned short c = ckd_narrow(ckd_add(a, b, 65), unsigned short, 65); }
+
+
+
+
+
+
+=== unsigned int ===
+void f(unsigned int a, unsigned int b) { unsigned int c = a + b; }
+---
+void f(unsigned int a, unsigned int b) { unsigned int c = ckd_narrow(ckd_add(a, b, 59), unsigned int, 59); }
+
+
+
+
+
+=== unsigned long ===
+void f(unsigned long a, unsigned long b) { unsigned long c = a + b; }
+---
+void f(unsigned long a, unsigned long b) { unsigned long c = ckd_narrow(ckd_add(a, b, 62), unsigned long, 62); }
+
+
+
+
+
+=== unsigned long long ===
+void f(unsigned long long a, unsigned long long b) { unsigned long long c = a + b; }
+---
+void f(unsigned long long a, unsigned long long b) { unsigned long long c = ckd_narrow(ckd_add(a, b, 77), unsigned long long, 77); }
+
+
+
+
+
+=== signed char ===
+void f(signed char a, signed char b) { signed char c = a + b; }
+---
+void f(signed char a, signed char b) { signed char c = ckd_narrow(ckd_add(a, b, 56), signed char, 56); }
+
+
+
+
+
+
+=== short ===
+void f(short a, short b) { short c = a + b; }
+---
+void f(short a, short b) { short c = ckd_narrow(ckd_add(a, b, 38), short, 38); }
+
+
+
+
+
+
+=== long long ===
+void f(long long a, long long b) { long long c = a + b; }
+---
+void f(long long a, long long b) { long long c = ckd_narrow(ckd_add(a, b, 50), long long, 50); }
+
+
+
+
+
+=== long mul ===
+void f(long a, long b) { long c = a * b; }
+---
+void f(long a, long b) { long c = ckd_narrow(ckd_mul(a, b, 35), long, 35); }
+
+
+
+
+
+=== short sub ===
+void f(short a, short b) { short c = a - b; }
+---
+void f(short a, short b) { short c = ckd_narrow(ckd_sub(a, b, 38), short, 38); }
+
+
+
+
+

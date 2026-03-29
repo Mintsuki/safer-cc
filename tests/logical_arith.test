@@ -1,0 +1,91 @@
+=== and both sides ===
+void f(int a, int b, int c, int d) { int x = (a + b) && (c - d); }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow((ckd_add(a, b, 47)) && (ckd_sub(c, d, 58)), int, 46); }
+
+
+
+
+
+=== or both sides ===
+void f(int a, int b, int c, int d) { int x = (a * b) || (c + d); }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow((ckd_mul(a, b, 47)) || (ckd_add(c, d, 58)), int, 46); }
+
+
+
+
+
+=== not of arith ===
+void f(int a, int b) { int x = !(a + b); }
+---
+void f(int a, int b) { int x = ckd_narrow(!(ckd_add(a, b, 34)), int, 32); }
+
+
+
+
+
+=== cmp with arith ===
+void f(int a, int b, int c) { int x = (a + b) < c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow((ckd_add(a, b, 40)) < c, int, 39); }
+
+
+
+
+
+=== eq with arith ===
+void f(int a, int b) { int x = (a * b) == 0; }
+---
+void f(int a, int b) { int x = ckd_narrow((ckd_mul(a, b, 33)) == 0, int, 32); }
+
+
+
+
+
+=== ternary arith ===
+void f(int c, int a, int b) { int x = c ? a + b : a - b; }
+---
+void f(int c, int a, int b) { int x = ckd_narrow(c ? ckd_add(a, b, 43) : ckd_sub(a, b, 51), int, 39); }
+
+
+
+
+
+=== ternary ptr ===
+void f(int c, char *p) { char *q = c ? p + 1 : p - 1; }
+---
+void f(int c, char *p) { char *q = c ? ckd_ptr_add(p, 1, 40) : ckd_ptr_sub(p, 1, 48); }
+
+
+
+
+
+
+=== logical or short circuit ===
+void f(int a) { int x = a || a + 1; }
+---
+void f(int a) { int x = ckd_narrow(a || ckd_add(a, 1, 30), int, 25); }
+
+
+
+
+
+
+=== bitwise and arith ===
+void f(int a, int b, int m) { int x = (a + b) & m; }
+---
+void f(int a, int b, int m) { int x = ckd_narrow((ckd_add(a, b, 40)) & m, int, 39); }
+
+
+
+
+
+=== shift arith ===
+void f(int a, int b) { int x = (a + b) << 2; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_shl((ckd_add(a, b, 33)), 2, 32), int, 32); }
+
+
+
+

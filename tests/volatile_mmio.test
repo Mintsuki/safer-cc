@@ -1,0 +1,69 @@
+=== volatile deref offset ===
+void f(unsigned long base) { unsigned char v = *(volatile unsigned char *)(base + 0x8000); }
+---
+void f(unsigned long base) { unsigned char v = *(volatile unsigned char *)(ckd_add(base, 0x8000, 76)); }
+
+
+
+
+
+
+=== volatile ptr write ===
+void f(volatile unsigned *fb, unsigned off, unsigned val) { fb[off] = val; }
+---
+void f(volatile unsigned *fb, unsigned off, unsigned val) { fb[off] = ckd_narrow(val, unsigned, 71); }
+
+
+
+
+
+
+=== volatile cast read ===
+void f(unsigned long base, int off) { unsigned val = *(volatile unsigned *)(base + off); }
+---
+void f(unsigned long base, int off) { unsigned val = *(volatile unsigned *)(ckd_add(base, off, 77)); }
+
+
+
+
+
+
+=== volatile ptr stride ===
+void f(volatile unsigned *fb, unsigned pitch, unsigned x, unsigned y) { volatile unsigned *row = fb + y * pitch; row[x] = 0; }
+---
+void f(volatile unsigned *fb, unsigned pitch, unsigned x, unsigned y) { volatile unsigned *row = ckd_ptr_add(fb, ckd_mul(y, pitch, 103), 98); row[x] = 0; }
+
+
+
+
+
+
+=== mmio reg array ===
+void f(volatile unsigned *regs, int idx) { unsigned v = regs[idx * 4]; }
+---
+void f(volatile unsigned *regs, int idx) { unsigned v = ckd_narrow(regs[ckd_mul(idx, 4, 62)], unsigned, 57); }
+
+
+
+
+
+
+=== volatile incr ===
+void f(volatile unsigned *counter) { (*counter)++; }
+---
+void f(volatile unsigned *counter) { ckd_preinc((*counter), 38); }
+
+
+
+
+
+
+=== readl pattern ===
+unsigned readl(volatile void *addr); void f(char *base) { unsigned v = readl(base + 0x10); }
+---
+unsigned readl(volatile void *addr); void f(char *base) { unsigned v = ckd_narrow(readl(ckd_ptr_add(base, 0x10, 78)), unsigned, 72); }
+
+
+
+
+

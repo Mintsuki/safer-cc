@@ -1,0 +1,85 @@
+=== wrapping add ===
+void f(unsigned a, unsigned b) { unsigned val; __builtin_add_overflow(a, b, &val); }
+---
+void f(unsigned a, unsigned b) { unsigned val; __builtin_add_overflow(a, b, &val); }
+
+
+
+
+
+
+=== page shift ===
+void f(unsigned long pfn) { unsigned long addr = pfn << 12; }
+---
+void f(unsigned long pfn) { unsigned long addr = ckd_narrow(ckd_shl(pfn, 12, 50), unsigned long, 50); }
+
+
+
+
+
+
+=== pfn to phys ===
+void f(unsigned long pfn) { void *p = (void *)(pfn << 12); }
+---
+void f(unsigned long pfn) { void *p = (void *)(ckd_shl(pfn, 12, 48)); }
+
+
+
+
+
+
+=== memcpy buf offset ===
+void f(char *buf, unsigned len, char *str, unsigned slen) { char *dst = buf + len; }
+---
+void f(char *buf, unsigned len, char *str, unsigned slen) { char *dst = ckd_ptr_add(buf, len, 73); }
+
+
+
+
+
+
+=== slot copy sizeof ===
+void f(void **dst, void **src, int d, int s, int n) { unsigned long bytes = sizeof(void *) * n; }
+---
+void f(void **dst, void **src, int d, int s, int n) { unsigned long bytes = ckd_narrow(ckd_mul(sizeof(void *), n, 77), unsigned long, 77); }
+
+
+
+
+
+=== gap copy sizeof ===
+void f(unsigned long *dst, unsigned long *src, int d, int s, int n) { unsigned long bytes = sizeof(unsigned long) * n; }
+---
+void f(unsigned long *dst, unsigned long *src, int d, int s, int n) { unsigned long bytes = ckd_narrow(ckd_mul(sizeof(unsigned long), n, 93), unsigned long, 93); }
+
+
+
+
+
+=== two shifts no arith ===
+void f(unsigned long addr) { unsigned long pml4 = (addr >> 39) & 0x1FF; unsigned long pdpt = (addr >> 30) & 0x1FF; }
+---
+void f(unsigned long addr) { unsigned long pml4 = ckd_narrow((ckd_shr(addr, 39, 52)) & 0x1FF, unsigned long, 51); unsigned long pdpt = ckd_narrow((ckd_shr(addr, 30, 95)) & 0x1FF, unsigned long, 94); }
+
+
+
+
+
+
+=== relay read pos ===
+void f(unsigned long consumed, unsigned long subbuf_sz, unsigned long n) { unsigned long pos = (consumed * subbuf_sz) % (n * subbuf_sz); }
+---
+void f(unsigned long consumed, unsigned long subbuf_sz, unsigned long n) { unsigned long pos = ckd_narrow(ckd_mod((ckd_mul(consumed, subbuf_sz, 97)), (ckd_mul(n, subbuf_sz, 122)), 96), unsigned long, 96); }
+
+
+
+
+
+=== relay subbuf inc ===
+void f(unsigned read_sub, unsigned n) { read_sub = (read_sub + 1) % n; }
+---
+void f(unsigned read_sub, unsigned n) { read_sub = ckd_narrow(ckd_mod((ckd_add(read_sub, 1, 53)), n, 52), unsigned, 52); }
+
+
+
+

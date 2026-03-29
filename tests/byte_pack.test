@@ -1,0 +1,259 @@
+=== register low byte ===
+void f(unsigned r) { unsigned char lo = r; }
+---
+void f(unsigned r) { unsigned char lo = ckd_narrow(r, unsigned char, 41); }
+
+
+
+
+
+
+=== register high byte ===
+void f(unsigned r) { unsigned char hi = r >> 8; }
+---
+void f(unsigned r) { unsigned char hi = ckd_narrow(ckd_shr(r, 8, 41), unsigned char, 41); }
+
+
+
+
+
+
+=== register third byte ===
+void f(unsigned r) { unsigned char b2 = r >> 16; }
+---
+void f(unsigned r) { unsigned char b2 = ckd_narrow(ckd_shr(r, 16, 41), unsigned char, 41); }
+
+
+
+
+
+
+=== register top byte ===
+void f(unsigned r) { unsigned char b3 = r >> 24; }
+---
+void f(unsigned r) { unsigned char b3 = ckd_narrow(ckd_shr(r, 24, 41), unsigned char, 41); }
+
+
+
+
+
+
+=== shift to short ===
+void f(unsigned v) { unsigned short w = v >> 16; }
+---
+void f(unsigned v) { unsigned short w = ckd_narrow(ckd_shr(v, 16, 41), unsigned short, 41); }
+
+
+
+
+
+
+=== byte pack store ===
+void f(unsigned char *buf, int val) {
+    buf[0] = val;
+    buf[1] = val >> 8;
+}
+---
+void f(unsigned char *buf, int val) {
+    buf[0] = ckd_narrow(val, unsigned char, 14);
+    buf[1] = ckd_narrow(ckd_shr(val, 8, 14), unsigned char, 14);
+}
+
+
+
+
+
+
+=== construct word ===
+void f(unsigned char a, unsigned char b) {
+    unsigned w = a | (b << 8);
+}
+---
+void f(unsigned char a, unsigned char b) {
+    unsigned w = ckd_narrow(a | (ckd_shl(b, 8, 23)), unsigned, 18);
+}
+
+
+
+
+
+
+=== mmio write byte ===
+void f(unsigned char *mmio, unsigned val, int off) {
+    mmio[off] = val;
+}
+---
+void f(unsigned char *mmio, unsigned val, int off) {
+    mmio[off] = ckd_narrow(val, unsigned char, 17);
+}
+
+
+
+
+
+
+=== read with offset ===
+void f(unsigned char *base, int off, int n) {
+    unsigned char v = base[off + n];
+}
+---
+void f(unsigned char *base, int off, int n) {
+    unsigned char v = ckd_narrow(base[ckd_add(off, n, 28)], unsigned char, 23);
+}
+
+
+
+
+
+
+=== byte extract four ===
+typedef unsigned char uint8_t;
+void f(unsigned addr, uint8_t *buf) {
+    buf[0] = addr;
+    buf[1] = addr >> 8;
+    buf[2] = addr >> 16;
+    buf[3] = addr >> 24;
+}
+---
+typedef unsigned char uint8_t;
+void f(unsigned addr, uint8_t *buf) {
+    buf[0] = ckd_narrow(addr, uint8_t, 14);
+    buf[1] = ckd_narrow(ckd_shr(addr, 8, 14), uint8_t, 14);
+    buf[2] = ckd_narrow(ckd_shr(addr, 16, 14), uint8_t, 14);
+    buf[3] = ckd_narrow(ckd_shr(addr, 24, 14), uint8_t, 14);
+}
+
+
+
+
+
+
+=== nibble extract ===
+void f(unsigned r) {
+    unsigned char lo = r;
+    unsigned char hi = r >> 4;
+}
+---
+void f(unsigned r) {
+    unsigned char lo = ckd_narrow(r, unsigned char, 24);
+    unsigned char hi = ckd_narrow(ckd_shr(r, 4, 24), unsigned char, 24);
+}
+
+
+
+
+
+
+=== two byte struct fields ===
+typedef unsigned char uint8_t;
+struct hdr { uint8_t type; uint8_t len; };
+void f(struct hdr *h, int t, int l) {
+    h->type = t;
+    h->len = l;
+}
+---
+typedef unsigned char uint8_t;
+struct hdr { uint8_t type; uint8_t len; };
+void f(struct hdr *h, int t, int l) {
+    h->type = ckd_narrow(t, uint8_t, 15);
+    h->len = ckd_narrow(l, uint8_t, 14);
+}
+
+
+
+
+
+
+=== byte from add ===
+void f(unsigned char *buf, int a, int b) {
+    buf[0] = a + b;
+}
+---
+void f(unsigned char *buf, int a, int b) {
+    buf[0] = ckd_narrow(ckd_add(a, b, 14), unsigned char, 14);
+}
+
+
+
+
+
+
+=== sign byte extract ===
+void f(int val) { signed char sb = val; }
+---
+void f(int val) { signed char sb = ckd_narrow(val, signed char, 36); }
+
+
+
+
+
+
+=== byte from mul ===
+void f(int a, int b) { char c = a * b; }
+---
+void f(int a, int b) { char c = ckd_narrow(ckd_mul(a, b, 33), char, 33); }
+
+
+
+
+
+
+=== word split multiline ===
+void f(unsigned w) {
+    unsigned char b0 = w;
+    unsigned char b1 = w >> 8;
+}
+---
+void f(unsigned w) {
+    unsigned char b0 = ckd_narrow(w, unsigned char, 24);
+    unsigned char b1 = ckd_narrow(ckd_shr(w, 8, 24), unsigned char, 24);
+}
+
+
+
+
+
+
+=== byte from div ===
+void f(int t, int c) { char avg = t / c; }
+---
+void f(int t, int c) { char avg = ckd_narrow(ckd_div(t, c, 35), char, 35); }
+
+
+
+
+
+
+=== byte from mod ===
+void f(int val, int m) { char r = val % m; }
+---
+void f(int val, int m) { char r = ckd_narrow(ckd_mod(val, m, 35), char, 35); }
+
+
+
+
+
+
+=== byte from neg ===
+void f(int x) { char c = -x; }
+---
+void f(int x) { char c = ckd_narrow(ckd_neg(x, 26), char, 26); }
+
+
+
+
+
+
+=== dword from bytes ===
+void f(unsigned char *p, unsigned *out) {
+    *out = p[0] | (p[1] << 8) | (p[2] << 16) | (p[3] << 24);
+}
+---
+void f(unsigned char *p, unsigned *out) {
+    *out = ckd_narrow(p[0] | (ckd_shl(p[1], 8, 20)) | (ckd_shl(p[2], 16, 34)) | (ckd_shl(p[3], 24, 49)), unsigned, 12);
+}
+
+
+
+
+

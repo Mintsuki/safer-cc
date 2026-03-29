@@ -1,0 +1,149 @@
+=== basic read ===
+void f(void) { int arr[10]; int x = arr[5]; }
+---
+void f(void) { int arr[10]; int x = ckd_narrow(ckd_bounds(arr, 5, 10, 37), int, 37); }
+
+
+
+
+
+
+=== basic write ===
+void f(void) { int arr[10]; arr[5] = 42; }
+---
+void f(void) { int arr[10]; ckd_bounds(arr, 5, 10, 29) = 42; }
+
+
+
+
+
+
+=== var index ===
+void f(int i) { int arr[10]; int x = arr[i]; }
+---
+void f(int i) { int arr[10]; int x = ckd_narrow(ckd_bounds(arr, i, 10, 38), int, 38); }
+
+
+
+
+
+
+=== index arith ===
+void f(int i) { int arr[10]; int x = arr[i + 1]; }
+---
+void f(int i) { int arr[10]; int x = ckd_narrow(ckd_bounds(arr, ckd_add(i, 1, 42), 10, 38), int, 38); }
+
+
+
+
+
+
+=== char array ===
+void f(int i) { char buf[256]; char c = buf[i]; }
+---
+void f(int i) { char buf[256]; char c = ckd_narrow(ckd_bounds(buf, i, 256, 41), char, 41); }
+
+
+
+
+
+
+=== unsigned long array ===
+void f(unsigned long i) { unsigned long arr[64]; unsigned long v = arr[i]; }
+---
+void f(unsigned long i) { unsigned long arr[64]; unsigned long v = ckd_narrow(ckd_bounds(arr, i, 64, 68), unsigned long, 68); }
+
+
+
+
+
+
+=== ptr array not checked ===
+void f(int *p, int i) { int x = p[i]; }
+---
+void f(int *p, int i) { int x = ckd_narrow(p[i], int, 33); }
+
+
+
+
+
+
+=== param array not checked ===
+void f(int arr[10], int i) { int x = arr[i]; }
+---
+void f(int arr[10], int i) { int x = ckd_narrow(ckd_bounds(arr, i, 10, 38), int, 38); }
+
+
+
+
+
+
+=== sizeof in size ===
+void f(int i) { char buf[sizeof(int) * 4]; char c = buf[i]; }
+---
+void f(int i) { char buf[sizeof(int) * 4]; char c = ckd_narrow(ckd_bounds(buf, i, sizeof(int) * 4, 53), char, 53); }
+
+
+
+
+
+
+=== field access after subscript ===
+struct s { int x; int y; }; void f(int i) { struct s arr[8]; arr[i].x = 0; }
+---
+struct s { int x; int y; }; void f(int i) { struct s arr[8]; ckd_bounds(arr, i, 8, 62).x = 0; }
+
+
+
+
+
+
+=== subscript in sizeof untouched ===
+void f(void) { int arr[10]; int x = sizeof(arr[0]); }
+---
+void f(void) { int arr[10]; int x = sizeof(arr[0]); }
+
+
+
+
+
+
+=== const index const size ===
+void f(void) { int arr[10]; int x = arr[3]; }
+---
+void f(void) { int arr[10]; int x = ckd_narrow(ckd_bounds(arr, 3, 10, 37), int, 37); }
+
+
+
+
+
+
+=== suppress bounds ===
+void f(int i) { int arr[10]; int x = arr@[i]; }
+---
+void f(int i) { int arr[10]; int x = ckd_narrow(arr[i], int, 38); }
+
+
+
+
+
+
+=== two arrays ===
+void f(int i) { int a[10]; int b[20]; a[i] = b[i]; }
+---
+void f(int i) { int a[10]; int b[20]; ckd_bounds(a, i, 10, 39) = ckd_narrow(ckd_bounds(b, i, 20, 46), int, 46); }
+
+
+
+
+
+
+=== array of ptrs ===
+void f(int i) { char *arr[4]; char *p = arr[i]; }
+---
+void f(int i) { char *arr[4]; char *p = ckd_bounds(arr, i, 4, 41); }
+
+
+
+
+

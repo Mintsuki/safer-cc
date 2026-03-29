@@ -1,0 +1,97 @@
+=== 2d const array ===
+typedef unsigned char uint8_t;
+void f(void) {
+    static const uint8_t tbl[2][4] = {
+        { 0, 1, 2, 3 },
+        { 4, 5, 6, 7 }
+    };
+}
+---
+typedef unsigned char uint8_t;
+void f(void) {
+    static const uint8_t tbl[2][4] = {
+        { 0, 1, 2, 3 },
+        { 4, 5, 6, 7 }
+    };
+}
+
+
+
+
+
+
+=== 1d var init ===
+typedef unsigned char uint8_t;
+void f(int a, int b, int c) {
+    uint8_t buf[3] = {a, b, c};
+}
+---
+typedef unsigned char uint8_t;
+void f(int a, int b, int c) {
+    uint8_t buf[3] = {ckd_narrow(a, uint8_t, 23), ckd_narrow(b, uint8_t, 26), ckd_narrow(c, uint8_t, 29)};
+}
+
+
+
+
+
+
+=== mixed const var init ===
+typedef unsigned char uint8_t;
+void f(int x) {
+    uint8_t buf[4] = {0, x, 0xFF, x};
+}
+---
+typedef unsigned char uint8_t;
+void f(int x) {
+    uint8_t buf[4] = {0, ckd_narrow(x, uint8_t, 26), 0xFF, ckd_narrow(x, uint8_t, 35)};
+}
+
+
+
+
+
+
+=== struct init no narrow ===
+struct s { int x; int y; };
+void f(int a, int b) {
+    struct s p = {a, b};
+}
+---
+struct s { int x; int y; };
+void f(int a, int b) {
+    struct s p = {a, b};
+}
+
+
+
+
+
+
+=== char arr string ===
+void f(void) {
+    char s[] = "hello";
+}
+---
+void f(void) {
+    char s[] = "hello";
+}
+
+
+
+
+
+
+=== short arr all expr ===
+void f(int a, int b) {
+    short arr[3] = {a + b, a - b, a * b};
+}
+---
+void f(int a, int b) {
+    short arr[3] = {ckd_narrow(ckd_add(a, b, 21), short, 21), ckd_narrow(ckd_sub(a, b, 28), short, 28), ckd_narrow(ckd_mul(a, b, 35), short, 35)};
+}
+
+
+
+
+

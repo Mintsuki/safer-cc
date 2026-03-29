@@ -1,0 +1,60 @@
+=== prototype param not tracked ===
+void g(int *x); void f(int x) { int y = x + 1; }
+---
+void g(int *x); void f(int x) { int y = ckd_narrow(ckd_add(x, 1, 41), int, 41); }
+
+
+
+
+
+
+=== prototype multiple params ===
+void g(int *a, int *b); void f(int a, int b) { int c = a * b; }
+---
+void g(int *a, int *b); void f(int a, int b) { int c = ckd_narrow(ckd_mul(a, b, 56), int, 56); }
+
+
+
+
+
+=== prototype then def ===
+void f(int *p);
+void f(int *p) { char *q = (char *)p + 1; }
+---
+void f(int *p);
+void f(int *p) { char *q = ckd_ptr_add((char *)p, 1, 28); }
+
+
+
+
+
+
+=== extern prototype no pollution ===
+extern void sort(int *arr, int n); void f(int arr, int n) { int x = arr + n; }
+---
+extern void sort(int *arr, int n); void f(int arr, int n) { int x = ckd_narrow(ckd_add(arr, n, 69), int, 69); }
+
+
+
+
+
+=== multiple prototypes ===
+void a(int *x); void b(int *y); void c(int *z);
+void f(int x, int y, int z) { int r = x + y + z; }
+---
+void a(int *x); void b(int *y); void c(int *z);
+void f(int x, int y, int z) { int r = ckd_narrow(ckd_add(ckd_add(x, y, 39), z, 39), int, 39); }
+
+
+
+
+
+=== prototype char ptr ===
+void g(char *buf, int len); void f(int buf) { int x = buf + 1; }
+---
+void g(char *buf, int len); void f(int buf) { int x = ckd_narrow(ckd_add(buf, 1, 55), int, 55); }
+
+
+
+
+

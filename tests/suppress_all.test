@@ -1,0 +1,149 @@
+=== sup add ===
+void f(int a, int b) { int x = a @+ b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a + b, int, 32); }
+
+
+
+
+
+
+=== sup sub ===
+void f(int a, int b) { int x = a @- b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a - b, int, 32); }
+
+
+
+
+
+
+=== sup mul ===
+void f(int a, int b) { int x = a @* b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a * b, int, 32); }
+
+
+
+
+
+
+=== sup div ===
+void f(int a, int b) { int x = a @/ b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a / b, int, 32); }
+
+
+
+
+
+
+=== sup mod ===
+void f(int a, int b) { int x = a @% b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a % b, int, 32); }
+
+
+
+
+
+
+=== sup shl ===
+void f(int a, int b) { int x = a @<< b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a << b, int, 32); }
+
+
+
+
+
+
+=== sup shr ===
+void f(int a, int b) { int x = a @>> b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a >> b, int, 32); }
+
+
+
+
+
+
+=== sup neg ===
+void f(int a) { int x = @-a; }
+---
+void f(int a) { int x = ckd_narrow(-a, int, 26); }
+
+
+
+
+
+
+=== sup bounds ===
+void f(int i) { int arr[10]; int x = arr@[i]; }
+---
+void f(int i) { int arr[10]; int x = ckd_narrow(arr[i], int, 38); }
+
+
+
+
+
+
+=== sup inc ===
+void f(int x) { x@++; }
+---
+void f(int x) { x++; }
+
+
+
+
+
+
+=== sup dec ===
+void f(int x) { @--x; }
+---
+void f(int x) { --x; }
+
+
+
+
+
+
+=== sup add assign ===
+void f(int x) { x @+= 1; }
+---
+void f(int x) { x += 1; }
+
+
+
+
+
+
+=== sup div assign ===
+void f(int x) { x @/= 2; }
+---
+void f(int x) { x /= 2; }
+
+
+
+
+
+
+=== sup shl assign ===
+void f(int x) { x @<<= 1; }
+---
+void f(int x) { x <<= 1; }
+
+
+
+
+
+
+=== sup ptr add ===
+void f(char *p) { char *q = p @+ 1; }
+---
+void f(char *p) { char *q = p + 1; }
+
+
+
+
+

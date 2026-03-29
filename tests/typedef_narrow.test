@@ -1,0 +1,185 @@
+=== uint16_t from uint32_t ===
+typedef unsigned int uint32_t; typedef unsigned short uint16_t;
+void f(uint32_t a) { uint16_t x = a; }
+---
+typedef unsigned int uint32_t; typedef unsigned short uint16_t;
+void f(uint32_t a) { uint16_t x = ckd_narrow(a, uint16_t, 35); }
+
+
+
+
+
+
+=== uint8_t from int ===
+typedef unsigned char uint8_t;
+void f(int a) { uint8_t x = a; }
+---
+typedef unsigned char uint8_t;
+void f(int a) { uint8_t x = ckd_narrow(a, uint8_t, 29); }
+
+
+
+
+
+
+=== int16_t from int ===
+typedef short int16_t;
+void f(int a) { int16_t x = a; }
+---
+typedef short int16_t;
+void f(int a) { int16_t x = ckd_narrow(a, int16_t, 29); }
+
+
+
+
+
+
+=== uint8_t from shift ===
+typedef unsigned char uint8_t;
+void f(unsigned dest, int j) { uint8_t b = dest >> (24 - j); }
+---
+typedef unsigned char uint8_t;
+void f(unsigned dest, int j) { uint8_t b = ckd_narrow(ckd_shr(dest, (ckd_sub(24, j, 53)), 44), uint8_t, 44); }
+
+
+
+
+
+
+=== uint8_t byte extract ===
+typedef unsigned char uint8_t;
+void f(unsigned addr, uint8_t *buf, int i) {
+    buf[i] = addr;
+    buf[i + 1] = addr >> 8;
+    buf[i + 2] = addr >> 16;
+}
+---
+typedef unsigned char uint8_t;
+void f(unsigned addr, uint8_t *buf, int i) {
+    buf[i] = ckd_narrow(addr, uint8_t, 14);
+    buf[ckd_add(i, 1, 9)] = ckd_narrow(ckd_shr(addr, 8, 18), uint8_t, 18);
+    buf[ckd_add(i, 2, 9)] = ckd_narrow(ckd_shr(addr, 16, 18), uint8_t, 18);
+}
+
+
+
+
+
+
+=== uint16_t from mask ===
+typedef unsigned short uint16_t;
+void f(unsigned nn) { uint16_t msk = nn; }
+---
+typedef unsigned short uint16_t;
+void f(unsigned nn) { uint16_t msk = ckd_narrow(nn, uint16_t, 38); }
+
+
+
+
+
+
+=== uint32_t no narrow ===
+typedef unsigned int uint32_t;
+void f(int a) { uint32_t x = a; }
+---
+typedef unsigned int uint32_t;
+void f(int a) { uint32_t x = ckd_narrow(a, uint32_t, 30); }
+
+
+
+
+
+=== uint64_t no narrow ===
+typedef unsigned long long uint64_t;
+void f(int a) { uint64_t x = a; }
+---
+typedef unsigned long long uint64_t;
+void f(int a) { uint64_t x = ckd_narrow(a, uint64_t, 30); }
+
+
+
+
+
+=== transitive typedef narrow ===
+typedef unsigned char uint8_t; typedef uint8_t byte_t;
+void f(int a) { byte_t b = a; }
+---
+typedef unsigned char uint8_t; typedef uint8_t byte_t;
+void f(int a) { byte_t b = ckd_narrow(a, byte_t, 28); }
+
+
+
+
+
+
+=== typedef narrow assign ===
+typedef unsigned short uint16_t;
+void f(int a) { uint16_t x; x = a; }
+---
+typedef unsigned short uint16_t;
+void f(int a) { uint16_t x; x = ckd_narrow(a, uint16_t, 33); }
+
+
+
+
+
+
+=== typedef narrow initlist ===
+typedef unsigned char uint8_t;
+void f(int a, int b) { uint8_t buf[2] = {a, b}; }
+---
+typedef unsigned char uint8_t;
+void f(int a, int b) { uint8_t buf[2] = {ckd_narrow(a, uint8_t, 42), ckd_narrow(b, uint8_t, 45)}; }
+
+
+
+
+
+
+=== typedef narrow with arith ===
+typedef unsigned char uint8_t;
+void f(int a, int b) { uint8_t x = a + b; }
+---
+typedef unsigned char uint8_t;
+void f(int a, int b) { uint8_t x = ckd_narrow(ckd_add(a, b, 36), uint8_t, 36); }
+
+
+
+
+
+
+=== typedef const skip ===
+typedef unsigned char uint8_t;
+void f(void) { uint8_t x = 42; }
+---
+typedef unsigned char uint8_t;
+void f(void) { uint8_t x = 42; }
+
+
+
+
+
+
+=== typedef string init skip ===
+typedef char int8_t;
+void f(void) { int8_t s[] = "hello"; }
+---
+typedef char int8_t;
+void f(void) { int8_t s[] = "hello"; }
+
+
+
+
+
+
+=== suppress typedef narrow ===
+typedef unsigned short uint16_t;
+void f(int a) { uint16_t x @= a; }
+---
+typedef unsigned short uint16_t;
+void f(int a) { uint16_t x = a; }
+
+
+
+
+

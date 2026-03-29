@@ -1,0 +1,138 @@
+=== audio freq table unchanged ===
+void f(void) { static const int freqs[2][8] = { { 8000, 16000, 27420, 32000, -1, -1, 48000, 9000 }, { 5510, 11025, 18900, 22050, 37800, 44100, 33075, 6620 } }; }
+---
+void f(void) { static const int freqs[2][8] = { { 8000, 16000, 27420, 32000, -1, -1, 48000, 9000 }, { 5510, 11025, 18900, 22050, 37800, 44100, 33075, 6620 } }; }
+
+
+
+
+
+
+=== aes key struct ===
+typedef unsigned int uint32_t; typedef unsigned char uint8_t;
+void f(uint32_t len, uint8_t *key_data) {
+    uint8_t key[32];
+    for (uint32_t i = 0; i < len; i++) {
+        key[i] = key_data[i];
+    }
+}
+---
+typedef unsigned int uint32_t; typedef unsigned char uint8_t;
+void f(uint32_t len, uint8_t *key_data) {
+    uint8_t key[32];
+    for (uint32_t i = 0; i < len; ckd_preinc(i, 35)) {
+        ckd_bounds(key, i, 32, 9) = ckd_narrow(key_data[i], uint8_t, 18);
+    }
+}
+
+
+
+
+
+
+=== virtio flush ===
+typedef unsigned short uint16_t;
+void f(uint16_t *ring, unsigned idx, unsigned num, uint16_t val) {
+    unsigned i = idx % num;
+    ring[i] = val;
+}
+---
+typedef unsigned short uint16_t;
+void f(uint16_t *ring, unsigned idx, unsigned num, uint16_t val) {
+    unsigned i = ckd_narrow(ckd_mod(idx, num, 18), unsigned, 18);
+    ring[i] = ckd_narrow(val, uint16_t, 15);
+}
+
+
+
+
+
+=== dma offset ===
+typedef unsigned long uint64_t;
+void f(char *base, uint64_t addr, uint64_t region_start) {
+    char *ptr = base + (addr - region_start);
+}
+---
+typedef unsigned long uint64_t;
+void f(char *base, uint64_t addr, uint64_t region_start) {
+    char *ptr = ckd_ptr_add(base, (ckd_sub(addr, region_start, 25)), 17);
+}
+
+
+
+
+
+
+=== mmio read ===
+typedef unsigned int uint32_t; typedef unsigned char uint8_t;
+void f(uint32_t val, uint8_t *buf) {
+    buf[0] = val;
+    buf[1] = val >> 8;
+    buf[2] = val >> 16;
+    buf[3] = val >> 24;
+}
+---
+typedef unsigned int uint32_t; typedef unsigned char uint8_t;
+void f(uint32_t val, uint8_t *buf) {
+    buf[0] = ckd_narrow(val, uint8_t, 14);
+    buf[1] = ckd_narrow(ckd_shr(val, 8, 14), uint8_t, 14);
+    buf[2] = ckd_narrow(ckd_shr(val, 16, 14), uint8_t, 14);
+    buf[3] = ckd_narrow(ckd_shr(val, 24, 14), uint8_t, 14);
+}
+
+
+
+
+
+
+=== timer calc ===
+void f(long mc, long base, long delta, long period) {
+    long elapsed = mc - base;
+    long ticks = (elapsed + delta) / period;
+}
+---
+void f(long mc, long base, long delta, long period) {
+    long elapsed = ckd_narrow(ckd_sub(mc, base, 20), long, 20);
+    long ticks = ckd_narrow(ckd_div((ckd_add(elapsed, delta, 19)), period, 18), long, 18);
+}
+
+
+
+
+
+=== pci bar mask ===
+typedef unsigned int uint32_t;
+void f(uint32_t bar, uint32_t *size) {
+    *size = ~(bar & ~0xF) + 1;
+}
+---
+typedef unsigned int uint32_t;
+void f(uint32_t bar, uint32_t *size) {
+    *size = ckd_narrow(ckd_add(~(bar & ~0xF), 1, 13), uint32_t, 13);
+}
+
+
+
+
+
+=== scatter gather ===
+void f(char *buf, unsigned *lens, int nsegs) {
+    unsigned total = 0;
+    char *ptr = buf;
+    for (int i = 0; i < nsegs; i++) {
+        total += lens[i];
+        ptr += lens[i];
+    }
+}
+---
+void f(char *buf, unsigned *lens, int nsegs) {
+    unsigned total = 0;
+    char *ptr = buf;
+    for (int i = 0; i < nsegs; ckd_preinc(i, 32)) {
+        ckd_compound_narrow(total, ckd_add, lens[i], unsigned, 9);
+        ckd_compound(ptr, ckd_ptr_add, lens[i], 9);
+    }
+}
+
+
+

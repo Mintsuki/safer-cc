@@ -1,0 +1,215 @@
+=== pp subscript no bounds ===
+void f(int **pp, int i) { int *row = pp[i]; }
+---
+void f(int **pp, int i) { int *row = pp[i]; }
+
+
+
+
+
+
+=== pp double subscript no bounds ===
+void f(int **pp, int i, int j) { int x = pp[i][j]; }
+---
+void f(int **pp, int i, int j) { int x = ckd_narrow(pp[i][j], int, 42); }
+
+
+
+
+
+
+=== pp subscript add is ptr ===
+void f(int **pp, int i, int n) { int *q = pp[i] + n; }
+---
+void f(int **pp, int i, int n) { int *q = ckd_ptr_add(pp[i], n, 43); }
+
+
+
+
+
+
+=== arr of ptr bounds first only ===
+void f(int i) { char *arr[4]; char *p = arr[i]; }
+---
+void f(int i) { char *arr[4]; char *p = ckd_bounds(arr, i, 4, 41); }
+
+
+
+
+
+
+=== arr of ptr subscript second no bounds ===
+void f(int i, int j) { char *arr[4]; char c = arr[i][j]; }
+---
+void f(int i, int j) { char *arr[4]; char c = ckd_narrow(ckd_bounds(arr, i, 4, 47)[j], char, 47); }
+
+
+
+
+
+
+=== arr of ptr add after bounds ===
+void f(int i, int n) { char *arr[8]; char *p = arr[i] + n; }
+---
+void f(int i, int n) { char *arr[8]; char *p = ckd_ptr_add(ckd_bounds(arr, i, 8, 48), n, 48); }
+
+
+
+
+
+
+=== 2d array both bounds ===
+void f(int i, int j) { int m[3][4]; int x = m[i][j]; }
+---
+void f(int i, int j) { int m[3][4]; int x = ckd_narrow(ckd_bounds(ckd_bounds(m, i, 3, 45), j, 4, 45), int, 45); }
+
+
+
+
+
+
+=== 2d array write ===
+void f(int i, int j) { int m[3][4]; m[i][j] = 42; }
+---
+void f(int i, int j) { int m[3][4]; ckd_bounds(ckd_bounds(m, i, 3, 37), j, 4, 37) = 42; }
+
+
+
+
+
+
+=== 2d array first only ===
+void f(int i) { int m[3][4]; int *row = m[i]; }
+---
+void f(int i) { int m[3][4]; int *row = ckd_bounds(m, i, 3, 41); }
+
+
+
+
+
+
+=== pp inc is ptr ===
+void f(char **pp) { pp[0]++; }
+---
+void f(char **pp) { ckd_ptr_preinc(pp[0], 21); }
+
+
+
+
+
+
+=== pp add assign is ptr ===
+void f(char **pp, int n) { pp[0] += n; }
+---
+void f(char **pp, int n) { ckd_compound(pp[0], ckd_ptr_add, n, 28); }
+
+
+
+
+
+
+=== deref pp add is ptr ===
+void f(char **pp) { char *q = *pp + 1; }
+---
+void f(char **pp) { char *q = ckd_ptr_add(*pp, 1, 31); }
+
+
+
+
+
+
+=== deref p add is int ===
+void f(int *p) { int x = *p + 1; }
+---
+void f(int *p) { int x = ckd_narrow(ckd_add(*p, 1, 26), int, 26); }
+
+
+
+
+
+
+=== arr of ptr inc elem is ptr ===
+void f(int i) { char *arr[4]; arr[i]++; }
+---
+void f(int i) { char *arr[4]; ckd_ptr_preinc(ckd_bounds(arr, i, 4, 31), 31); }
+
+
+
+
+
+
+=== 2d bounds with arith index ===
+void f(int i, int j) { int m[10][20]; int x = m[i + 1][j * 2]; }
+---
+void f(int i, int j) { int m[10][20]; int x = ckd_narrow(ckd_bounds(ckd_bounds(m, ckd_add(i, 1, 49), 10, 47), ckd_mul(j, 2, 56), 20, 47), int, 47); }
+
+
+
+
+
+
+=== struct with arr field ===
+struct s { int data[16]; }; void f(struct s *s, int i) { int x = s->data[i]; }
+---
+struct s { int data[16]; }; void f(struct s *s, int i) { int x = ckd_narrow(s->data[i], int, 66); }
+
+
+
+
+
+
+=== local arr of pp ===
+void f(int i, int j) { int *arr[4]; int x = arr[i][j]; }
+---
+void f(int i, int j) { int *arr[4]; int x = ckd_narrow(ckd_bounds(arr, i, 4, 45)[j], int, 45); }
+
+
+
+
+
+
+=== 3d all bounds ===
+void f(int i, int j, int k) { int a[2][3][4]; a[i][j][k] = 0; }
+---
+void f(int i, int j, int k) { int a[2][3][4]; ckd_bounds(ckd_bounds(ckd_bounds(a, i, 2, 47), j, 3, 47), k, 4, 47) = 0; }
+
+
+
+
+
+
+=== pp with arith then deref ===
+void f(char **pp, int i, int off) { char c = pp[i][off]; }
+---
+void f(char **pp, int i, int off) { char c = ckd_narrow(pp[i][off], char, 46); }
+
+
+
+
+
+
+=== mixed ptr arr scope ===
+void f(int i) {
+    int arr[10];
+    int x = arr[i];
+    {
+        int *arr;
+        int y = arr[i];
+    }
+    int z = arr[i];
+}
+---
+void f(int i) {
+    int arr[10];
+    int x = ckd_narrow(ckd_bounds(arr, i, 10, 13), int, 13);
+    {
+        int *arr;
+        int y = ckd_narrow(arr[i], int, 17);
+    }
+    int z = ckd_narrow(ckd_bounds(arr, i, 10, 13), int, 13);
+}
+
+
+
+
+

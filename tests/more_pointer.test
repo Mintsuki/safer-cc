@@ -1,0 +1,119 @@
+=== void star ===
+void f(void *p) { void *q = p + 1; }
+---
+void f(void *p) { void *q = ckd_ptr_add(p, 1, 29); }
+
+
+
+
+
+
+=== const ptr ===
+void f(const char *p) { const char *q = p + 1; }
+---
+void f(const char *p) { const char *q = ckd_ptr_add(p, 1, 41); }
+
+
+
+
+
+
+=== pp add ===
+void f(int **pp) { int **qq = pp + 1; }
+---
+void f(int **pp) { int **qq = ckd_ptr_add(pp, 1, 31); }
+
+
+
+
+
+
+=== func ret ptr ===
+char *alloc(int); void f(void) { char *p = alloc(10) + 5; }
+---
+char *alloc(int); void f(void) { char *p = ckd_ptr_add(alloc(10), 5, 44); }
+
+
+
+
+
+
+=== struct field ptr ===
+struct s { char *p; }; void f(struct s *x) { char *q = x->p + 1; }
+---
+struct s { char *p; }; void f(struct s *x) { char *q = ckd_ptr_add(x->p, 1, 56); }
+
+
+
+
+
+
+=== struct field arr ===
+struct s { char buf[64]; }; void f(struct s *x) { char *q = x->buf + 1; }
+---
+struct s { char buf[64]; }; void f(struct s *x) { char *q = ckd_ptr_add(x->buf, 1, 61); }
+
+
+
+
+
+
+=== deref pp ===
+void f(void **pp) { void *p = *pp + 1; }
+---
+void f(void **pp) { void *p = ckd_ptr_add(*pp, 1, 31); }
+
+
+
+
+
+
+=== typedef arr ===
+typedef char symbol[]; extern symbol s; void f(void) { char *p = s + 1; }
+---
+typedef char symbol[]; extern symbol s; void f(void) { char *p = ckd_ptr_add(s, 1, 66); }
+
+
+
+
+
+
+=== null ptr ===
+void f(void) { void *p = (void *)0 + 1; }
+---
+void f(void) { void *p = ckd_ptr_add((void *)0, 1, 26); }
+
+
+
+
+
+
+=== ptr sub neg ===
+void f(char *p) { char *q = p - (-1); }
+---
+void f(char *p) { char *q = ckd_ptr_sub(p, (-1), 29); }
+
+
+
+
+
+
+=== ptr chain ===
+void f(char *p, int a, int b) { char *q = p + a + b; }
+---
+void f(char *p, int a, int b) { char *q = ckd_ptr_add(ckd_ptr_add(p, a, 43), b, 43); }
+
+
+
+
+
+
+=== cond ptr ===
+void f(int c, char *a, char *b) { char *p = (c ? a : b) + 1; }
+---
+void f(int c, char *a, char *b) { char *p = ckd_ptr_add((c ? a : b), 1, 45); }
+
+
+
+
+

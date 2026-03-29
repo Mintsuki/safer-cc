@@ -1,0 +1,76 @@
+=== toupper ===
+void f(unsigned short c) { unsigned short u = c >= 'a' && c <= 'z' ? c - 32 : c; }
+---
+void f(unsigned short c) { unsigned short u = ckd_narrow(c >= 'a' && c <= 'z' ? ckd_sub(c, 32, 70) : c, unsigned short, 47); }
+
+
+
+
+
+
+=== min pattern ===
+void f(unsigned a, unsigned b) { unsigned m = a < b ? a : b; }
+---
+void f(unsigned a, unsigned b) { unsigned m = ckd_narrow(a < b ? a : b, unsigned, 47); }
+
+
+
+
+
+
+=== clamp low ===
+void f(long x, long lo) { long r = x < lo ? lo : x; }
+---
+void f(long x, long lo) { long r = ckd_narrow(x < lo ? lo : x, long, 36); }
+
+
+
+
+
+
+=== offset or zero ===
+void f(unsigned long loc, unsigned long start) { unsigned long off = (loc > start) ? (loc - start) : 0; }
+---
+void f(unsigned long loc, unsigned long start) { unsigned long off = ckd_narrow((loc > start) ? (ckd_sub(loc, start, 87)) : 0, unsigned long, 70); }
+
+
+
+
+
+=== slide calc ===
+void f(unsigned r, unsigned max_align, int higher, unsigned long hh_off, unsigned long min_va) { unsigned long slide = (r & ~(max_align - 1)) + (higher ? hh_off - min_va : 0); }
+---
+void f(unsigned r, unsigned max_align, int higher, unsigned long hh_off, unsigned long min_va) { unsigned long slide = ckd_narrow(ckd_add((r & ~(ckd_sub(max_align, 1, 127))), (higher ? ckd_sub(hh_off, min_va, 155) : 0), 120), unsigned long, 120); }
+
+
+
+
+
+=== ternary ptr ===
+void f(int *p, int cond, int off) { int *q = cond ? p + off : p - off; }
+---
+void f(int *p, int cond, int off) { int *q = cond ? ckd_ptr_add(p, off, 53) : ckd_ptr_sub(p, off, 63); }
+
+
+
+
+
+
+=== default bg select ===
+void f(unsigned *canvas, unsigned def_bg, unsigned x, unsigned gx) { unsigned bg = def_bg == 0xffffffff ? canvas[gx] : def_bg; }
+---
+void f(unsigned *canvas, unsigned def_bg, unsigned x, unsigned gx) { unsigned bg = ckd_narrow(def_bg == 0xffffffff ? canvas[gx] : def_bg, unsigned, 84); }
+
+
+
+
+
+
+=== saturate add ===
+void f(unsigned a, unsigned b, unsigned max) { unsigned r = (a + b) > max ? max : (a + b); }
+---
+void f(unsigned a, unsigned b, unsigned max) { unsigned r = ckd_narrow((ckd_add(a, b, 62)) > max ? max : (ckd_add(a, b, 84)), unsigned, 61); }
+
+
+
+

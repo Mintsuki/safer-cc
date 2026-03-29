@@ -1,0 +1,70 @@
+=== virtio ring idx ===
+void f(unsigned idx, unsigned used, unsigned num) { unsigned i = (idx + used) % num; }
+---
+void f(unsigned idx, unsigned used, unsigned num) { unsigned i = ckd_narrow(ckd_mod((ckd_add(idx, used, 67)), num, 66), unsigned, 66); }
+
+
+
+
+
+=== virtio used idx ===
+void f(unsigned used_idx, unsigned num) { unsigned i = used_idx % num; }
+---
+void f(unsigned used_idx, unsigned num) { unsigned i = ckd_narrow(ckd_mod(used_idx, num, 56), unsigned, 56); }
+
+
+
+
+
+=== fifo write ===
+void f(unsigned *fifo, unsigned *idx, unsigned val) { fifo[(*idx)++] = val; }
+---
+void f(unsigned *fifo, unsigned *idx, unsigned val) { fifo[ckd_postinc((*idx), 60)] = ckd_narrow(val, unsigned, 72); }
+
+
+
+
+
+
+=== ring advance mask ===
+void f(unsigned *head, unsigned mask) { *head = (*head + 1) & mask; }
+---
+void f(unsigned *head, unsigned mask) { *head = ckd_narrow((ckd_add(*head, 1, 50)) & mask, unsigned, 49); }
+
+
+
+
+
+
+=== ring distance ===
+void f(unsigned h, unsigned t, unsigned cap) { unsigned avail = (h - t) % cap; }
+---
+void f(unsigned h, unsigned t, unsigned cap) { unsigned avail = ckd_narrow(ckd_mod((ckd_sub(h, t, 66)), cap, 65), unsigned, 65); }
+
+
+
+
+
+=== circular buffer write ===
+void f(unsigned n) {
+    unsigned buf[64];
+    unsigned head = 0;
+    for (unsigned i = 0; i < n; i++) {
+        buf[head] = i;
+        head = (head + 1) % 64;
+    }
+}
+---
+void f(unsigned n) {
+    unsigned buf[64];
+    unsigned head = 0;
+    for (unsigned i = 0; i < n; ckd_preinc(i, 33)) {
+        ckd_bounds(buf, head, 64, 9) = ckd_narrow(i, unsigned, 21);
+        head = ckd_narrow(ckd_mod((ckd_add(head, 1, 17)), 64, 16), unsigned, 16);
+    }
+}
+
+
+
+
+

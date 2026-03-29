@@ -1,0 +1,69 @@
+=== ptr add ===
+void f(char *p) { char *q = p + 1; }
+---
+void f(char *p) { char *q = ckd_ptr_add(p, 1, 29); }
+
+
+
+
+
+
+=== ptr sub ===
+void f(char *p) { char *q = p - 1; }
+---
+void f(char *p) { char *q = ckd_ptr_sub(p, 1, 29); }
+
+
+
+
+
+
+=== ptr inc ===
+void f(char *p) { p++; }
+---
+void f(char *p) { ckd_ptr_preinc(p, 19); }
+
+
+
+
+
+
+=== ptr dec ===
+void f(char *p) { --p; }
+---
+void f(char *p) { ckd_ptr_predec(p, 19); }
+
+
+
+
+
+
+=== ptr add assign ===
+void f(char *p, int n) { p += n; }
+---
+void f(char *p, int n) { ckd_compound(p, ckd_ptr_add, n, 26); }
+
+
+
+
+
+
+=== int not null checked ===
+void f(int a) { int x = a + 1; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(a, 1, 25), int, 25); }
+
+
+
+
+
+
+=== null compiles for non ptr ===
+void f(unsigned short a) { unsigned short b = a + 1; }
+---
+void f(unsigned short a) { unsigned short b = ckd_narrow(ckd_add(a, 1, 47), unsigned short, 47); }
+
+
+
+
+

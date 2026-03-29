@@ -1,0 +1,235 @@
+=== char compound add ===
+void f(int x) { char c = 0; c += x; }
+---
+void f(int x) { char c = 0; ckd_compound_narrow(c, ckd_add, x, char, 29); }
+
+
+
+
+
+
+=== unsigned char compound add ===
+void f(int x) { unsigned char u = 0; u += x; }
+---
+void f(int x) { unsigned char u = 0; ckd_compound_narrow(u, ckd_add, x, unsigned char, 38); }
+
+
+
+
+
+
+=== short compound sub ===
+void f(int x) { short s = 0; s -= x; }
+---
+void f(int x) { short s = 0; ckd_compound_narrow(s, ckd_sub, x, short, 30); }
+
+
+
+
+
+
+=== char compound mul ===
+void f(int x) { char c = 0; c *= x; }
+---
+void f(int x) { char c = 0; ckd_compound_narrow(c, ckd_mul, x, char, 29); }
+
+
+
+
+
+
+=== char compound div ===
+void f(int x) { char c = 1; c /= x; }
+---
+void f(int x) { char c = 1; ckd_compound_narrow(c, ckd_div, x, char, 29); }
+
+
+
+
+
+
+=== char compound mod ===
+void f(int x) { char c = 0; c %= x; }
+---
+void f(int x) { char c = 0; ckd_compound_narrow(c, ckd_mod, x, char, 29); }
+
+
+
+
+
+
+=== char compound shl ===
+void f(int x) { char c = 0; c <<= x; }
+---
+void f(int x) { char c = 0; ckd_compound_narrow(c, ckd_shl, x, char, 29); }
+
+
+
+
+
+
+=== char compound shr ===
+void f(int x) { char c = 0; c >>= x; }
+---
+void f(int x) { char c = 0; ckd_compound_narrow(c, ckd_shr, x, char, 29); }
+
+
+
+
+
+
+=== int compound no narrow ===
+void f(int x) { int n = 0; n += x; }
+---
+void f(int x) { int n = 0; ckd_compound_narrow(n, ckd_add, x, int, 28); }
+
+
+
+
+=== ptr compound no narrow ===
+void f(int *p, int n) { p += n; }
+---
+void f(int *p, int n) { ckd_compound(p, ckd_ptr_add, n, 25); }
+
+
+
+
+
+
+=== typedef compound narrow ===
+typedef unsigned char uint8_t;
+void f(int x) { uint8_t v = 0; v += x; }
+---
+typedef unsigned char uint8_t;
+void f(int x) { uint8_t v = 0; ckd_compound_narrow(v, ckd_add, x, uint8_t, 32); }
+
+
+
+
+
+
+=== struct field compound narrow ===
+typedef unsigned char uint8_t;
+struct s { uint8_t val; };
+void f(struct s *s, int x) {
+    s->val += x;
+}
+---
+typedef unsigned char uint8_t;
+struct s { uint8_t val; };
+void f(struct s *s, int x) {
+    ckd_compound_narrow(s->val, ckd_add, x, uint8_t, 5);
+}
+
+
+
+
+
+
+=== struct field compound non narrow ===
+struct s { int val; };
+void f(struct s *s, int x) {
+    s->val += x;
+}
+---
+struct s { int val; };
+void f(struct s *s, int x) {
+    ckd_compound_narrow(s->val, ckd_add, x, int, 5);
+}
+
+
+
+
+=== subscript compound narrow ===
+void f(unsigned char *buf, int i, int x) {
+    buf[i] += x;
+}
+---
+void f(unsigned char *buf, int i, int x) {
+    ckd_compound_narrow(buf[i], ckd_add, x, unsigned char, 5);
+}
+
+
+
+
+
+
+=== array compound narrow with bounds ===
+void f(int i, int x) {
+    char arr[10];
+    arr[i] += x;
+}
+---
+void f(int i, int x) {
+    char arr[10];
+    ckd_compound_narrow(ckd_bounds(arr, i, 10, 5), ckd_add, x, char, 5);
+}
+
+
+
+
+
+
+=== deref compound narrow ===
+void f(unsigned char *p, int x) {
+    *p += x;
+}
+---
+void f(unsigned char *p, int x) {
+    ckd_compound_narrow(*p, ckd_add, x, unsigned char, 5);
+}
+
+
+
+
+
+
+=== compound narrow multiline ===
+typedef unsigned short uint16_t;
+void f(int a, int b) {
+    uint16_t total = 0;
+    total += a;
+    total += b;
+}
+---
+typedef unsigned short uint16_t;
+void f(int a, int b) {
+    uint16_t total = 0;
+    ckd_compound_narrow(total, ckd_add, a, uint16_t, 5);
+    ckd_compound_narrow(total, ckd_add, b, uint16_t, 5);
+}
+
+
+
+
+
+
+=== compound narrow suppress ===
+void f(int x) { char c = 0; c @+= x; }
+---
+void f(int x) { char c = 0; c += x; }
+
+
+
+
+
+
+=== compound narrow const rhs ===
+void f(void) { char c = 0; c += 1; }
+---
+void f(void) { char c = 0; ckd_compound_narrow(c, ckd_add, 1, char, 28); }
+
+
+
+
+
+
+=== short compound shift ===
+void f(int x) { short s = 1; s <<= x; }
+---
+void f(int x) { short s = 1; ckd_compound_narrow(s, ckd_shl, x, short, 30); }
+
+
+
+
+

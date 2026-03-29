@@ -1,0 +1,292 @@
+=== edid mode byte ===
+typedef unsigned char uint8_t;
+void f(uint8_t *mode, unsigned xres) {
+    mode[0] = xres / 8 - 31;
+}
+---
+typedef unsigned char uint8_t;
+void f(uint8_t *mode, unsigned xres) {
+    mode[0] = ckd_narrow(ckd_sub(ckd_div(xres, 8, 15), 31, 15), uint8_t, 15);
+}
+
+
+
+
+
+
+=== edid timing calc ===
+void f(unsigned xres, unsigned *xfront) {
+    *xfront = xres * 25 / 100;
+}
+---
+void f(unsigned xres, unsigned *xfront) {
+    *xfront = ckd_narrow(ckd_div(ckd_mul(xres, 25, 15), 100, 15), unsigned, 15);
+}
+
+
+
+
+
+
+=== ati dst calc ===
+void f(unsigned x, unsigned w) {
+    unsigned dst_x = x + 1 - w;
+}
+---
+void f(unsigned x, unsigned w) {
+    unsigned dst_x = ckd_narrow(ckd_sub(ckd_add(x, 1, 22), w, 22), unsigned, 22);
+}
+
+
+
+
+
+=== ati bpp div ===
+void f(int bpp) {
+    unsigned bypp = bpp / 8;
+}
+---
+void f(int bpp) {
+    unsigned bypp = ckd_narrow(ckd_div(bpp, 8, 21), unsigned, 21);
+}
+
+
+
+
+
+
+=== ati stride mul ===
+void f(unsigned *stride, int bpp) {
+    *stride *= bpp;
+}
+---
+void f(unsigned *stride, int bpp) {
+    ckd_compound_narrow(*stride, ckd_mul, bpp, unsigned, 5);
+}
+
+
+
+
+=== ati stride div ===
+void f(unsigned *stride, unsigned divisor) {
+    *stride /= divisor;
+}
+---
+void f(unsigned *stride, unsigned divisor) {
+    ckd_compound_narrow(*stride, ckd_div, divisor, unsigned, 5);
+}
+
+
+
+
+=== dta index store ===
+typedef unsigned char uint8_t;
+void f(uint8_t *dta, int nr) {
+    dta[dta[2]] = nr;
+}
+---
+typedef unsigned char uint8_t;
+void f(uint8_t *dta, int nr) {
+    dta[dta[2]] = ckd_narrow(nr, uint8_t, 19);
+}
+
+
+
+
+
+
+=== tpm data read ===
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+void f(uint8_t *data) {
+    uint16_t reg = data[0];
+}
+---
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+void f(uint8_t *data) {
+    uint16_t reg = ckd_narrow(data[0], uint16_t, 20);
+}
+
+
+
+
+
+
+=== limine overlap calc ===
+void f(unsigned long mb, unsigned long base, unsigned long mt, unsigned long top) {
+    unsigned long ob = mb > base ? mb : base;
+    unsigned long ot = mt < top ? mt : top;
+    unsigned long sz = ot - ob;
+}
+---
+void f(unsigned long mb, unsigned long base, unsigned long mt, unsigned long top) {
+    unsigned long ob = ckd_narrow(mb > base ? mb : base, unsigned long, 24);
+    unsigned long ot = ckd_narrow(mt < top ? mt : top, unsigned long, 24);
+    unsigned long sz = ckd_narrow(ckd_sub(ot, ob, 24), unsigned long, 24);
+}
+
+
+
+
+
+=== limine block read ===
+void f(unsigned long loc, unsigned long progress, unsigned long bs) {
+    unsigned long block = (loc + progress) / bs;
+    unsigned long offset = (loc + progress) % bs;
+}
+---
+void f(unsigned long loc, unsigned long progress, unsigned long bs) {
+    unsigned long block = ckd_narrow(ckd_div((ckd_add(loc, progress, 28)), bs, 27), unsigned long, 27);
+    unsigned long offset = ckd_narrow(ckd_mod((ckd_add(loc, progress, 29)), bs, 28), unsigned long, 28);
+}
+
+
+
+
+
+=== limine chunk clamp ===
+void f(unsigned long count, unsigned long progress, unsigned long bs, unsigned long offset) {
+    unsigned long chunk = count - progress;
+}
+---
+void f(unsigned long count, unsigned long progress, unsigned long bs, unsigned long offset) {
+    unsigned long chunk = ckd_narrow(ckd_sub(count, progress, 27), unsigned long, 27);
+}
+
+
+
+
+
+=== limine sector calc ===
+void f(unsigned long block, unsigned xfer, unsigned long *off) {
+    unsigned long block_off = block * xfer;
+}
+---
+void f(unsigned long block, unsigned xfer, unsigned long *off) {
+    unsigned long block_off = ckd_narrow(ckd_mul(block, xfer, 31), unsigned long, 31);
+}
+
+
+
+
+
+=== limine header check ===
+void f(unsigned long hdr_off, unsigned long kernel_sz, unsigned hdr_len) {
+    int ok = hdr_len > kernel_sz - hdr_off;
+}
+---
+void f(unsigned long hdr_off, unsigned long kernel_sz, unsigned hdr_len) {
+    int ok = ckd_narrow(hdr_len > ckd_sub(kernel_sz, hdr_off, 24), int, 14);
+}
+
+
+
+
+
+=== video mode bpp narrow ===
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+struct mode { uint16_t bpp; uint8_t model; };
+void f(struct mode *m, int b, int model) {
+    m->bpp = b;
+    m->model = model;
+}
+---
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+struct mode { uint16_t bpp; uint8_t model; };
+void f(struct mode *m, int b, int model) {
+    m->bpp = ckd_narrow(b, uint16_t, 14);
+    m->model = ckd_narrow(model, uint8_t, 16);
+}
+
+
+
+
+
+
+=== ptr diff header offset ===
+void f(char *header, char *kernel) {
+    long off = header - kernel;
+}
+---
+void f(char *header, char *kernel) {
+    long off = ckd_narrow(ckd_ptr_diff(header, kernel, 16), long, 16);
+}
+
+
+
+
+
+=== random fill bytes ===
+typedef unsigned char uint8_t;
+void f(uint8_t *ptr, unsigned random, int j) {
+    ptr[j] = random;
+    ptr[j + 1] = random >> 8;
+}
+---
+typedef unsigned char uint8_t;
+void f(uint8_t *ptr, unsigned random, int j) {
+    ptr[j] = ckd_narrow(random, uint8_t, 14);
+    ptr[ckd_add(j, 1, 9)] = ckd_narrow(ckd_shr(random, 8, 18), uint8_t, 18);
+}
+
+
+
+
+
+
+=== ati pixel offset ===
+void f(unsigned x, unsigned bypp, unsigned y, unsigned pitch) {
+    unsigned i = x * bypp;
+    unsigned j = y * pitch;
+}
+---
+void f(unsigned x, unsigned bypp, unsigned y, unsigned pitch) {
+    unsigned i = ckd_narrow(ckd_mul(x, bypp, 18), unsigned, 18);
+    unsigned j = ckd_narrow(ckd_mul(y, pitch, 18), unsigned, 18);
+}
+
+
+
+
+
+=== ati line offset ===
+void f(unsigned dst_y, unsigned y, unsigned pitch, unsigned *i) {
+    *i += (dst_y + y) * pitch;
+}
+---
+void f(unsigned dst_y, unsigned y, unsigned pitch, unsigned *i) {
+    ckd_compound_narrow(*i, ckd_add, ckd_mul((ckd_add(dst_y, y, 12)), pitch, 11), unsigned, 5);
+}
+
+
+
+
+=== limine memmap coalesce ===
+void f(unsigned long *base, unsigned long *len, unsigned long next_base) {
+    *len = next_base - *base;
+}
+---
+void f(unsigned long *base, unsigned long *len, unsigned long next_base) {
+    *len = ckd_narrow(ckd_sub(next_base, *base, 12), unsigned long, 12);
+}
+
+
+
+
+
+
+=== display clock calc ===
+void f(unsigned long refresh, unsigned xtotal, unsigned ytotal, unsigned long *clock) {
+    *clock = refresh * xtotal / 1000;
+}
+---
+void f(unsigned long refresh, unsigned xtotal, unsigned ytotal, unsigned long *clock) {
+    *clock = ckd_narrow(ckd_div(ckd_mul(refresh, xtotal, 14), 1000, 14), unsigned long, 14);
+}
+
+
+
+

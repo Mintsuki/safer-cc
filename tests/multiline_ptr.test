@@ -1,0 +1,108 @@
+=== alloc pattern ===
+void *alloc(unsigned long);
+void f(unsigned long count, unsigned long size) {
+    unsigned long total = count * size;
+    char *buf = (char *)alloc(total);
+    char *end = buf + total;
+}
+---
+void *alloc(unsigned long);
+void f(unsigned long count, unsigned long size) {
+    unsigned long total = ckd_narrow(ckd_mul(count, size, 27), unsigned long, 27);
+    char *buf = (char *)alloc(ckd_narrow(total, unsigned long, 31));
+    char *end = ckd_ptr_add(buf, total, 17);
+}
+
+
+
+
+
+=== memcpy pattern ===
+void f(char *dst, char *src, int n) {
+    for (int i = 0; i < n; i++) {
+        dst[i] = src[i];
+        dst++;
+        src++;
+    }
+}
+---
+void f(char *dst, char *src, int n) {
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        dst[i] = ckd_narrow(src[i], char, 18);
+        ckd_ptr_preinc(dst, 9);
+        ckd_ptr_preinc(src, 9);
+    }
+}
+
+
+
+
+
+
+=== struct array offset ===
+struct item { int val; };
+void f(struct item *base, int index) {
+    struct item *p = base + index;
+    p->val = p->val + 1;
+}
+---
+struct item { int val; };
+void f(struct item *base, int index) {
+    struct item *p = ckd_ptr_add(base, index, 22);
+    p->val = ckd_narrow(ckd_add(p->val, 1, 14), int, 14);
+}
+
+
+
+
+
+
+=== double ptr multiline ===
+void f(char **table, int row, int col) {
+    char *line = table[row];
+    char *cell = line + col;
+}
+---
+void f(char **table, int row, int col) {
+    char *line = table[row];
+    char *cell = ckd_ptr_add(line, col, 18);
+}
+
+
+
+
+
+
+=== canvas offset pattern ===
+void f(unsigned *canvas, unsigned width, unsigned x, unsigned y, unsigned color) {
+    unsigned off = y * width;
+    canvas[off + x] = color;
+}
+---
+void f(unsigned *canvas, unsigned width, unsigned x, unsigned y, unsigned color) {
+    unsigned off = ckd_narrow(ckd_mul(y, width, 20), unsigned, 20);
+    canvas[ckd_add(off, x, 12)] = ckd_narrow(color, unsigned, 23);
+}
+
+
+
+
+
+=== ring buffer advance ===
+void f(char *buf, int size) {
+    int head = 0;
+    int tail = 0;
+    head = (head + 1) % size;
+    tail = (tail + 1) % size;
+}
+---
+void f(char *buf, int size) {
+    int head = 0;
+    int tail = 0;
+    head = ckd_narrow(ckd_mod((ckd_add(head, 1, 13)), size, 12), int, 12);
+    tail = ckd_narrow(ckd_mod((ckd_add(tail, 1, 13)), size, 12), int, 12);
+}
+
+
+
+

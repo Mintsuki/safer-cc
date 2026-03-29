@@ -1,0 +1,267 @@
+=== bounds var index ===
+void f(int i) { int arr[10]; arr[i]; }
+---
+void f(int i) { int arr[10]; ckd_bounds(arr, i, 10, 30); }
+
+
+
+
+
+
+=== bounds add index ===
+void f(int i) { int arr[16]; arr[i + 1]; }
+---
+void f(int i) { int arr[16]; ckd_bounds(arr, ckd_add(i, 1, 34), 16, 30); }
+
+
+
+
+
+
+=== bounds sub index ===
+void f(int n) { int arr[8]; arr[n - 1]; }
+---
+void f(int n) { int arr[8]; ckd_bounds(arr, ckd_sub(n, 1, 33), 8, 29); }
+
+
+
+
+
+
+=== bounds mul index ===
+void f(int i) { int arr[64]; arr[i * 2]; }
+---
+void f(int i) { int arr[64]; ckd_bounds(arr, ckd_mul(i, 2, 34), 64, 30); }
+
+
+
+
+
+
+=== bounds 2d simple ===
+void f(int i, int j) { int m[4][4]; m[i][j]; }
+---
+void f(int i, int j) { int m[4][4]; ckd_bounds(ckd_bounds(m, i, 4, 37), j, 4, 37); }
+
+
+
+
+
+
+=== bounds 2d add ===
+void f(int i, int j) {
+    int m[3][3];
+    m[i + 1][j];
+}
+---
+void f(int i, int j) {
+    int m[3][3];
+    ckd_bounds(ckd_bounds(m, ckd_add(i, 1, 7), 3, 5), j, 3, 5);
+}
+
+
+
+
+
+
+=== bounds vla ===
+void f(int n, int i) { int arr[n]; arr[i]; }
+---
+void f(int n, int i) { int arr[n]; ckd_bounds(arr, i, n, 36); }
+
+
+
+
+
+
+=== bounds vla arith ===
+void f(int n, int i) { int arr[n]; arr[i + 1]; }
+---
+void f(int n, int i) { int arr[n]; ckd_bounds(arr, ckd_add(i, 1, 40), n, 36); }
+
+
+
+
+
+
+=== bounds assign narrow rhs ===
+void f(int i) {
+    char buf[32];
+    int x;
+    buf[i] = x;
+}
+---
+void f(int i) {
+    char buf[32];
+    int x;
+    ckd_bounds(buf, i, 32, 5) = ckd_narrow(x, char, 14);
+}
+
+
+
+
+
+
+=== bounds in for loop ===
+void f(int n) {
+    int arr[10];
+    for (int i = 0; i < n; ++i) {
+        arr[i];
+    }
+}
+---
+void f(int n) {
+    int arr[10];
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        ckd_bounds(arr, i, 10, 9);
+    }
+}
+
+
+
+
+
+
+=== bounds shift index ===
+void f(int i) { int arr[256]; arr[i >> 2]; }
+---
+void f(int i) { int arr[256]; ckd_bounds(arr, ckd_shr(i, 2, 35), 256, 31); }
+
+
+
+
+
+
+=== bounds compound assign ===
+void f(int i, int v) {
+    int arr[8];
+    arr[i] += v;
+}
+---
+void f(int i, int v) {
+    int arr[8];
+    ckd_compound_narrow(ckd_bounds(arr, i, 8, 5), ckd_add, v, int, 5);
+}
+
+
+
+
+=== bounds with narrow lhs ===
+void f(int i, int x) {
+    char buf[16];
+    buf[i] = x;
+}
+---
+void f(int i, int x) {
+    char buf[16];
+    ckd_bounds(buf, i, 16, 5) = ckd_narrow(x, char, 14);
+}
+
+
+
+
+
+
+=== bounds 3d ===
+void f(int i, int j, int k) {
+    int a[2][3][4];
+    a[i][j][k];
+}
+---
+void f(int i, int j, int k) {
+    int a[2][3][4];
+    ckd_bounds(ckd_bounds(ckd_bounds(a, i, 2, 5), j, 3, 5), k, 4, 5);
+}
+
+
+
+
+
+
+=== bounds const index ===
+void f(void) { int arr[10]; arr[0]; }
+---
+void f(void) { int arr[10]; ckd_bounds(arr, 0, 10, 29); }
+
+
+
+
+
+
+=== bounds field access ===
+void f(int i) {
+    struct { int x; } arr[4];
+    arr[i].x;
+}
+---
+void f(int i) {
+    struct { int x; } arr[4];
+    ckd_bounds(arr, i, 4, 5).x;
+}
+
+
+
+
+
+
+=== bounds post inc ===
+void f(int i) {
+    int arr[10];
+    arr[i++];
+}
+---
+void f(int i) {
+    int arr[10];
+    ckd_bounds(arr, ckd_postinc(i, 9), 10, 5);
+}
+
+
+
+
+
+
+=== bounds two arrays ===
+void f(int i, int j) {
+    int a[4];
+    int b[8];
+    a[i];
+    b[j];
+}
+---
+void f(int i, int j) {
+    int a[4];
+    int b[8];
+    ckd_bounds(a, i, 4, 5);
+    ckd_bounds(b, j, 8, 5);
+}
+
+
+
+
+
+
+=== bounds mod index ===
+void f(int i) { int arr[8]; arr[i % 8]; }
+---
+void f(int i) { int arr[8]; ckd_bounds(arr, ckd_mod(i, 8, 33), 8, 29); }
+
+
+
+
+
+
+=== bounds return from array ===
+char f(int i) {
+    char buf[64];
+    return buf[i];
+}
+---
+char f(int i) {
+    char buf[64];
+    return ckd_narrow(ckd_bounds(buf, i, 64, 12), char, 12);
+}
+
+
+
+
+

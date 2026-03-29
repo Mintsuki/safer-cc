@@ -1,0 +1,239 @@
+=== per struct narrow ===
+typedef unsigned char uint8_t;
+struct s { uint8_t val; };
+void f(struct s *s, int x) { s->val = x; }
+---
+typedef unsigned char uint8_t;
+struct s { uint8_t val; };
+void f(struct s *s, int x) { s->val = ckd_narrow(x, uint8_t, 39); }
+
+
+
+
+
+
+=== per struct no narrow int field ===
+struct s { int val; };
+void f(struct s *s, int x) { s->val = x; }
+---
+struct s { int val; };
+void f(struct s *s, int x) { s->val = ckd_narrow(x, int, 39); }
+
+
+
+
+
+
+=== per struct ptr field not narrow ===
+struct s { char *name; };
+void f(struct s *s, char *p) { s->name = p; }
+---
+struct s { char *name; };
+void f(struct s *s, char *p) { s->name = p; }
+
+
+
+
+
+
+=== same field name different structs ===
+struct a { char *data; };
+struct b { char data; };
+void f(struct a *a, struct b *b, char *p, int x) {
+    a->data = p;
+    b->data = x;
+}
+---
+struct a { char *data; };
+struct b { char data; };
+void f(struct a *a, struct b *b, char *p, int x) {
+    a->data = p;
+    b->data = ckd_narrow(x, char, 15);
+}
+
+
+
+
+
+
+=== collision ptr wins ===
+struct a { char *label; };
+struct b { char label[11]; };
+void f(struct a *a, char *p) { a->label = p; }
+---
+struct a { char *label; };
+struct b { char label[11]; };
+void f(struct a *a, char *p) { a->label = p; }
+
+
+
+
+
+
+=== two narrow structs ===
+struct pixel { unsigned char r; unsigned char g; unsigned char b; };
+struct header { unsigned char type; unsigned char len; };
+void f(struct pixel *p, struct header *h, int rv, int tv) {
+    p->r = rv;
+    h->type = tv;
+}
+---
+struct pixel { unsigned char r; unsigned char g; unsigned char b; };
+struct header { unsigned char type; unsigned char len; };
+void f(struct pixel *p, struct header *h, int rv, int tv) {
+    p->r = ckd_narrow(rv, unsigned char, 12);
+    h->type = ckd_narrow(tv, unsigned char, 15);
+}
+
+
+
+
+
+
+=== dot access narrow ===
+struct s { short val; };
+void f(struct s s, int x) { s.val = x; }
+---
+struct s { short val; };
+void f(struct s s, int x) { s.val = ckd_narrow(x, short, 37); }
+
+
+
+
+
+
+=== field from expr ===
+typedef unsigned char uint8_t;
+struct s { uint8_t val; };
+void f(struct s *s, int a, int b) { s->val = a + b; }
+---
+typedef unsigned char uint8_t;
+struct s { uint8_t val; };
+void f(struct s *s, int a, int b) { s->val = ckd_narrow(ckd_add(a, b, 46), uint8_t, 46); }
+
+
+
+
+
+
+=== field const skip ===
+struct s { char c; };
+void f(struct s *s) { s->c = 0; }
+---
+struct s { char c; };
+void f(struct s *s) { s->c = 0; }
+
+
+
+
+
+
+=== field suppress ===
+struct s { char c; };
+void f(struct s *s, int x) { s->c @= x; }
+---
+struct s { char c; };
+void f(struct s *s, int x) { s->c = x; }
+
+
+
+
+
+
+=== unknown struct no narrow ===
+void f(void *opaque, int x) {
+    struct unknown *s = opaque;
+    s->field = x;
+}
+---
+void f(void *opaque, int x) {
+    struct unknown *s = opaque;
+    s->field = x;
+}
+
+
+
+
+
+
+=== device header byte split ===
+typedef unsigned char uint8_t;
+struct hdr { uint8_t lo; uint8_t hi; };
+void f(struct hdr *h, unsigned val) {
+    h->lo = val;
+    h->hi = val >> 8;
+}
+---
+typedef unsigned char uint8_t;
+struct hdr { uint8_t lo; uint8_t hi; };
+void f(struct hdr *h, unsigned val) {
+    h->lo = ckd_narrow(val, uint8_t, 13);
+    h->hi = ckd_narrow(ckd_shr(val, 8, 13), uint8_t, 13);
+}
+
+
+
+
+
+
+=== pixel rgb set ===
+struct pixel { unsigned char r; unsigned char g; unsigned char b; };
+void f(struct pixel *p, int rv, int gv, int bv) {
+    p->r = rv;
+    p->g = gv;
+    p->b = bv;
+}
+---
+struct pixel { unsigned char r; unsigned char g; unsigned char b; };
+void f(struct pixel *p, int rv, int gv, int bv) {
+    p->r = ckd_narrow(rv, unsigned char, 12);
+    p->g = ckd_narrow(gv, unsigned char, 12);
+    p->b = ckd_narrow(bv, unsigned char, 12);
+}
+
+
+
+
+
+
+=== anonymous struct narrow ===
+struct { char c; } s;
+void f(int x) { s.c = x; }
+---
+struct { char c; } s;
+void f(int x) { s.c = ckd_narrow(x, char, 23); }
+
+
+
+
+
+
+=== anon struct via typedef narrow ===
+typedef unsigned char uint8_t;
+typedef struct { uint8_t val; } my_type;
+void f(my_type *s, int x) { s->val = x; }
+---
+typedef unsigned char uint8_t;
+typedef struct { uint8_t val; } my_type;
+void f(my_type *s, int x) { s->val = ckd_narrow(x, uint8_t, 38); }
+
+
+
+
+
+
+=== named struct via typedef narrow ===
+typedef unsigned char uint8_t;
+struct foo { uint8_t val; };
+typedef struct foo foo_t;
+void f(foo_t *s, int x) { s->val = x; }
+---
+typedef unsigned char uint8_t;
+struct foo { uint8_t val; };
+typedef struct foo foo_t;
+void f(foo_t *s, int x) { s->val = ckd_narrow(x, uint8_t, 36); }
+
+
+
+
+

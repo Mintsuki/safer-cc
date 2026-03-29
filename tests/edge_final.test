@@ -1,0 +1,189 @@
+=== empty func ===
+void f(void) {}
+---
+void f(void) {}
+
+
+
+
+
+
+=== only return ===
+int f(void) { return 0; }
+---
+int f(void) { return 0; }
+
+
+
+
+
+
+=== void return ===
+void f(int a) { if (a) return; }
+---
+void f(int a) { if (a) return; }
+
+
+
+
+
+
+=== string lit no neg ===
+void f(void) { const char *s = "hello"; }
+---
+void f(void) { const char *s = "hello"; }
+
+
+
+
+
+
+=== char lit in arith ===
+void f(int a) { int x = a + 'A'; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(a, 'A', 25), int, 25); }
+
+
+
+
+
+
+=== hex in arith ===
+void f(int a) { int x = a + 0xFF; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(a, 0xFF, 25), int, 25); }
+
+
+
+
+
+
+=== long long add ===
+void f(long long a, long long b) { long long x = a + b; }
+---
+void f(long long a, long long b) { long long x = ckd_narrow(ckd_add(a, b, 50), long long, 50); }
+
+
+
+
+
+=== unsigned long long mul ===
+void f(unsigned long long a, unsigned long long b) { unsigned long long x = a * b; }
+---
+void f(unsigned long long a, unsigned long long b) { unsigned long long x = ckd_narrow(ckd_mul(a, b, 77), unsigned long long, 77); }
+
+
+
+
+
+=== short div ===
+void f(short a, short b) { short x = a / b; }
+---
+void f(short a, short b) { short x = ckd_narrow(ckd_div(a, b, 38), short, 38); }
+
+
+
+
+
+
+=== signed char neg ===
+void f(signed char a) { signed char x = -a; }
+---
+void f(signed char a) { signed char x = ckd_narrow(ckd_neg(a, 41), signed char, 41); }
+
+
+
+
+
+
+=== zero arr size not checked ===
+void f(int arr[0], int i) { arr[i]; }
+---
+void f(int arr[0], int i) { ckd_bounds(arr, i, 0, 29); }
+
+
+
+
+
+
+=== sizeof in index ===
+void f(void) { int arr[10]; int x = arr[sizeof(int)]; }
+---
+void f(void) { int arr[10]; int x = ckd_narrow(ckd_bounds(arr, sizeof(int), 10, 37), int, 37); }
+
+
+
+
+
+
+=== neg neg ===
+void f(int a) { int x = -(-a); }
+---
+void f(int a) { int x = ckd_narrow(ckd_neg((ckd_neg(a, 27)), 25), int, 25); }
+
+
+
+
+
+
+=== neg of const ===
+void f(void) { int x = -(-1); }
+---
+void f(void) { int x = -(-1); }
+
+
+
+
+
+
+=== triple neg ===
+void f(int a) { int x = -(-(-a)); }
+---
+void f(int a) { int x = ckd_narrow(ckd_neg((ckd_neg((ckd_neg(a, 29)), 27)), 25), int, 25); }
+
+
+
+
+
+
+=== complement of add ===
+void f(int a, int b) { int x = ~(a + b); }
+---
+void f(int a, int b) { int x = ckd_narrow(~(ckd_add(a, b, 34)), int, 32); }
+
+
+
+
+
+=== logical not of mul ===
+void f(int a, int b) { int x = !(a * b); }
+---
+void f(int a, int b) { int x = ckd_narrow(!(ckd_mul(a, b, 34)), int, 32); }
+
+
+
+
+
+=== assign to deref ===
+void f(int *p, int val) { *p = val + 1; }
+---
+void f(int *p, int val) { *p = ckd_narrow(ckd_add(val, 1, 32), int, 32); }
+
+
+
+
+
+
+=== cast to unsigned add ===
+void f(int a) { unsigned x = (unsigned)a + 1; }
+---
+void f(int a) { unsigned x = ckd_narrow(ckd_add(ckd_narrow(a, unsigned, 30), 1, 30), unsigned, 30); }
+
+=== nested ternary arith ===
+void f(int a, int b, int c) { int x = a > 0 ? a + b : b > 0 ? b + c : c - a; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(a > 0 ? ckd_add(a, b, 47) : b > 0 ? ckd_add(b, c, 63) : ckd_sub(c, a, 71), int, 39); }
+
+
+
+

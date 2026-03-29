@@ -1,0 +1,95 @@
+=== segment ptr calc ===
+void f(unsigned short seg, unsigned short off) { char *p = (char *)(unsigned long)(((unsigned long)seg << 4) + (unsigned long)off); }
+---
+void f(unsigned short seg, unsigned short off) { char *p = (char *)ckd_narrow((ckd_add((ckd_shl(ckd_narrow(seg, unsigned long, 85), 4, 85)), ckd_narrow(off, unsigned long, 112), 84)), unsigned long, 68); }
+
+=== dmap offset ===
+void f(void *addr, unsigned long dmap_off) { unsigned long va = (unsigned long)addr + dmap_off; }
+---
+void f(void *addr, unsigned long dmap_off) { unsigned long va = ckd_narrow(ckd_add(ckd_narrow(addr, unsigned long, 65), dmap_off, 65), unsigned long, 65); }
+
+=== title skip ===
+void f(int i, int title_length) { i += (title_length + 2) - 1; }
+---
+void f(int i, int title_length) { ckd_compound_narrow(i, ckd_add, ckd_sub((ckd_add(title_length, 2, 41)), 1, 40), int, 35); }
+
+
+
+
+=== madt walk ===
+void f(unsigned char *ptr) { ptr += *(ptr + 1); }
+---
+void f(unsigned char *ptr) { ckd_compound(ptr, ckd_ptr_add, *(ckd_ptr_add(ptr, 1, 39)), 30); }
+
+
+
+
+
+
+=== clean dcache ===
+void f(char *base, unsigned long size) { char *start = base; char *end = base + size; }
+---
+void f(char *base, unsigned long size) { char *start = base; char *end = ckd_ptr_add(base, size, 74); }
+
+
+
+
+
+
+=== header offset ===
+void f(char *header, char *kernel) { unsigned long off = (unsigned long)header - (unsigned long)kernel; }
+---
+void f(char *header, char *kernel) { unsigned long off = ckd_narrow(ckd_sub(ckd_narrow(header, unsigned long, 58), ckd_narrow(kernel, unsigned long, 82), 58), unsigned long, 58); }
+
+=== multiboot tag align ===
+void f(unsigned long *sz, int cmdlen, unsigned align) { *sz += (sizeof(int) + cmdlen + 1 + align - 1) & ~(align - 1); }
+---
+void f(unsigned long *sz, int cmdlen, unsigned align) { ckd_compound_narrow(*sz, ckd_add, (ckd_sub(ckd_add(ckd_add(ckd_add(sizeof(int), cmdlen, 65), 1, 65), align, 65), 1, 65)) & ~(ckd_sub(align, 1, 107)), unsigned long, 57); }
+
+
+
+
+=== pixel count ===
+void f(int x, int y) { unsigned long n = (unsigned long)x * (unsigned long)y; }
+---
+void f(int x, int y) { unsigned long n = ckd_narrow(ckd_mul(ckd_narrow(x, unsigned long, 42), ckd_narrow(y, unsigned long, 61), 42), unsigned long, 42); }
+
+=== fat cluster offset ===
+void f(unsigned cluster) { unsigned long long off = (unsigned long long)cluster * sizeof(unsigned); }
+---
+void f(unsigned cluster) { unsigned long long off = ckd_narrow(ckd_mul(ckd_narrow(cluster, unsigned long long, 53), sizeof(unsigned), 53), unsigned long long, 53); }
+
+=== iso lba to byte ===
+void f(unsigned lba) { unsigned long long off = (unsigned long long)lba * 2048; }
+---
+void f(unsigned lba) { unsigned long long off = ckd_narrow(ckd_mul(ckd_narrow(lba, unsigned long long, 49), 2048, 49), unsigned long long, 49); }
+
+=== efi mmap walk ===
+void f(char *mmap, int i, unsigned long desc_size) { char *entry = mmap + i * desc_size; }
+---
+void f(char *mmap, int i, unsigned long desc_size) { char *entry = ckd_ptr_add(mmap, ckd_mul(i, desc_size, 75), 68); }
+
+
+
+
+
+
+=== size check ===
+void f(char *fd, unsigned long size, unsigned long loc, unsigned long count) { if (loc >= size || count > size - loc) { return; } char *p = fd + loc; }
+---
+void f(char *fd, unsigned long size, unsigned long loc, unsigned long count) { if (loc >= size || count > ckd_sub(size, loc, 107)) { return; } char *p = ckd_ptr_add(fd, loc, 141); }
+
+
+
+
+
+
+=== memcpy progress ===
+void f(char *dest, unsigned long progress, char *buf, unsigned long bsize) { char *dst = dest + progress; }
+---
+void f(char *dest, unsigned long progress, char *buf, unsigned long bsize) { char *dst = ckd_ptr_add(dest, progress, 90); }
+
+
+
+
+

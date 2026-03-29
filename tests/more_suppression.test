@@ -1,0 +1,88 @@
+=== sub assign ===
+void f(int x) { x @-= 3; }
+---
+void f(int x) { x -= 3; }
+
+
+
+
+
+
+=== mul assign ===
+void f(int x) { x @*= 3; }
+---
+void f(int x) { x *= 3; }
+
+
+
+
+
+
+=== ptr add assign ===
+void f(char *p) { p @+= 1; }
+---
+void f(char *p) { p += 1; }
+
+
+
+
+
+
+=== ptr sub assign ===
+void f(char *p) { p @-= 1; }
+---
+void f(char *p) { p -= 1; }
+
+
+
+
+
+
+=== ptr postdec ===
+void f(char *p) { p@--; }
+---
+void f(char *p) { p--; }
+
+
+
+
+
+
+=== ptr preinc ===
+void f(char *p) { @++p; }
+---
+void f(char *p) { ++p; }
+
+
+
+
+
+
+=== ptr predec ===
+void f(char *p) { @--p; }
+---
+void f(char *p) { --p; }
+
+
+
+
+
+
+=== neighbor ===
+void f(int a, int b) { int x = a @+ b; int y = a + b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a + b, int, 32); int y = ckd_narrow(ckd_add(a, b, 48), int, 48); }
+
+
+
+
+
+=== space before op ===
+void f(int x) { x @ += 5; }
+---
+void f(int x) { x  += 5; }
+
+
+
+
+

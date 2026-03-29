@@ -1,0 +1,105 @@
+=== basic ptr diff ===
+void f(char *a, char *b) { long d = a - b; }
+---
+void f(char *a, char *b) { long d = ckd_narrow(ckd_ptr_diff(a, b, 37), long, 37); }
+
+
+
+
+
+=== int ptr diff ===
+void f(int *a, int *b) { long d = a - b; }
+---
+void f(int *a, int *b) { long d = ckd_narrow(ckd_ptr_diff(a, b, 35), long, 35); }
+
+
+
+
+
+=== void ptr diff ===
+void f(void *a, void *b) { long d = a - b; }
+---
+void f(void *a, void *b) { long d = ckd_narrow(ckd_ptr_diff(a, b, 37), long, 37); }
+
+
+
+
+
+=== ptr diff in return ===
+long f(char *a, char *b) { return a - b; }
+---
+long f(char *a, char *b) { return ckd_narrow(ckd_ptr_diff(a, b, 35), long, 35); }
+
+
+
+
+
+=== ptr diff in call ===
+void g(long); void f(char *a, char *b) { g(a - b); }
+---
+void g(long); void f(char *a, char *b) { g(ckd_narrow(ckd_ptr_diff(a, b, 44), long, 44)); }
+
+
+
+
+
+=== ptr diff in arith ===
+void f(char *a, char *b) { long d = (a - b) + 1; }
+---
+void f(char *a, char *b) { long d = ckd_narrow(ckd_ptr_add((ckd_ptr_diff(a, b, 38)), 1, 37), long, 37); }
+
+
+
+
+
+=== ptr minus int not diff ===
+void f(char *p, int n) { char *q = p - n; }
+---
+void f(char *p, int n) { char *q = ckd_ptr_sub(p, n, 36); }
+
+
+
+
+
+
+=== strlen pattern ===
+long f(const char *s) {
+    const char *p = s;
+    while (*p) p++;
+    return p - s;
+}
+---
+long f(const char *s) {
+    const char *p = s;
+    while (*p) ckd_ptr_preinc(p, 16);
+    return ckd_narrow(ckd_ptr_diff(p, s, 12), long, 12);
+}
+
+
+
+
+
+=== ptr diff suppress ===
+void f(char *a, char *b) { long d = a @- b; }
+---
+void f(char *a, char *b) { long d = ckd_narrow(a - b, long, 37); }
+
+
+
+
+
+
+=== ptr diff multiline ===
+void f(char *start, char *end) {
+    long len = end - start;
+    char *mid = start + len / 2;
+}
+---
+void f(char *start, char *end) {
+    long len = ckd_narrow(ckd_ptr_diff(end, start, 16), long, 16);
+    char *mid = ckd_ptr_add(start, ckd_div(len, 2, 25), 17);
+}
+
+
+
+

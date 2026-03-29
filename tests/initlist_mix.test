@@ -1,0 +1,207 @@
+=== initlist char vars ===
+void f(int a, int b, int c) { char buf[3] = {a, b, c}; }
+---
+void f(int a, int b, int c) { char buf[3] = {ckd_narrow(a, char, 46), ckd_narrow(b, char, 49), ckd_narrow(c, char, 52)}; }
+
+
+
+
+
+
+=== initlist mixed const ===
+void f(int x) { char arr[3] = {0, x, 1}; }
+---
+void f(int x) { char arr[3] = {0, ckd_narrow(x, char, 35), 1}; }
+
+
+
+
+
+
+=== initlist all const ===
+void f(void) { char arr[3] = {1, 2, 3}; }
+---
+void f(void) { char arr[3] = {1, 2, 3}; }
+
+
+
+
+
+
+=== initlist add expr ===
+void f(int a, int b) { char arr[1] = {a + b}; }
+---
+void f(int a, int b) { char arr[1] = {ckd_narrow(ckd_add(a, b, 39), char, 39)}; }
+
+
+
+
+
+
+=== initlist sub expr ===
+void f(int a, int b) { char arr[1] = {a - b}; }
+---
+void f(int a, int b) { char arr[1] = {ckd_narrow(ckd_sub(a, b, 39), char, 39)}; }
+
+
+
+
+
+
+=== initlist shift expr ===
+void f(unsigned v) { unsigned char arr[2] = {v, v >> 8}; }
+---
+void f(unsigned v) { unsigned char arr[2] = {ckd_narrow(v, unsigned char, 46), ckd_narrow(ckd_shr(v, 8, 49), unsigned char, 49)}; }
+
+
+
+
+
+
+=== initlist uint8_t typedef ===
+typedef unsigned char uint8_t;
+void f(int a, int b) { uint8_t buf[2] = {a, b}; }
+---
+typedef unsigned char uint8_t;
+void f(int a, int b) { uint8_t buf[2] = {ckd_narrow(a, uint8_t, 42), ckd_narrow(b, uint8_t, 45)}; }
+
+
+
+
+
+
+=== initlist short ===
+void f(int a, int b) { short arr[2] = {a, b}; }
+---
+void f(int a, int b) { short arr[2] = {ckd_narrow(a, short, 40), ckd_narrow(b, short, 43)}; }
+
+
+
+
+
+
+=== initlist int no narrow ===
+void f(int a, int b) { int arr[2] = {a, b}; }
+---
+void f(int a, int b) { int arr[2] = {ckd_narrow(a, int, 38), ckd_narrow(b, int, 41)}; }
+
+
+
+
+
+
+=== initlist string skip ===
+void f(void) { char s[] = "hello"; }
+---
+void f(void) { char s[] = "hello"; }
+
+
+
+
+
+
+=== initlist single ===
+void f(int x) { char c[1] = {x}; }
+---
+void f(int x) { char c[1] = {ckd_narrow(x, char, 30)}; }
+
+
+
+
+
+
+=== initlist four mixed ===
+void f(int a, int b) { char arr[4] = {a, 0, b, 1}; }
+---
+void f(int a, int b) { char arr[4] = {ckd_narrow(a, char, 39), 0, ckd_narrow(b, char, 45), 1}; }
+
+
+
+
+
+
+=== initlist neg ===
+void f(int x) { char arr[1] = {-x}; }
+---
+void f(int x) { char arr[1] = {ckd_narrow(ckd_neg(x, 32), char, 32)}; }
+
+
+
+
+
+
+=== initlist div ===
+void f(int a, int b) { char arr[1] = {a / b}; }
+---
+void f(int a, int b) { char arr[1] = {ckd_narrow(ckd_div(a, b, 39), char, 39)}; }
+
+
+
+
+
+
+=== initlist uint16_t ===
+typedef unsigned short uint16_t;
+void f(int a, int b) { uint16_t arr[2] = {a, b}; }
+---
+typedef unsigned short uint16_t;
+void f(int a, int b) { uint16_t arr[2] = {ckd_narrow(a, uint16_t, 43), ckd_narrow(b, uint16_t, 46)}; }
+
+
+
+
+
+
+=== initlist mul expr ===
+void f(int a, int b) { char arr[1] = {a * b}; }
+---
+void f(int a, int b) { char arr[1] = {ckd_narrow(ckd_mul(a, b, 39), char, 39)}; }
+
+
+
+
+
+
+=== initlist nested arith ===
+void f(int a, int b, int c) {
+    char arr[2] = {a + b, a - c};
+}
+---
+void f(int a, int b, int c) {
+    char arr[2] = {ckd_narrow(ckd_add(a, b, 20), char, 20), ckd_narrow(ckd_sub(a, c, 27), char, 27)};
+}
+
+
+
+
+
+
+=== initlist signed char ===
+void f(int a) { signed char arr[1] = {a}; }
+---
+void f(int a) { signed char arr[1] = {ckd_narrow(a, signed char, 39)}; }
+
+
+
+
+
+
+=== initlist zero skip ===
+void f(void) { char arr[10] = {0}; }
+---
+void f(void) { char arr[10] = {0}; }
+
+
+
+
+
+
+=== initlist from long ===
+void f(long a, long b) { short arr[2] = {a, b}; }
+---
+void f(long a, long b) { short arr[2] = {ckd_narrow(a, short, 42), ckd_narrow(b, short, 45)}; }
+
+
+
+
+

@@ -1,0 +1,205 @@
+=== compound add int ===
+void f(int a, int b) { a += b; }
+---
+void f(int a, int b) { ckd_compound_narrow(a, ckd_add, b, int, 24); }
+
+
+
+
+=== compound sub int ===
+void f(int a, int b) { a -= b; }
+---
+void f(int a, int b) { ckd_compound_narrow(a, ckd_sub, b, int, 24); }
+
+
+
+
+=== compound mul int ===
+void f(int a, int b) { a *= b; }
+---
+void f(int a, int b) { ckd_compound_narrow(a, ckd_mul, b, int, 24); }
+
+
+
+
+=== compound div int ===
+void f(int a, int b) { a /= b; }
+---
+void f(int a, int b) { ckd_compound_narrow(a, ckd_div, b, int, 24); }
+
+
+
+
+=== compound mod int ===
+void f(int a, int b) { a %= b; }
+---
+void f(int a, int b) { ckd_compound_narrow(a, ckd_mod, b, int, 24); }
+
+
+
+
+=== compound shl ===
+void f(int a, int b) { a <<= b; }
+---
+void f(int a, int b) { ckd_compound_narrow(a, ckd_shl, b, int, 24); }
+
+
+
+
+=== compound shr ===
+void f(int a, int b) { a >>= b; }
+---
+void f(int a, int b) { ckd_compound_narrow(a, ckd_shr, b, int, 24); }
+
+
+
+
+=== compound add ptr ===
+void f(int *p, int n) { p += n; }
+---
+void f(int *p, int n) { ckd_compound(p, ckd_ptr_add, n, 25); }
+
+
+
+
+
+
+=== compound sub ptr ===
+void f(int *p, int n) { p -= n; }
+---
+void f(int *p, int n) { ckd_compound(p, ckd_ptr_sub, n, 25); }
+
+
+
+
+
+
+=== pre inc int ===
+void f(int i) { ++i; }
+---
+void f(int i) { ckd_preinc(i, 17); }
+
+
+
+
+
+
+=== post inc int ===
+void f(int i) { i++; }
+---
+void f(int i) { ckd_preinc(i, 17); }
+
+
+
+
+
+
+=== pre dec int ===
+void f(int i) { --i; }
+---
+void f(int i) { ckd_predec(i, 17); }
+
+
+
+
+
+
+=== post dec int ===
+void f(int i) { i--; }
+---
+void f(int i) { ckd_predec(i, 17); }
+
+
+
+
+
+
+=== pre inc ptr ===
+void f(int *p) { ++p; }
+---
+void f(int *p) { ckd_ptr_preinc(p, 18); }
+
+
+
+
+
+
+=== post inc ptr ===
+void f(int *p) { p++; }
+---
+void f(int *p) { ckd_ptr_preinc(p, 18); }
+
+
+
+
+
+
+=== compound in loop ===
+void f(int n) {
+    int sum = 0;
+    for (int i = 0; i < n; ++i) {
+        sum += i;
+    }
+}
+---
+void f(int n) {
+    int sum = 0;
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        ckd_compound_narrow(sum, ckd_add, i, int, 9);
+    }
+}
+
+
+
+
+=== compound suppress ===
+void f(int a, int b) { a @+= b; }
+---
+void f(int a, int b) { a += b; }
+
+
+
+
+
+
+=== compound array elem ===
+void f(int i, int v) {
+    int arr[8];
+    arr[i] += v;
+}
+---
+void f(int i, int v) {
+    int arr[8];
+    ckd_compound_narrow(ckd_bounds(arr, i, 8, 5), ckd_add, v, int, 5);
+}
+
+
+
+
+=== compound two ops ===
+void f(int a, int b, int c) {
+    a += b;
+    a *= c;
+}
+---
+void f(int a, int b, int c) {
+    ckd_compound_narrow(a, ckd_add, b, int, 5);
+    ckd_compound_narrow(a, ckd_mul, c, int, 5);
+}
+
+
+
+
+=== pre inc in for ===
+void f(int n) {
+    for (int i = 0; i < n; ++i) {}
+}
+---
+void f(int n) {
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {}
+}
+
+
+
+
+

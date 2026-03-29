@@ -1,0 +1,97 @@
+=== row col index ===
+void f(int *buf, int row, int cols, int col) { int v = buf[row * cols + col]; }
+---
+void f(int *buf, int row, int cols, int col) { int v = ckd_narrow(buf[ckd_add(ckd_mul(row, cols, 60), col, 60)], int, 56); }
+
+
+
+
+
+=== vga textmode ===
+void f(char *bb, int y, int x) { char c = bb[y * 80 + x * 2]; }
+---
+void f(char *bb, int y, int x) { char c = ckd_narrow(bb[ckd_add(ckd_mul(y, 80, 46), ckd_mul(x, 2, 55), 46)], char, 43); }
+
+
+
+
+
+
+=== vga textmode plus1 ===
+void f(char *bb, int y, int x) { char c = bb[y * 80 + x * 2 + 1]; }
+---
+void f(char *bb, int y, int x) { char c = ckd_narrow(bb[ckd_add(ckd_add(ckd_mul(y, 80, 46), ckd_mul(x, 2, 55), 46), 1, 46)], char, 43); }
+
+
+
+
+
+
+=== stride with sizeof ===
+void f(char *base, int i, int entry_size) { char *entry = base + i * entry_size; }
+---
+void f(char *base, int i, int entry_size) { char *entry = ckd_ptr_add(base, ckd_mul(i, entry_size, 66), 59); }
+
+
+
+
+
+
+=== hex nibble ===
+void f(char *s, unsigned char *mac, int i) { mac[i] = (s[i * 3] << 4) | s[i * 3 + 1]; }
+---
+void f(char *s, unsigned char *mac, int i) { mac[i] = ckd_narrow((ckd_shl(s[ckd_mul(i, 3, 58)], 4, 56)) | s[ckd_add(ckd_mul(i, 3, 75), 1, 75)], unsigned char, 55); }
+
+
+
+
+
+
+=== nlongs offset ===
+void f(unsigned long *exp, int nlongs) { unsigned long *a = exp + 0 * nlongs; unsigned long *b = exp + 1 * nlongs; }
+---
+void f(unsigned long *exp, int nlongs) { unsigned long *a = ckd_ptr_add(exp, ckd_mul(0, nlongs, 67), 61); unsigned long *b = ckd_ptr_add(exp, ckd_mul(1, nlongs, 104), 98); }
+
+
+
+
+
+
+=== memcpy slot offset ===
+void f(void **dst, void **src, int dstart, int sstart, int n) { int i = 0; while (i < n) { dst[dstart + i] = src[sstart + i]; i++; } }
+---
+void f(void **dst, void **src, int dstart, int sstart, int n) { int i = 0; while (i < n) { dst[ckd_add(dstart, i, 96)] = src[ckd_add(sstart, i, 114)]; ckd_preinc(i, 127); } }
+
+
+
+
+
+
+=== bitmap word bit ===
+void f(unsigned long *bm, unsigned long nr) { unsigned long word = nr / 64; unsigned long bit = nr % 64; bm[word] = bm[word] | (1UL << bit); }
+---
+void f(unsigned long *bm, unsigned long nr) { unsigned long word = ckd_narrow(ckd_div(nr, 64, 68), unsigned long, 68); unsigned long bit = ckd_narrow(ckd_mod(nr, 64, 97), unsigned long, 97); bm[word] = ckd_narrow(bm[word] | (ckd_shl(1UL, bit, 129)), unsigned long, 117); }
+
+
+
+
+
+=== font glyph offset ===
+void f(int *font, int c, int h, int w) { int *glyph = font + c * h * w; }
+---
+void f(int *font, int c, int h, int w) { int *glyph = ckd_ptr_add(font, ckd_mul(ckd_mul(c, h, 62), w, 62), 55); }
+
+
+
+
+
+
+=== pitch offset ===
+void f(unsigned *fb, unsigned pitch, unsigned x, unsigned y) { fb[y * (pitch / 4) + x] = 0xFF; }
+---
+void f(unsigned *fb, unsigned pitch, unsigned x, unsigned y) { fb[ckd_add(ckd_mul(y, (ckd_div(pitch, 4, 72)), 67), x, 67)] = 0xFF; }
+
+
+
+
+

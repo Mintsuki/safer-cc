@@ -1,0 +1,106 @@
+=== funcptr no leak to sibling func ===
+struct ops { void (*read)(char *buf, int *len); };
+void f(int buf, int len) {
+    int x = buf + len;
+}
+---
+struct ops { void (*read)(char *buf, int *len); };
+void f(int buf, int len) {
+    int x = ckd_narrow(ckd_add(buf, len, 13), int, 13);
+}
+
+
+
+
+
+=== proto no leak to def ===
+void sort(int *arr, int n);
+void f(int arr, int n) {
+    int x = arr + n;
+}
+---
+void sort(int *arr, int n);
+void f(int arr, int n) {
+    int x = ckd_narrow(ckd_add(arr, n, 13), int, 13);
+}
+
+
+
+
+
+=== two funcs different types ===
+void a(char *data) {
+    char *p = data + 1;
+}
+void b(int data) {
+    int x = data + 1;
+}
+---
+void a(char *data) {
+    char *p = ckd_ptr_add(data, 1, 15);
+}
+void b(int data) {
+    int x = ckd_narrow(ckd_add(data, 1, 13), int, 13);
+}
+
+
+
+
+
+
+=== same name param and local ===
+void f(int x) {
+    int y = x + 1;
+    {
+        char *x = (char *)0;
+        char *z = x + 1;
+    }
+}
+---
+void f(int x) {
+    int y = ckd_narrow(ckd_add(x, 1, 13), int, 13);
+    {
+        char *x = (char *)0;
+        char *z = ckd_ptr_add(x, 1, 19);
+    }
+}
+
+
+
+
+
+
+=== ptr return func param scope ===
+char *advance(char *p, int n) {
+    return p + n;
+}
+int sum(int p, int n) {
+    return p + n;
+}
+---
+char *advance(char *p, int n) {
+    return ckd_ptr_add(p, n, 12);
+}
+int sum(int p, int n) {
+    return ckd_narrow(ckd_add(p, n, 12), int, 12);
+}
+
+
+
+
+
+=== typedef ptr in func ===
+typedef char *str_t;
+void f(str_t s) {
+    str_t t = s + 1;
+}
+---
+typedef char *str_t;
+void f(str_t s) {
+    str_t t = ckd_ptr_add(s, 1, 15);
+}
+
+
+
+
+

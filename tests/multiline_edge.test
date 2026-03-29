@@ -1,0 +1,233 @@
+=== tab vs space indent ===
+void f(int a) {
+	int x = a + 1;
+    int y = a + 2;
+}
+---
+void f(int a) {
+	int x = ckd_narrow(ckd_add(a, 1, 10), int, 10);
+    int y = ckd_narrow(ckd_add(a, 2, 13), int, 13);
+}
+
+
+
+
+
+
+=== deeply indented ===
+void f(int a) {
+    if (a) {
+        if (a) {
+            if (a) {
+                int x = a + 1;
+            }
+        }
+    }
+}
+---
+void f(int a) {
+    if (a) {
+        if (a) {
+            if (a) {
+                int x = ckd_narrow(ckd_add(a, 1, 25), int, 25);
+            }
+        }
+    }
+}
+
+
+
+
+
+
+=== mixed arith across lines ===
+int f(int a, int b, int c, int d) {
+    int x = a + b;
+    int y = c - d;
+    int z = x * y;
+    return z + 1;
+}
+---
+int f(int a, int b, int c, int d) {
+    int x = ckd_narrow(ckd_add(a, b, 13), int, 13);
+    int y = ckd_narrow(ckd_sub(c, d, 13), int, 13);
+    int z = ckd_narrow(ckd_mul(x, y, 13), int, 13);
+    return ckd_narrow(ckd_add(z, 1, 12), int, 12);
+}
+
+
+
+
+
+=== funcdef with ptr param ===
+char *advance(char *p, int n) {
+    return p + n;
+}
+---
+char *advance(char *p, int n) {
+    return ckd_ptr_add(p, n, 12);
+}
+
+
+
+
+
+
+=== multiple returns ===
+int abs_diff(int a, int b) {
+    if (a > b) {
+        return a - b;
+    }
+    return b - a;
+}
+---
+int abs_diff(int a, int b) {
+    if (a > b) {
+        return ckd_narrow(ckd_sub(a, b, 16), int, 16);
+    }
+    return ckd_narrow(ckd_sub(b, a, 12), int, 12);
+}
+
+
+
+
+
+=== assign in if condition ===
+void f(int *arr, int n) {
+    int sum = 0;
+    for (int i = 0; i < n; i++) {
+        sum += arr[i];
+    }
+    if (sum + 1 > 1000) {
+        sum = 0;
+    }
+}
+---
+void f(int *arr, int n) {
+    int sum = 0;
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        ckd_compound_narrow(sum, ckd_add, arr[i], int, 9);
+    }
+    if (ckd_add(sum, 1, 9) > 1000) {
+        sum = 0;
+    }
+}
+
+
+
+
+=== do while with compound ===
+void f(int *buf, int n) {
+    int i = 0;
+    do {
+        buf[i] = buf[i] + 1;
+        i++;
+    } while (i < n);
+}
+---
+void f(int *buf, int n) {
+    int i = 0;
+    do {
+        buf[i] = ckd_narrow(ckd_add(buf[i], 1, 18), int, 18);
+        ckd_preinc(i, 9);
+    } while (i < n);
+}
+
+
+
+
+
+
+=== break and continue ===
+void f(int n) {
+    for (int i = 0; i < n; i++) {
+        if (i + 5 > n) break;
+        if (i * 2 > n) continue;
+        int x = i + 1;
+    }
+}
+---
+void f(int n) {
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        if (ckd_add(i, 5, 13) > n) break;
+        if (ckd_mul(i, 2, 13) > n) continue;
+        int x = ckd_narrow(ckd_add(i, 1, 17), int, 17);
+    }
+}
+
+
+
+
+
+
+=== two functions same file ===
+int add(int a, int b) {
+    return a + b;
+}
+int mul(int a, int b) {
+    return a * b;
+}
+---
+int add(int a, int b) {
+    return ckd_narrow(ckd_add(a, b, 12), int, 12);
+}
+int mul(int a, int b) {
+    return ckd_narrow(ckd_mul(a, b, 12), int, 12);
+}
+
+
+
+
+
+=== global with func ===
+int counter = 0;
+void inc(void) {
+    counter++;
+}
+void add(int n) {
+    counter += n;
+}
+---
+int counter = 0;
+void inc(void) {
+    ckd_preinc(counter, 5);
+}
+void add(int n) {
+    ckd_compound_narrow(counter, ckd_add, n, int, 5);
+}
+
+
+
+
+=== ptr arithmetic multiline ===
+void f(char *base, int off1, int off2) {
+    char *p = base + off1;
+    char *q = p + off2;
+    char *r = q - off1;
+}
+---
+void f(char *base, int off1, int off2) {
+    char *p = ckd_ptr_add(base, off1, 15);
+    char *q = ckd_ptr_add(p, off2, 15);
+    char *r = ckd_ptr_sub(q, off1, 15);
+}
+
+
+
+
+
+
+=== suppress across lines ===
+void f(unsigned a, unsigned b) {
+    unsigned x = a @+ b;
+    unsigned y = a + b;
+}
+---
+void f(unsigned a, unsigned b) {
+    unsigned x = ckd_narrow(a + b, unsigned, 18);
+    unsigned y = ckd_narrow(ckd_add(a, b, 18), unsigned, 18);
+}
+
+
+
+

@@ -1,0 +1,89 @@
+=== global array ===
+int garr[100];
+void f(int i) { garr[i] = 0; }
+---
+int garr[100];
+void f(int i) { ckd_bounds(garr, i, 100, 17) = 0; }
+
+
+
+
+
+
+=== static array ===
+void f(int i) { static int arr[50]; arr[i] = 0; }
+---
+void f(int i) { static int arr[50]; ckd_bounds(arr, i, 50, 37) = 0; }
+
+
+
+
+
+
+=== array in if ===
+void f(int i, int cond) { int arr[10]; if (cond) { arr[i] = 1; } }
+---
+void f(int i, int cond) { int arr[10]; if (cond) { ckd_bounds(arr, i, 10, 52) = 1; } }
+
+
+
+
+
+
+=== array addr ===
+void f(int i) { int arr[10]; int *p = &arr[i]; }
+---
+void f(int i) { int arr[10]; int *p = &ckd_bounds(arr, i, 10, 40); }
+
+
+
+
+
+
+=== array as arg ===
+void g(int); void f(int i) { int arr[10]; g(arr[i]); }
+---
+void g(int); void f(int i) { int arr[10]; g(ckd_narrow(ckd_bounds(arr, i, 10, 45), int, 45)); }
+
+
+
+
+
+
+=== array inc element ===
+void f(int i) { int arr[10]; arr[i]++; }
+---
+void f(int i) { int arr[10]; ckd_preinc(ckd_bounds(arr, i, 10, 30), 30); }
+
+
+
+
+
+
+=== array compound assign ===
+void f(int i) { int arr[10]; arr[i] += 5; }
+---
+void f(int i) { int arr[10]; ckd_compound_narrow(ckd_bounds(arr, i, 10, 30), ckd_add, 5, int, 30); }
+
+
+
+
+=== nested array subscript arith ===
+void f(int i) { int arr[10]; int x = arr[i * 2 + 1]; }
+---
+void f(int i) { int arr[10]; int x = ckd_narrow(ckd_bounds(arr, ckd_add(ckd_mul(i, 2, 42), 1, 42), 10, 38), int, 38); }
+
+
+
+
+
+
+=== unsized array not checked ===
+void f(int arr[], int i) { int x = arr[i]; }
+---
+void f(int arr[], int i) { int x = ckd_narrow(arr[i], int, 36); }
+
+
+
+
+

@@ -1,0 +1,98 @@
+=== for postinc update ===
+void f(int n) { for (int i = 0; i < n; i++) {} }
+---
+void f(int n) { for (int i = 0; i < n; ckd_preinc(i, 40)) {} }
+
+
+
+
+
+
+=== for predec update ===
+void f(int n) { for (int i = n; i > 0; i--) {} }
+---
+void f(int n) { for (int i = ckd_narrow(n, int, 30); i > 0; ckd_predec(i, 40)) {} }
+
+
+
+
+
+
+=== for preinc update ===
+void f(int n) { for (int i = 0; i < n; ++i) {} }
+---
+void f(int n) { for (int i = 0; i < n; ckd_preinc(i, 40)) {} }
+
+
+
+
+
+
+=== while postinc ===
+void f(int n) { int i = 0; while (i < n) { i++; } }
+---
+void f(int n) { int i = 0; while (i < n) { ckd_preinc(i, 44); } }
+
+
+
+
+
+
+=== do while postdec ===
+void f(int n) { int i = n; do { i--; } while (i > 0); }
+---
+void f(int n) { int i = ckd_narrow(n, int, 25); do { ckd_predec(i, 33); } while (i > 0); }
+
+
+
+
+
+
+=== if condition add ===
+void f(int a, int b) { if (a + b) {} }
+---
+void f(int a, int b) { if (ckd_add(a, b, 28)) {} }
+
+
+
+
+
+
+=== while condition add ===
+void f(int a, int b) { while (a + b) {} }
+---
+void f(int a, int b) { while (ckd_add(a, b, 31)) {} }
+
+
+
+
+
+
+=== return mul ===
+int f(int a, int b) { return a * b; }
+---
+int f(int a, int b) { return ckd_narrow(ckd_mul(a, b, 30), int, 30); }
+
+
+
+
+
+=== comma both disc ===
+void f(int a, int b) { a++, b++; }
+---
+void f(int a, int b) { ckd_preinc(a, 24), ckd_preinc(b, 29); }
+
+
+
+
+
+
+=== for init add ===
+void f(int a) { for (int i = a + 1;;) {} }
+---
+void f(int a) { for (int i = ckd_narrow(ckd_add(a, 1, 30), int, 30);;) {} }
+
+
+
+
+

@@ -1,0 +1,66 @@
+=== sizeof chain ===
+void f(unsigned e_lfanew, unsigned opt_size) { unsigned long off = e_lfanew + sizeof(unsigned) + sizeof(short) + opt_size; }
+---
+void f(unsigned e_lfanew, unsigned opt_size) { unsigned long off = ckd_narrow(ckd_add(ckd_add(ckd_add(e_lfanew, sizeof(unsigned), 68), sizeof(short), 68), opt_size, 68), unsigned long, 68); }
+
+
+
+
+
+=== sizeof cast ptr ===
+void f(char *buf) { char *desc = buf + sizeof(unsigned) + sizeof(unsigned short); }
+---
+void f(char *buf) { char *desc = ckd_ptr_add(ckd_ptr_add(buf, sizeof(unsigned), 34), sizeof(unsigned short), 34); }
+
+
+
+
+
+
+=== count times sizeof ===
+void f(unsigned count) { unsigned long alloc = count * sizeof(unsigned long); }
+---
+void f(unsigned count) { unsigned long alloc = ckd_narrow(ckd_mul(count, sizeof(unsigned long), 48), unsigned long, 48); }
+
+
+
+
+
+
+=== request size minus header ===
+void f(unsigned total) { unsigned data = (total - sizeof(int)) / sizeof(unsigned); }
+---
+void f(unsigned total) { unsigned data = ckd_narrow(ckd_div((ckd_sub(total, sizeof(int), 43)), sizeof(unsigned), 42), unsigned, 42); }
+
+
+
+
+
+
+=== sizeof struct mul ===
+struct entry { int key; int val; }; void f(int n) { unsigned long sz = n * sizeof(struct entry); }
+---
+struct entry { int key; int val; }; void f(int n) { unsigned long sz = ckd_narrow(ckd_mul(n, sizeof(struct entry), 72), unsigned long, 72); }
+
+
+
+
+
+
+=== memcpy sizeof stride ===
+void f(void **dst, void **src, int start, int n) { unsigned long bytes = sizeof(void *) * n; }
+---
+void f(void **dst, void **src, int start, int n) { unsigned long bytes = ckd_narrow(ckd_mul(sizeof(void *), n, 74), unsigned long, 74); }
+
+
+
+
+
+=== sizeof plus string ===
+void f(int cmdlen) { unsigned long size = sizeof(int) + cmdlen + 1; }
+---
+void f(int cmdlen) { unsigned long size = ckd_narrow(ckd_add(ckd_add(sizeof(int), cmdlen, 43), 1, 43), unsigned long, 43); }
+
+
+
+

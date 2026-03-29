@@ -1,0 +1,58 @@
+=== basic vla ===
+void f(int n, int i) { int arr[n]; arr[i] = 0; }
+---
+void f(int n, int i) { int arr[n]; ckd_bounds(arr, i, n, 36) = 0; }
+
+
+
+
+
+
+=== vla read ===
+void f(int n, int i) { int arr[n]; int x = arr[i]; }
+---
+void f(int n, int i) { int arr[n]; int x = ckd_narrow(ckd_bounds(arr, i, n, 44), int, 44); }
+
+
+
+
+
+=== vla with arith index ===
+void f(int n, int i) { int arr[n]; arr[i + 1] = 0; }
+---
+void f(int n, int i) { int arr[n]; ckd_bounds(arr, ckd_add(i, 1, 40), n, 36) = 0; }
+
+
+
+
+
+
+=== vla with expr size ===
+void f(int n) { char buf[n * 2]; buf[0] = 0; }
+---
+void f(int n) { char buf[ckd_mul(n, 2, 26)]; ckd_bounds(buf, 0, n * 2, 34) = 0; }
+
+
+
+
+
+
+=== vla param not checked ===
+void f(int n, int arr[n], int i) { arr[i] = 0; }
+---
+void f(int n, int arr[n], int i) { ckd_bounds(arr, i, n, 36) = 0; }
+
+
+
+
+
+
+=== vla loop ===
+void f(int n) { int arr[n]; for (int i = 0; i < n; i++) { arr[i] = i; } }
+---
+void f(int n) { int arr[n]; for (int i = 0; i < n; ckd_preinc(i, 52)) { ckd_bounds(arr, i, n, 59) = ckd_narrow(i, int, 68); } }
+
+
+
+
+

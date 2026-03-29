@@ -1,0 +1,246 @@
+=== int add ===
+void f(int a, int b) { int x = a + b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_add(a, b, 32), int, 32); }
+
+
+
+
+
+=== int sub ===
+void f(int a, int b) { int x = a - b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_sub(a, b, 32), int, 32); }
+
+
+
+
+
+=== int mul ===
+void f(int a, int b) { int x = a * b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_mul(a, b, 32), int, 32); }
+
+
+
+
+
+=== add assign ===
+void f(int x) { x += 5; }
+---
+void f(int x) { ckd_compound_narrow(x, ckd_add, 5, int, 17); }
+
+
+
+
+=== sub assign ===
+void f(int x) { x -= 5; }
+---
+void f(int x) { ckd_compound_narrow(x, ckd_sub, 5, int, 17); }
+
+
+
+
+=== mul assign ===
+void f(int x) { x *= 5; }
+---
+void f(int x) { ckd_compound_narrow(x, ckd_mul, 5, int, 17); }
+
+
+
+
+=== preinc discarded ===
+void f(int x) { ++x; }
+---
+void f(int x) { ckd_preinc(x, 17); }
+
+
+
+
+
+
+=== predec discarded ===
+void f(int x) { --x; }
+---
+void f(int x) { ckd_predec(x, 17); }
+
+
+
+
+
+
+=== postinc discarded ===
+void f(int x) { x++; }
+---
+void f(int x) { ckd_preinc(x, 17); }
+
+
+
+
+
+
+=== postdec discarded ===
+void f(int x) { x--; }
+---
+void f(int x) { ckd_predec(x, 17); }
+
+
+
+
+
+
+=== postinc used ===
+void f(int x) { int y = x++; }
+---
+void f(int x) { int y = ckd_narrow(ckd_postinc(x, 25), int, 25); }
+
+
+
+
+
+
+=== postdec used ===
+void f(int x) { int y = x--; }
+---
+void f(int x) { int y = ckd_narrow(ckd_postdec(x, 25), int, 25); }
+
+
+
+
+
+
+=== preinc used ===
+void f(int x) { int y = ++x; }
+---
+void f(int x) { int y = ckd_narrow(ckd_preinc(x, 25), int, 25); }
+
+
+
+
+
+
+=== predec used ===
+void f(int x) { int y = --x; }
+---
+void f(int x) { int y = ckd_narrow(ckd_predec(x, 25), int, 25); }
+
+
+
+
+
+
+=== for loop ===
+void f(void) { for (int i = 0; i < 10; i++) {} }
+---
+void f(void) { for (int i = 0; i < 10; ckd_preinc(i, 40)) {} }
+
+
+
+
+
+
+=== return ===
+int f(int a, int b) { return a + b; }
+---
+int f(int a, int b) { return ckd_narrow(ckd_add(a, b, 30), int, 30); }
+
+
+
+
+
+=== no arith ===
+int main(void) { return 0; }
+---
+int main(void) { return 0; }
+
+
+
+
+
+
+=== div checked ===
+void f(int a, int b) { int x = a / b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_div(a, b, 32), int, 32); }
+
+
+
+
+
+=== mod checked ===
+void f(int a, int b) { int x = a % b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_mod(a, b, 32), int, 32); }
+
+
+
+
+
+=== band untouched ===
+void f(int a, int b) { int x = a & b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a & b, int, 32); }
+
+
+
+
+
+
+=== bor untouched ===
+void f(int a, int b) { int x = a | b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a | b, int, 32); }
+
+
+
+
+
+
+=== shl checked ===
+void f(int a, int b) { int x = a << b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_shl(a, b, 32), int, 32); }
+
+
+
+
+
+=== cmp untouched ===
+void f(int a, int b) { int x = a < b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a < b, int, 32); }
+
+
+
+
+
+
+=== assign untouched ===
+void f(int a) { int x = a; }
+---
+void f(int a) { int x = ckd_narrow(a, int, 25); }
+
+
+
+
+
+
+=== empty ===
+void f(void) {}
+---
+void f(void) {}
+
+
+
+
+
+
+=== only decls ===
+int x; char *p;
+---
+int x; char *p;
+
+
+
+
+

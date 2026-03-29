@@ -1,0 +1,98 @@
+=== deref pp add ===
+void f(char **pp) { char *q = *pp + 1; }
+---
+void f(char **pp) { char *q = ckd_ptr_add(*pp, 1, 31); }
+
+
+
+
+
+
+=== addr of add ===
+void f(int x) { int *p = &x + 1; }
+---
+void f(int x) { int *p = ckd_ptr_add(&x, 1, 26); }
+
+
+
+
+
+
+=== func ret ptr add ===
+char *get(void); void f(void) { char *p = get() + 5; }
+---
+char *get(void); void f(void) { char *p = ckd_ptr_add(get(), 5, 43); }
+
+
+
+
+
+
+=== int plus ptr reversed ===
+void f(char *p) { char *q = 3 + p; }
+---
+void f(char *p) { char *q = ckd_ptr_add(p, 3, 29); }
+
+
+
+
+
+
+=== ptr minus int ===
+void f(char *p, int n) { char *q = p - n; }
+---
+void f(char *p, int n) { char *q = ckd_ptr_sub(p, n, 36); }
+
+
+
+
+
+
+=== ptr ptr sub untouched ===
+void f(char *a, char *b) { long d = a - b; }
+---
+void f(char *a, char *b) { long d = ckd_narrow(ckd_ptr_diff(a, b, 37), long, 37); }
+
+
+
+
+
+=== cast ptr add ===
+void f(unsigned long a) { char *p = (char *)a + 10; }
+---
+void f(unsigned long a) { char *p = ckd_ptr_add((char *)a, 10, 37); }
+
+
+
+
+
+
+=== struct field ptr add ===
+struct s { char *p; }; void f(struct s *x) { char *q = x->p + 1; }
+---
+struct s { char *p; }; void f(struct s *x) { char *q = ckd_ptr_add(x->p, 1, 56); }
+
+
+
+
+
+
+=== typedef ptr add ===
+typedef char *cptr; void f(cptr p) { cptr q = p + 1; }
+---
+typedef char *cptr; void f(cptr p) { cptr q = ckd_ptr_add(p, 1, 47); }
+
+
+
+
+
+
+=== const ptr add ===
+void f(const char *p) { const char *q = p + 5; }
+---
+void f(const char *p) { const char *q = ckd_ptr_add(p, 5, 41); }
+
+
+
+
+

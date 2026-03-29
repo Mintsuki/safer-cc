@@ -1,0 +1,179 @@
+=== a+b+c ===
+void f(int a, int b, int c) { int x = a + b + c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_add(ckd_add(a, b, 39), c, 39), int, 39); }
+
+
+
+
+
+=== a+b+c+d ===
+void f(int a, int b, int c, int d) { int x = a + b + c + d; }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow(ckd_add(ckd_add(ckd_add(a, b, 46), c, 46), d, 46), int, 46); }
+
+
+
+
+
+=== a+b+c+d+e ===
+void f(int a, int b, int c, int d, int e) { int x = a + b + c + d + e; }
+---
+void f(int a, int b, int c, int d, int e) { int x = ckd_narrow(ckd_add(ckd_add(ckd_add(ckd_add(a, b, 53), c, 53), d, 53), e, 53), int, 53); }
+
+
+
+
+
+=== a*b+c ===
+void f(int a, int b, int c) { int x = a * b + c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_add(ckd_mul(a, b, 39), c, 39), int, 39); }
+
+
+
+
+
+=== a+b*c ===
+void f(int a, int b, int c) { int x = a + b * c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_add(a, ckd_mul(b, c, 43), 39), int, 39); }
+
+
+
+
+
+=== a*b+c*d ===
+void f(int a, int b, int c, int d) { int x = a * b + c * d; }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow(ckd_add(ckd_mul(a, b, 46), ckd_mul(c, d, 54), 46), int, 46); }
+
+
+
+
+
+=== a*b-c*d ===
+void f(int a, int b, int c, int d) { int x = a * b - c * d; }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow(ckd_sub(ckd_mul(a, b, 46), ckd_mul(c, d, 54), 46), int, 46); }
+
+
+
+
+
+=== (a+b)*c ===
+void f(int a, int b, int c) { int x = (a + b) * c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_mul((ckd_add(a, b, 40)), c, 39), int, 39); }
+
+
+
+
+
+=== (a+b)*(c+d) ===
+void f(int a, int b, int c, int d) { int x = (a + b) * (c + d); }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow(ckd_mul((ckd_add(a, b, 47)), (ckd_add(c, d, 57)), 46), int, 46); }
+
+
+
+
+
+=== (a-b)*(c+d) ===
+void f(int a, int b, int c, int d) { int x = (a - b) * (c + d); }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow(ckd_mul((ckd_sub(a, b, 47)), (ckd_add(c, d, 57)), 46), int, 46); }
+
+
+
+
+
+=== a*(b+c) ===
+void f(int a, int b, int c) { int x = a * (b + c); }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_mul(a, (ckd_add(b, c, 44)), 39), int, 39); }
+
+
+
+
+
+=== a*(b-c)+d ===
+void f(int a, int b, int c, int d) { int x = a * (b - c) + d; }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow(ckd_add(ckd_mul(a, (ckd_sub(b, c, 51)), 46), d, 46), int, 46); }
+
+
+
+
+
+=== (a+1)*(b+2) ===
+void f(int a, int b) { int x = (a + 1) * (b + 2); }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_mul((ckd_add(a, 1, 33)), (ckd_add(b, 2, 43)), 32), int, 32); }
+
+
+
+
+
+
+=== ptr+a*b ===
+void f(char *p, int a, int b) { char *q = p + a * b; }
+---
+void f(char *p, int a, int b) { char *q = ckd_ptr_add(p, ckd_mul(a, b, 47), 43); }
+
+
+
+
+
+
+=== ptr+a+b ===
+void f(char *p, int a, int b) { char *q = p + a + b; }
+---
+void f(char *p, int a, int b) { char *q = ckd_ptr_add(ckd_ptr_add(p, a, 43), b, 43); }
+
+
+
+
+
+
+=== ptr+a+b+c ===
+void f(char *p, int a, int b, int c) { char *q = p + a + b + c; }
+---
+void f(char *p, int a, int b, int c) { char *q = ckd_ptr_add(ckd_ptr_add(ckd_ptr_add(p, a, 50), b, 50), c, 50); }
+
+
+
+
+
+
+=== x+=a+b ===
+void f(int x, int a, int b) { x += a + b; }
+---
+void f(int x, int a, int b) { ckd_compound_narrow(x, ckd_add, ckd_add(a, b, 36), int, 31); }
+
+
+
+
+=== x+=a*b ===
+void f(int x, int a, int b) { x += a * b; }
+---
+void f(int x, int a, int b) { ckd_compound_narrow(x, ckd_add, ckd_mul(a, b, 36), int, 31); }
+
+
+
+
+=== x-=a+b ===
+void f(int x, int a, int b) { x -= a + b; }
+---
+void f(int x, int a, int b) { ckd_compound_narrow(x, ckd_sub, ckd_add(a, b, 36), int, 31); }
+
+
+
+
+=== x*=a+b ===
+void f(int x, int a, int b) { x *= a + b; }
+---
+void f(int x, int a, int b) { ckd_compound_narrow(x, ckd_mul, ckd_add(a, b, 36), int, 31); }
+
+
+

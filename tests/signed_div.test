@@ -1,0 +1,91 @@
+=== basic signed div ===
+void f(int a, int b) { int x = a / b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_div(a, b, 32), int, 32); }
+
+
+
+
+
+=== unsigned div no signed check ===
+void f(unsigned a, unsigned b) { unsigned x = a / b; }
+---
+void f(unsigned a, unsigned b) { unsigned x = ckd_narrow(ckd_div(a, b, 47), unsigned, 47); }
+
+
+
+
+
+=== signed mod ===
+void f(int a, int b) { int x = a % b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_mod(a, b, 32), int, 32); }
+
+
+
+
+
+=== long div ===
+void f(long a, long b) { long x = a / b; }
+---
+void f(long a, long b) { long x = ckd_narrow(ckd_div(a, b, 35), long, 35); }
+
+
+
+
+
+=== short div narrow ===
+void f(short a, short b) { short x = a / b; }
+---
+void f(short a, short b) { short x = ckd_narrow(ckd_div(a, b, 38), short, 38); }
+
+
+
+
+
+
+=== div assign ===
+void f(int a, int b) { a /= b; }
+---
+void f(int a, int b) { ckd_compound_narrow(a, ckd_div, b, int, 24); }
+
+
+
+
+=== mod assign ===
+void f(int a, int b) { a %= b; }
+---
+void f(int a, int b) { ckd_compound_narrow(a, ckd_mod, b, int, 24); }
+
+
+
+
+=== suppress div ===
+void f(int a, int b) { int x = a @/ b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a / b, int, 32); }
+
+
+
+
+
+
+=== div by const ===
+void f(int a) { int x = a / 2; }
+---
+void f(int a) { int x = ckd_narrow(ckd_div(a, 2, 25), int, 25); }
+
+
+
+
+
+
+=== const div const ===
+void f(void) { int x = 100 / 3; }
+---
+void f(void) { int x = 100 / 3; }
+
+
+
+
+

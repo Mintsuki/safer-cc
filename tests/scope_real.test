@@ -1,0 +1,122 @@
+=== print buf conflict ===
+void prn_i(void) {
+    char buf[21];
+    buf[19] = '0';
+}
+void prn_x(void) {
+    char buf[17];
+    buf[15] = '0';
+}
+---
+void prn_i(void) {
+    char buf[21];
+    ckd_bounds(buf, 19, 21, 5) = '0';
+}
+void prn_x(void) {
+    char buf[17];
+    ckd_bounds(buf, 15, 17, 5) = '0';
+}
+
+
+
+
+
+
+=== ret param conflict ===
+void a(char *ret) {
+    char *p = ret + 1;
+}
+void b(void) {
+    unsigned short ret = 32;
+    ret--;
+}
+---
+void a(char *ret) {
+    char *p = ckd_ptr_add(ret, 1, 15);
+}
+void b(void) {
+    unsigned short ret = 32;
+    ckd_predec(ret, 5);
+}
+
+
+
+
+
+
+=== iter var conflict ===
+void a(char *p, int n) {
+    for (int i = 0; i < n; i++) {
+        p++;
+    }
+}
+void b(int n) {
+    int arr[10];
+    for (int i = 0; i < n; i++) {
+        arr[i] = 0;
+    }
+}
+---
+void a(char *p, int n) {
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        ckd_ptr_preinc(p, 9);
+    }
+}
+void b(int n) {
+    int arr[10];
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        ckd_bounds(arr, i, 10, 9) = 0;
+    }
+}
+
+
+
+
+
+
+=== same arr name diff funcs ===
+void f(int i) {
+    int arr[10];
+    arr[i] = 0;
+}
+void g(int i) {
+    int arr[5];
+    arr[i] = 0;
+}
+---
+void f(int i) {
+    int arr[10];
+    ckd_bounds(arr, i, 10, 5) = 0;
+}
+void g(int i) {
+    int arr[5];
+    ckd_bounds(arr, i, 5, 5) = 0;
+}
+
+
+
+
+
+
+=== funcptr complex ===
+struct ctx {
+    void (*get)(int *x, int *y);
+    void (*set)(char *buf, int *len);
+};
+void f(int x, int y, int buf, int len) {
+    int a = x + y;
+    int b = buf + len;
+}
+---
+struct ctx {
+    void (*get)(int *x, int *y);
+    void (*set)(char *buf, int *len);
+};
+void f(int x, int y, int buf, int len) {
+    int a = ckd_narrow(ckd_add(x, y, 13), int, 13);
+    int b = ckd_narrow(ckd_add(buf, len, 13), int, 13);
+}
+
+
+
+

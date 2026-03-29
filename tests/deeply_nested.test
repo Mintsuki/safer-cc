@@ -1,0 +1,89 @@
+=== triple add ===
+void f(int a, int b, int c, int d) { int x = a + b + c + d; }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow(ckd_add(ckd_add(ckd_add(a, b, 46), c, 46), d, 46), int, 46); }
+
+
+
+
+
+=== triple mul ===
+void f(int a, int b, int c, int d) { int x = a * b * c * d; }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow(ckd_mul(ckd_mul(ckd_mul(a, b, 46), c, 46), d, 46), int, 46); }
+
+
+
+
+
+=== double paren ===
+void f(int a, int b, int c) { int x = ((a + b)) * c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_mul(((ckd_add(a, b, 41))), c, 39), int, 39); }
+
+
+
+
+
+=== nested paren add mul ===
+void f(int a, int b, int c, int d) { int x = (a + b) * (c + d); }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow(ckd_mul((ckd_add(a, b, 47)), (ckd_add(c, d, 57)), 46), int, 46); }
+
+
+
+
+
+=== three level nesting ===
+void f(int a, int b, int c) { int x = (a + b) * c + 1; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_add(ckd_mul((ckd_add(a, b, 40)), c, 39), 1, 39), int, 39); }
+
+
+
+
+
+=== four ops chain ===
+void f(int a, int b, int c, int d, int e) { int x = a + b - c + d - e; }
+---
+void f(int a, int b, int c, int d, int e) { int x = ckd_narrow(ckd_sub(ckd_add(ckd_sub(ckd_add(a, b, 53), c, 53), d, 53), e, 53), int, 53); }
+
+
+
+
+
+=== compound inside compound ===
+void f(int x, int a, int b, int c) { x += (a + b) * c; }
+---
+void f(int x, int a, int b, int c) { ckd_compound_narrow(x, ckd_add, ckd_mul((ckd_add(a, b, 44)), c, 43), int, 38); }
+
+
+
+
+=== ptr chain add ===
+void f(char *p) { char *q = p + 1 + 2 + 3; }
+---
+void f(char *p) { char *q = ckd_ptr_add(ckd_ptr_add(ckd_ptr_add(p, 1, 29), 2, 29), 3, 29); }
+
+
+
+
+
+
+=== mixed ptr int deep ===
+void f(char *p, int a, int b) { char *q = p + (a + b); }
+---
+void f(char *p, int a, int b) { char *q = ckd_ptr_add(p, (ckd_add(a, b, 48)), 43); }
+
+
+
+
+
+
+=== assign add add ===
+void f(int x, int a, int b, int c) { x += a + b + c; }
+---
+void f(int x, int a, int b, int c) { ckd_compound_narrow(x, ckd_add, ckd_add(ckd_add(a, b, 43), c, 43), int, 38); }
+
+
+

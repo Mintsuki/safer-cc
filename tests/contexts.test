@@ -1,0 +1,65 @@
+=== switch ===
+void f(int a, int b) { switch (a + b) { default: break; } }
+---
+void f(int a, int b) { switch (ckd_add(a, b, 32)) { default: break; } }
+
+
+
+
+
+
+=== for init ===
+void f(int a, int b) { for (int i = a + b; ;) {} }
+---
+void f(int a, int b) { for (int i = ckd_narrow(ckd_add(a, b, 37), int, 37); ;) {} }
+
+
+
+
+
+=== for cond ===
+void f(int i, int n, int m) { for (; i < n + m;) {} }
+---
+void f(int i, int n, int m) { for (; i < ckd_add(n, m, 42);) {} }
+
+
+
+
+
+
+=== comma expr ===
+void f(int a, int b) { int x = (a + b, a - b); }
+---
+void f(int a, int b) { int x = ckd_narrow((ckd_add(a, b, 33), ckd_sub(a, b, 40)), int, 32); }
+
+
+
+
+
+=== chain assign ===
+void f(int a, int b) { int x, y; x = y = a + b; }
+---
+void f(int a, int b) { int x, y; x = ckd_narrow(y = ckd_narrow(ckd_add(a, b, 42), int, 42), int, 38); }
+
+
+
+
+
+=== struct init ===
+struct s { int x; }; void f(int a, int b) { struct s v = { .x = a + b }; }
+---
+struct s { int x; }; void f(int a, int b) { struct s v = { .x = ckd_add(a, b, 65) }; }
+
+
+
+
+
+
+=== bitwise of arith ===
+void f(int a, int b, int c) { int x = (a + b) & c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow((ckd_add(a, b, 40)) & c, int, 39); }
+
+
+
+

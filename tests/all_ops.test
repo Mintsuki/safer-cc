@@ -1,0 +1,210 @@
+=== add ===
+void f(int a, int b) { int x = a + b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_add(a, b, 32), int, 32); }
+
+
+
+
+
+=== sub ===
+void f(int a, int b) { int x = a - b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_sub(a, b, 32), int, 32); }
+
+
+
+
+
+=== mul ===
+void f(int a, int b) { int x = a * b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_mul(a, b, 32), int, 32); }
+
+
+
+
+
+=== add= ===
+void f(int a) { a += 1; }
+---
+void f(int a) { ckd_compound_narrow(a, ckd_add, 1, int, 17); }
+
+
+
+
+=== sub= ===
+void f(int a) { a -= 1; }
+---
+void f(int a) { ckd_compound_narrow(a, ckd_sub, 1, int, 17); }
+
+
+
+
+=== mul= ===
+void f(int a) { a *= 1; }
+---
+void f(int a) { ckd_compound_narrow(a, ckd_mul, 1, int, 17); }
+
+
+
+
+=== preinc ===
+void f(int a) { ++a; }
+---
+void f(int a) { ckd_preinc(a, 17); }
+
+
+
+
+
+
+=== predec ===
+void f(int a) { --a; }
+---
+void f(int a) { ckd_predec(a, 17); }
+
+
+
+
+
+
+=== postinc disc ===
+void f(int a) { a++; }
+---
+void f(int a) { ckd_preinc(a, 17); }
+
+
+
+
+
+
+=== postdec disc ===
+void f(int a) { a--; }
+---
+void f(int a) { ckd_predec(a, 17); }
+
+
+
+
+
+
+=== postinc used ===
+void f(int a) { int b = a++; }
+---
+void f(int a) { int b = ckd_narrow(ckd_postinc(a, 25), int, 25); }
+
+
+
+
+
+
+=== postdec used ===
+void f(int a) { int b = a--; }
+---
+void f(int a) { int b = ckd_narrow(ckd_postdec(a, 25), int, 25); }
+
+
+
+
+
+
+=== ptr add ===
+void f(char *p) { char *q = p + 1; }
+---
+void f(char *p) { char *q = ckd_ptr_add(p, 1, 29); }
+
+
+
+
+
+
+=== ptr sub ===
+void f(char *p) { char *q = p - 1; }
+---
+void f(char *p) { char *q = ckd_ptr_sub(p, 1, 29); }
+
+
+
+
+
+
+=== ptr add= ===
+void f(char *p) { p += 1; }
+---
+void f(char *p) { ckd_compound(p, ckd_ptr_add, 1, 19); }
+
+
+
+
+
+
+=== ptr sub= ===
+void f(char *p) { p -= 1; }
+---
+void f(char *p) { ckd_compound(p, ckd_ptr_sub, 1, 19); }
+
+
+
+
+
+
+=== ptr preinc ===
+void f(char *p) { ++p; }
+---
+void f(char *p) { ckd_ptr_preinc(p, 19); }
+
+
+
+
+
+
+=== ptr predec ===
+void f(char *p) { --p; }
+---
+void f(char *p) { ckd_ptr_predec(p, 19); }
+
+
+
+
+
+
+=== ptr postinc disc ===
+void f(char *p) { p++; }
+---
+void f(char *p) { ckd_ptr_preinc(p, 19); }
+
+
+
+
+
+
+=== ptr postdec disc ===
+void f(char *p) { p--; }
+---
+void f(char *p) { ckd_ptr_predec(p, 19); }
+
+
+
+
+
+
+=== ptr postinc used ===
+void f(char *p) { char *q = p++; }
+---
+void f(char *p) { char *q = ckd_ptr_postinc(p, 29); }
+
+
+
+
+
+
+=== ptr postdec used ===
+void f(char *p) { char *q = p--; }
+---
+void f(char *p) { char *q = ckd_ptr_postdec(p, 29); }
+
+
+
+
+

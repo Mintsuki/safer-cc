@@ -1,0 +1,64 @@
+=== ring next ===
+void f(int head, int n) { int next = (head + 1) % n; }
+---
+void f(int head, int n) { int next = ckd_narrow(ckd_mod((ckd_add(head, 1, 39)), n, 38), int, 38); }
+
+
+
+
+
+=== ring pos calc ===
+void f(unsigned long consumed, unsigned long subbuf_size, unsigned long n) { unsigned long pos = (consumed * subbuf_size) % (n * subbuf_size); }
+---
+void f(unsigned long consumed, unsigned long subbuf_size, unsigned long n) { unsigned long pos = ckd_narrow(ckd_mod((ckd_mul(consumed, subbuf_size, 99)), (ckd_mul(n, subbuf_size, 126)), 98), unsigned long, 98); }
+
+
+
+
+
+=== ring advance ===
+void f(unsigned *h, unsigned cap) { *h = (*h + 1) % cap; }
+---
+void f(unsigned *h, unsigned cap) { *h = ckd_narrow(ckd_mod((ckd_add(*h, 1, 43)), cap, 42), unsigned, 42); }
+
+
+
+
+
+=== ring distance ===
+void f(unsigned h, unsigned t, unsigned cap) { unsigned used = (h - t + cap) % cap; }
+---
+void f(unsigned h, unsigned t, unsigned cap) { unsigned used = ckd_narrow(ckd_mod((ckd_add(ckd_sub(h, t, 65), cap, 65)), cap, 64), unsigned, 64); }
+
+
+
+
+
+=== circular inc ===
+void f(unsigned *idx, unsigned n) { *idx = *idx + 1; if (*idx >= n) { *idx = 0; } }
+---
+void f(unsigned *idx, unsigned n) { *idx = ckd_narrow(ckd_add(*idx, 1, 44), unsigned, 44); if (*idx >= n) { *idx = 0; } }
+
+
+
+
+
+
+=== power of two ring ===
+void f(unsigned h, unsigned mask) { unsigned next = (h + 1) & mask; }
+---
+void f(unsigned h, unsigned mask) { unsigned next = ckd_narrow((ckd_add(h, 1, 54)) & mask, unsigned, 53); }
+
+
+
+
+
+
+=== seq buf append ===
+void f(char *buf, unsigned len, unsigned off) { char *dst = buf + off; unsigned new_len = off + len; }
+---
+void f(char *buf, unsigned len, unsigned off) { char *dst = ckd_ptr_add(buf, off, 61); unsigned new_len = ckd_narrow(ckd_add(off, len, 91), unsigned, 91); }
+
+
+
+

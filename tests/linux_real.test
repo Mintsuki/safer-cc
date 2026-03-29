@@ -1,0 +1,147 @@
+=== slab offset ===
+void f(char *objp0, char *objp, unsigned long *out) { *out = objp0 - objp; }
+---
+void f(char *objp0, char *objp, unsigned long *out) { *out = ckd_narrow(ckd_ptr_diff(objp0, objp, 62), unsigned long, 62); }
+
+
+
+
+
+=== bootconfig node data ===
+typedef unsigned short uint16_t;
+void f(uint16_t *data, unsigned offset, unsigned flag) {
+    *data = offset | flag;
+}
+---
+typedef unsigned short uint16_t;
+void f(uint16_t *data, unsigned offset, unsigned flag) {
+    *data = ckd_narrow(offset | flag, uint16_t, 13);
+}
+
+
+
+
+
+
+=== reed solomon mask ===
+typedef unsigned short uint16_t;
+void f(unsigned nn) { uint16_t msk = nn; }
+---
+typedef unsigned short uint16_t;
+void f(unsigned nn) { uint16_t msk = ckd_narrow(nn, uint16_t, 38); }
+
+
+
+
+
+
+=== xz byte extract ===
+typedef unsigned char uint8_t;
+void f(unsigned dest, int j) { uint8_t b = dest >> (24 - j); }
+---
+typedef unsigned char uint8_t;
+void f(unsigned dest, int j) { uint8_t b = ckd_narrow(ckd_shr(dest, (ckd_sub(24, j, 53)), 44), uint8_t, 44); }
+
+
+
+
+
+
+=== bitmap word calc ===
+void f(unsigned long nr) {
+    unsigned long word = nr / 64;
+    unsigned long bit = nr % 64;
+    unsigned long mask = 1UL << bit;
+}
+---
+void f(unsigned long nr) {
+    unsigned long word = ckd_narrow(ckd_div(nr, 64, 26), unsigned long, 26);
+    unsigned long bit = ckd_narrow(ckd_mod(nr, 64, 25), unsigned long, 25);
+    unsigned long mask = ckd_narrow(ckd_shl(1UL, bit, 26), unsigned long, 26);
+}
+
+
+
+
+
+=== page alloc order ===
+void f(unsigned order) {
+    unsigned pages = 1U << order;
+    unsigned bytes = pages * 4096;
+}
+---
+void f(unsigned order) {
+    unsigned pages = ckd_narrow(ckd_shl(1U, order, 22), unsigned, 22);
+    unsigned bytes = ckd_narrow(ckd_mul(pages, 4096, 22), unsigned, 22);
+}
+
+
+
+
+
+=== mempool alloc ===
+void f(unsigned count, unsigned elem_size) {
+    unsigned total = count * elem_size;
+    unsigned padded = (total + 63) & ~63;
+}
+---
+void f(unsigned count, unsigned elem_size) {
+    unsigned total = ckd_narrow(ckd_mul(count, elem_size, 22), unsigned, 22);
+    unsigned padded = ckd_narrow((ckd_add(total, 63, 24)) & ~63, unsigned, 23);
+}
+
+
+
+
+
+=== shmem clear ===
+void f(char *info, char *inode) {
+    long size = inode - info;
+    for (long i = 0; i < size; i++) {
+        info[i] = 0;
+    }
+}
+---
+void f(char *info, char *inode) {
+    long size = ckd_narrow(ckd_ptr_diff(inode, info, 17), long, 17);
+    for (long i = 0; i < size; ckd_preinc(i, 32)) {
+        info[i] = 0;
+    }
+}
+
+
+
+
+
+=== rcu ref count ===
+void f(unsigned *cnt) {
+    unsigned old = *cnt;
+    unsigned new_val = old + 1;
+    *cnt = new_val;
+}
+---
+void f(unsigned *cnt) {
+    unsigned old = ckd_narrow(*cnt, unsigned, 20);
+    unsigned new_val = ckd_narrow(ckd_add(old, 1, 24), unsigned, 24);
+    *cnt = ckd_narrow(new_val, unsigned, 12);
+}
+
+
+
+
+
+
+=== relay subbuf ===
+void f(unsigned read_sub, unsigned n_subbufs, unsigned subbuf_size) {
+    unsigned long pos = (read_sub * subbuf_size) % (n_subbufs * subbuf_size);
+    read_sub = (read_sub + 1) % n_subbufs;
+}
+---
+void f(unsigned read_sub, unsigned n_subbufs, unsigned subbuf_size) {
+    unsigned long pos = ckd_narrow(ckd_mod((ckd_mul(read_sub, subbuf_size, 26)), (ckd_mul(n_subbufs, subbuf_size, 53)), 25), unsigned long, 25);
+    read_sub = ckd_narrow(ckd_mod((ckd_add(read_sub, 1, 17)), n_subbufs, 16), unsigned, 16);
+}
+
+
+
+

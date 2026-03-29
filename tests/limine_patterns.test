@@ -1,0 +1,92 @@
+=== align up ===
+void f(unsigned long v, unsigned long a) { unsigned long r = ((v + (a - 1)) / a) * a; }
+---
+void f(unsigned long v, unsigned long a) { unsigned long r = ckd_narrow(ckd_mul((ckd_div((ckd_add(v, (ckd_sub(a, 1, 69)), 64)), a, 63)), a, 62), unsigned long, 62); }
+
+
+
+
+
+=== base+len ===
+void f(unsigned long b, unsigned long l) { unsigned long t = b + l; }
+---
+void f(unsigned long b, unsigned long l) { unsigned long t = ckd_narrow(ckd_add(b, l, 62), unsigned long, 62); }
+
+
+
+
+
+=== count*sizeof ===
+void f(unsigned long n) { unsigned long s = n * sizeof(int); }
+---
+void f(unsigned long n) { unsigned long s = ckd_narrow(ckd_mul(n, sizeof(int), 45), unsigned long, 45); }
+
+
+
+
+
+
+=== entries+pad*sizeof ===
+void f(unsigned long e) { unsigned long s = (e + 16) * sizeof(long); }
+---
+void f(unsigned long e) { unsigned long s = ckd_narrow(ckd_mul((ckd_add(e, 16, 46)), sizeof(long), 45), unsigned long, 45); }
+
+
+
+
+
+
+=== pitch*height ===
+void f(unsigned long p, unsigned long h) { unsigned long s = p * h; }
+---
+void f(unsigned long p, unsigned long h) { unsigned long s = ckd_narrow(ckd_mul(p, h, 62), unsigned long, 62); }
+
+
+
+
+
+=== total+=mod ===
+void f(unsigned long t, unsigned long m) { t += m; }
+---
+void f(unsigned long t, unsigned long m) { ckd_compound_narrow(t, ckd_add, m, unsigned long, 44); }
+
+
+
+
+=== alloc+size ===
+void *alloc(unsigned long); void f(unsigned long s) { void *p = alloc(s) + s; }
+---
+void *alloc(unsigned long); void f(unsigned long s) { void *p = ckd_ptr_add(alloc(ckd_narrow(s, unsigned long, 71)), s, 65); }
+
+
+
+
+
+
+=== page align ===
+void f(unsigned long a) { unsigned long r = (a + 0xFFF) & ~0xFFF; }
+---
+void f(unsigned long a) { unsigned long r = ckd_narrow((ckd_add(a, 0xFFF, 46)) & ~0xFFF, unsigned long, 45); }
+
+
+
+
+
+
+=== offset calc ===
+void f(unsigned long b, unsigned long o, unsigned long s) { unsigned long a = b + o * s; }
+---
+void f(unsigned long b, unsigned long o, unsigned long s) { unsigned long a = ckd_narrow(ckd_add(b, ckd_mul(o, s, 83), 79), unsigned long, 79); }
+
+
+
+
+
+=== ring next ===
+void f(unsigned h, unsigned s) { unsigned n = (h + 1) % s; }
+---
+void f(unsigned h, unsigned s) { unsigned n = ckd_narrow(ckd_mod((ckd_add(h, 1, 48)), s, 47), unsigned, 47); }
+
+
+
+

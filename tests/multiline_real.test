@@ -1,0 +1,118 @@
+=== page table index ===
+void f(unsigned long addr) {
+    unsigned long pml4 = (addr >> 39) & 0x1FF;
+    unsigned long pdpt = (addr >> 30) & 0x1FF;
+    unsigned long pd = (addr >> 21) & 0x1FF;
+    unsigned long pt = (addr >> 12) & 0x1FF;
+    unsigned long off = addr & 0xFFF;
+}
+---
+void f(unsigned long addr) {
+    unsigned long pml4 = ckd_narrow((ckd_shr(addr, 39, 27)) & 0x1FF, unsigned long, 26);
+    unsigned long pdpt = ckd_narrow((ckd_shr(addr, 30, 27)) & 0x1FF, unsigned long, 26);
+    unsigned long pd = ckd_narrow((ckd_shr(addr, 21, 25)) & 0x1FF, unsigned long, 24);
+    unsigned long pt = ckd_narrow((ckd_shr(addr, 12, 25)) & 0x1FF, unsigned long, 24);
+    unsigned long off = ckd_narrow(addr & 0xFFF, unsigned long, 25);
+}
+
+
+
+
+
+
+=== elf load ===
+void f(char *base, unsigned long offset, unsigned long size) {
+    char *start = base + offset;
+    char *end = start + size;
+    unsigned long total = offset + size;
+}
+---
+void f(char *base, unsigned long offset, unsigned long size) {
+    char *start = ckd_ptr_add(base, offset, 19);
+    char *end = ckd_ptr_add(start, size, 17);
+    unsigned long total = ckd_narrow(ckd_add(offset, size, 27), unsigned long, 27);
+}
+
+
+
+
+
+=== framebuffer pitch ===
+void f(unsigned *fb, unsigned pitch, unsigned x, unsigned y) {
+    unsigned *row = fb + y * (pitch / 4);
+    row[x] = 0xFFFFFF;
+}
+---
+void f(unsigned *fb, unsigned pitch, unsigned x, unsigned y) {
+    unsigned *row = ckd_ptr_add(fb, ckd_mul(y, (ckd_div(pitch, 4, 31)), 26), 21);
+    row[x] = 0xFFFFFF;
+}
+
+
+
+
+
+
+=== memmap coalesce ===
+void f(unsigned long *base, unsigned long *len, int count) {
+    for (int i = 0; i < count - 1; i++) {
+        unsigned long end = base[i] + len[i];
+        if (end == base[i + 1]) {
+            len[i] = len[i] + len[i + 1];
+        }
+    }
+}
+---
+void f(unsigned long *base, unsigned long *len, int count) {
+    for (int i = 0; i < ckd_sub(count, 1, 25); ckd_preinc(i, 36)) {
+        unsigned long end = ckd_narrow(ckd_add(base[i], len[i], 29), unsigned long, 29);
+        if (end == base[ckd_add(i, 1, 25)]) {
+            len[i] = ckd_narrow(ckd_add(len[i], len[ckd_add(i, 1, 35)], 22), unsigned long, 22);
+        }
+    }
+}
+
+
+
+
+
+
+=== module total size ===
+struct mod { unsigned long size; };
+unsigned long total_size(struct mod *mods, int count) {
+    unsigned long total = 0;
+    for (int i = 0; i < count; i++) {
+        total += mods[i].size;
+    }
+    return total;
+}
+---
+struct mod { unsigned long size; };
+unsigned long total_size(struct mod *mods, int count) {
+    unsigned long total = 0;
+    for (int i = 0; i < count; ckd_preinc(i, 32)) {
+        ckd_compound_narrow(total, ckd_add, mods[i].size, unsigned long, 9);
+    }
+    return ckd_narrow(total, unsigned long, 12);
+}
+
+
+
+=== bitmap alloc ===
+void f(unsigned long *bitmap, unsigned long pages) {
+    unsigned long idx = pages / 64;
+    unsigned long bit = pages % 64;
+    unsigned long mask = 1UL << bit;
+    bitmap[idx] = bitmap[idx] | mask;
+}
+---
+void f(unsigned long *bitmap, unsigned long pages) {
+    unsigned long idx = ckd_narrow(ckd_div(pages, 64, 25), unsigned long, 25);
+    unsigned long bit = ckd_narrow(ckd_mod(pages, 64, 25), unsigned long, 25);
+    unsigned long mask = ckd_narrow(ckd_shl(1UL, bit, 26), unsigned long, 26);
+    bitmap[idx] = ckd_narrow(bitmap[idx] | mask, unsigned long, 19);
+}
+
+
+
+

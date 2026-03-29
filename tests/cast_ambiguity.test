@@ -1,0 +1,49 @@
+=== unsigned char cast parses ok ===
+void f(unsigned a, unsigned b) { unsigned r = (unsigned char)(a) + (unsigned char)(b); }
+---
+void f(unsigned a, unsigned b) { unsigned r = ckd_narrow(ckd_add(ckd_narrow((a), unsigned char, 47), ckd_narrow((b), unsigned char, 68), 47), unsigned, 47); }
+
+=== unsigned char double paren ===
+void f(unsigned a, unsigned b) { unsigned r = (unsigned char)((a)) + (unsigned char)((b)); }
+---
+void f(unsigned a, unsigned b) { unsigned r = ckd_narrow(ckd_add(ckd_narrow(((a)), unsigned char, 47), ckd_narrow(((b)), unsigned char, 70), 47), unsigned, 47); }
+
+=== cast with shift ===
+void f(unsigned rgb) { unsigned r = (unsigned char)(rgb >> 16) + 1; }
+---
+void f(unsigned rgb) { unsigned r = ckd_narrow(ckd_add(ckd_narrow((ckd_shr(rgb, 16, 53)), unsigned char, 37), 1, 37), unsigned, 37); }
+
+=== cast with mask ===
+void f(unsigned rgb) { unsigned b = (unsigned char)(rgb & 0xFF) + 1; }
+---
+void f(unsigned rgb) { unsigned b = ckd_narrow(ckd_add(ckd_narrow((rgb & 0xFF), unsigned char, 37), 1, 37), unsigned, 37); }
+
+=== cast double paren mul ===
+void f(unsigned a, unsigned b) { unsigned r = (unsigned char)((a) & 0xFF) * (unsigned char)((b) & 0xFF); }
+---
+void f(unsigned a, unsigned b) { unsigned r = ckd_narrow(ckd_mul(ckd_narrow(((a) & 0xFF), unsigned char, 47), ckd_narrow(((b) & 0xFF), unsigned char, 77), 47), unsigned, 47); }
+
+=== int cast in arith ===
+void f(long a) { int x = (int)(a) + 1; }
+---
+void f(long a) { int x = ckd_narrow(ckd_add(ckd_narrow((a), int, 26), 1, 26), int, 26); }
+
+=== int cast double paren ===
+void f(long a) { int x = (int)((a)) + 1; }
+---
+void f(long a) { int x = ckd_narrow(ckd_add(ckd_narrow(((a)), int, 26), 1, 26), int, 26); }
+
+=== blend pattern correct ===
+void f(unsigned alpha, unsigned fg, unsigned bg) { unsigned r = alpha * (unsigned char)((fg) >> 16) + (256 - alpha) * (unsigned char)((bg) >> 16); }
+---
+void f(unsigned alpha, unsigned fg, unsigned bg) { unsigned r = ckd_narrow(ckd_add(ckd_mul(alpha, ckd_narrow((ckd_shr((fg), 16, 89)), unsigned char, 73), 65), ckd_mul((ckd_sub(256, alpha, 104)), ckd_narrow((ckd_shr((bg), 16, 135)), unsigned char, 119), 103), 65), unsigned, 65); }
+
+=== blend blue with mask ===
+void f(unsigned a, unsigned fg, unsigned bg, unsigned inv) { unsigned b = a * (unsigned char)((fg) & 0xFF) + inv * (unsigned char)((bg) & 0xFF); }
+---
+void f(unsigned a, unsigned fg, unsigned bg, unsigned inv) { unsigned b = ckd_narrow(ckd_add(ckd_mul(a, ckd_narrow(((fg) & 0xFF), unsigned char, 79), 75), ckd_mul(inv, ckd_narrow(((bg) & 0xFF), unsigned char, 116), 110), 75), unsigned, 75); }
+
+=== char cast no double paren ===
+void f(int a) { char c = (char)a + 1; }
+---
+void f(int a) { char c = ckd_narrow(ckd_add(ckd_narrow(a, char, 26), 1, 26), char, 26); }

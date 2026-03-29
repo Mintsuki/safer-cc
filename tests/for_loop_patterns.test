@@ -1,0 +1,94 @@
+=== classic for ===
+void f(int n) { for (int i = 0; i < n; i++) {} }
+---
+void f(int n) { for (int i = 0; i < n; ckd_preinc(i, 40)) {} }
+
+
+
+
+
+
+=== for predec ===
+void f(int n) { for (int i = n; i > 0; --i) {} }
+---
+void f(int n) { for (int i = ckd_narrow(n, int, 30); i > 0; ckd_predec(i, 40)) {} }
+
+
+
+
+
+
+=== for add assign ===
+void f(int n) { for (int i = 0; i < n; i += 2) {} }
+---
+void f(int n) { for (int i = 0; i < n; ckd_compound_narrow(i, ckd_add, 2, int, 40)) {} }
+
+
+
+
+=== for sub assign ===
+void f(int n) { for (int i = n; i > 0; i -= 3) {} }
+---
+void f(int n) { for (int i = ckd_narrow(n, int, 30); i > 0; ckd_compound_narrow(i, ckd_sub, 3, int, 40)) {} }
+
+
+
+=== for init arith ===
+void f(int a) { for (int i = a + 1; i < 10;) {} }
+---
+void f(int a) { for (int i = ckd_narrow(ckd_add(a, 1, 30), int, 30); i < 10;) {} }
+
+
+
+
+
+
+=== for cond arith ===
+void f(int a) { for (int i = 0; i < a + 10; i++) {} }
+---
+void f(int a) { for (int i = 0; i < ckd_add(a, 10, 37); ckd_preinc(i, 45)) {} }
+
+
+
+
+
+
+=== for body arith ===
+void f(int n) { for (int i = 0; i < n; i++) { int x = i * 2; } }
+---
+void f(int n) { for (int i = 0; i < n; ckd_preinc(i, 40)) { int x = ckd_narrow(ckd_mul(i, 2, 55), int, 55); } }
+
+
+
+
+
+
+=== for ptr inc ===
+void f(char *p, char *end) { for (; p < end; p++) {} }
+---
+void f(char *p, char *end) { for (; p < end; ckd_ptr_preinc(p, 46)) {} }
+
+
+
+
+
+
+=== for ptr add assign ===
+void f(char *p, char *end, int s) { for (; p < end; p += s) {} }
+---
+void f(char *p, char *end, int s) { for (; p < end; ckd_compound(p, ckd_ptr_add, s, 53)) {} }
+
+
+
+
+
+
+=== nested for ===
+void f(int n) { for (int i = 0; i < n; i++) { for (int j = 0; j < n; j++) {} } }
+---
+void f(int n) { for (int i = 0; i < n; ckd_preinc(i, 40)) { for (int j = 0; j < n; ckd_preinc(j, 70)) {} } }
+
+
+
+
+

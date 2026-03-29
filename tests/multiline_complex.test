@@ -1,0 +1,173 @@
+=== three nested parens ===
+int f(int a, int b, int c, int d) {
+    return ((a + b) * (c - d)) + 1;
+}
+---
+int f(int a, int b, int c, int d) {
+    return ckd_narrow(ckd_add((ckd_mul((ckd_add(a, b, 14)), (ckd_sub(c, d, 24)), 13)), 1, 12), int, 12);
+}
+
+
+
+
+
+=== conditional across lines ===
+int f(int a, int b, int c) {
+    return a > 0
+        ? a + b
+        : a - c;
+}
+---
+int f(int a, int b, int c) {
+    return ckd_narrow(a > 0
+        ? ckd_add(a, b, 11)
+        : ckd_sub(a, c, 11), int, 12);
+}
+
+
+
+
+
+=== for with comma ===
+void f(int n) {
+    int a = 0, b = 0;
+    for (int i = 0; i < n; a++, b++, i++) {
+    }
+}
+---
+void f(int n) {
+    int a = 0, b = 0;
+    for (int i = 0; i < n; ckd_preinc(a, 28), ckd_preinc(b, 33), ckd_preinc(i, 38)) {
+    }
+}
+
+
+
+
+
+
+=== nested call multiline ===
+int g(int);
+int f(int a, int b) {
+    return g(a + b) + g(a - b);
+}
+---
+int g(int);
+int f(int a, int b) {
+    return ckd_narrow(ckd_add(g(ckd_narrow(ckd_add(a, b, 14), int, 14)), g(ckd_narrow(ckd_sub(a, b, 25), int, 25)), 12), int, 12);
+}
+
+
+
+
+
+=== array indexing multiline ===
+void f(int *a, int n) {
+    for (int i = 1; i < n; i++) {
+        a[i] = a[i - 1] + a[i];
+    }
+}
+---
+void f(int *a, int n) {
+    for (int i = 1; i < n; ckd_preinc(i, 28)) {
+        a[i] = ckd_narrow(ckd_add(a[ckd_sub(i, 1, 18)], a[i], 16), int, 16);
+    }
+}
+
+
+
+
+
+
+=== funcptr field no pollution multiline ===
+struct ops {
+    void (*read)(char *buf, int *len);
+    void (*write)(char *buf, int *len);
+};
+void f(int buf, int len) {
+    int total = buf + len;
+}
+---
+struct ops {
+    void (*read)(char *buf, int *len);
+    void (*write)(char *buf, int *len);
+};
+void f(int buf, int len) {
+    int total = ckd_narrow(ckd_add(buf, len, 17), int, 17);
+}
+
+
+
+
+
+=== real blend multiline ===
+unsigned blend_channel(unsigned fg, unsigned bg, unsigned alpha) {
+    unsigned a = 255 - alpha;
+    unsigned b = alpha + 1;
+    unsigned r = (unsigned char)((fg) >> 16);
+    unsigned s = (unsigned char)((bg) >> 16);
+    return (a * r + b * s) / 256;
+}
+---
+unsigned blend_channel(unsigned fg, unsigned bg, unsigned alpha) {
+    unsigned a = ckd_narrow(ckd_sub(255, alpha, 18), unsigned, 18);
+    unsigned b = ckd_narrow(ckd_add(alpha, 1, 18), unsigned, 18);
+    unsigned r = ckd_narrow(ckd_narrow((ckd_shr((fg), 16, 34)), unsigned char, 18), unsigned, 18);
+    unsigned s = ckd_narrow(ckd_narrow((ckd_shr((bg), 16, 34)), unsigned char, 18), unsigned, 18);
+    return ckd_narrow(ckd_div((ckd_add(ckd_mul(a, r, 13), ckd_mul(b, s, 21), 13)), 256, 12), unsigned, 12);
+}
+
+=== accumulate ptr and size ===
+void f(char *base, unsigned long *sizes, int count) {
+    unsigned long total = 0;
+    char *ptr = base;
+    for (int i = 0; i < count; i++) {
+        total += sizes[i];
+        ptr += sizes[i];
+    }
+}
+---
+void f(char *base, unsigned long *sizes, int count) {
+    unsigned long total = 0;
+    char *ptr = base;
+    for (int i = 0; i < count; ckd_preinc(i, 32)) {
+        ckd_compound_narrow(total, ckd_add, sizes[i], unsigned long, 9);
+        ckd_compound(ptr, ckd_ptr_add, sizes[i], 9);
+    }
+}
+
+
+
+
+=== complex offset calc ===
+void f(char *fb, unsigned pitch, unsigned bpp,
+       unsigned x, unsigned y) {
+    char *pixel = fb + y * pitch + x * (bpp / 8);
+}
+---
+void f(char *fb, unsigned pitch, unsigned bpp,
+       unsigned x, unsigned y) {
+    char *pixel = ckd_ptr_add(ckd_ptr_add(fb, ckd_mul(y, pitch, 24), 19), ckd_mul(x, (ckd_div(bpp, 8, 41)), 36), 19);
+}
+
+
+
+
+
+
+=== line directive then multiline ===
+# 1 "test.c"
+int f(int a, int b) {
+    int x = a + b;
+    return x * 2;
+}
+---
+# 1 "test.c"
+int f(int a, int b) {
+    int x = ckd_narrow(ckd_add(a, b, 13), int, 13);
+    return ckd_narrow(ckd_mul(x, 2, 12), int, 12);
+}
+
+
+
+

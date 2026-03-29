@@ -1,0 +1,44 @@
+=== chain 2 ===
+void f(int a, int b, int c) { int x = a + b + c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_add(ckd_add(a, b, 39), c, 39), int, 39); }
+
+
+
+
+
+=== parens mul ===
+void f(int a, int b, int c) { int x = (a + b) * c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_mul((ckd_add(a, b, 40)), c, 39), int, 39); }
+
+
+
+
+
+=== mul then add ===
+void f(int a, int b, int c) { int x = a * b + c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_add(ckd_mul(a, b, 39), c, 39), int, 39); }
+
+
+
+
+
+=== add then mul ===
+void f(int a, int b, int c) { int x = a + b * c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_add(a, ckd_mul(b, c, 43), 39), int, 39); }
+
+
+
+
+
+=== align up ===
+void f(unsigned long v, unsigned long a) { unsigned long r = ((v + (a - 1)) / a) * a; }
+---
+void f(unsigned long v, unsigned long a) { unsigned long r = ckd_narrow(ckd_mul((ckd_div((ckd_add(v, (ckd_sub(a, 1, 69)), 64)), a, 63)), a, 62), unsigned long, 62); }
+
+
+
+

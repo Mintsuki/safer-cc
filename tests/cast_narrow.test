@@ -1,0 +1,80 @@
+=== cast char ===
+void f(int x) { char c = (char)x; }
+---
+void f(int x) { char c = ckd_narrow(x, char, 26); }
+
+=== cast unsigned char ===
+void f(int x) { unsigned char c = (unsigned char)x; }
+---
+void f(int x) { unsigned char c = ckd_narrow(x, unsigned char, 35); }
+
+=== cast short ===
+void f(int x) { short s = (short)x; }
+---
+void f(int x) { short s = ckd_narrow(x, short, 27); }
+
+=== cast int from long ===
+void f(long x) { int y = (int)x; }
+---
+void f(long x) { int y = ckd_narrow(x, int, 26); }
+
+=== cast uint32 from uint64 ===
+typedef unsigned int uint32_t;
+typedef unsigned long long uint64_t;
+void f(uint64_t x) { uint32_t y = (uint32_t)x; }
+---
+typedef unsigned int uint32_t;
+typedef unsigned long long uint64_t;
+void f(uint64_t x) { uint32_t y = ckd_narrow(x, uint32_t, 35); }
+
+=== cast pointer skip ===
+void f(int x) { void *p = (void *)x; }
+---
+void f(int x) { void *p = (void *)x; }
+
+=== cast const skip ===
+void f(void) { char c = (char)42; }
+---
+void f(void) { char c = (char)42; }
+
+=== cast with expr ===
+void f(int a, int b) { char c = (char)(a + b); }
+---
+void f(int a, int b) { char c = ckd_narrow((ckd_add(a, b, 40)), char, 33); }
+
+=== cast suppress ===
+void f(int x) { char c = @(char)x; }
+---
+void f(int x) { char c = (char)x; }
+
+=== cast different type double check ===
+void f(long x) { char c = (int)x; }
+---
+void f(long x) { char c = ckd_narrow(ckd_narrow(x, int, 27), char, 27); }
+
+=== cast in expression ===
+void f(int x, int y) { int z = (char)x + y; }
+---
+void f(int x, int y) { int z = ckd_narrow(ckd_add(ckd_narrow(x, char, 32), y, 32), int, 32); }
+
+=== cast in return ===
+char f(long x) { return (char)x; }
+---
+char f(long x) { return ckd_narrow(x, char, 25); }
+
+=== cast in call same type ===
+void g(char c);
+void f(int x) { g((char)x); }
+---
+void g(char c);
+void f(int x) { g(ckd_narrow(x, char, 19)); }
+
+=== cast to wider harmless ===
+void f(int x) { long y = (long)x; }
+---
+void f(int x) { long y = ckd_narrow(x, long, 26); }
+
+=== cast to unsigned ===
+void f(int x) { unsigned y = (unsigned)x; }
+---
+void f(int x) { unsigned y = ckd_narrow(x, unsigned, 30); }

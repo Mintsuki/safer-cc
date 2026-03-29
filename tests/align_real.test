@@ -1,0 +1,65 @@
+=== kernel align ===
+void f(unsigned long x, unsigned long a) { unsigned long r = ((x) + (a - 1)) & ~(a - 1); }
+---
+void f(unsigned long x, unsigned long a) { unsigned long r = ckd_narrow((ckd_add((x), (ckd_sub(a, 1, 70)), 63)) & ~(ckd_sub(a, 1, 82)), unsigned long, 62); }
+
+
+
+
+
+
+=== div round up ===
+void f(unsigned long n, unsigned long d) { unsigned long r = (n + d - 1) / d; }
+---
+void f(unsigned long n, unsigned long d) { unsigned long r = ckd_narrow(ckd_div((ckd_sub(ckd_add(n, d, 63), 1, 63)), d, 62), unsigned long, 62); }
+
+
+
+
+
+=== page align 4k ===
+void f(unsigned long addr) { unsigned long r = (addr + 0xFFF) & ~0xFFFUL; }
+---
+void f(unsigned long addr) { unsigned long r = ckd_narrow((ckd_add(addr, 0xFFF, 49)) & ~0xFFFUL, unsigned long, 48); }
+
+
+
+
+
+
+=== fat root dir sectors ===
+void f(unsigned entries, unsigned bps) { unsigned long s = ((entries * 32) + (bps - 1)) / bps; }
+---
+void f(unsigned entries, unsigned bps) { unsigned long s = ckd_narrow(ckd_div((ckd_add((ckd_mul(entries, 32, 62)), (ckd_sub(bps, 1, 79)), 61)), bps, 60), unsigned long, 60); }
+
+
+
+
+
+=== align mask sub ===
+void f(unsigned long align) { unsigned long mask = align - 1; unsigned long inv = ~mask; }
+---
+void f(unsigned long align) { unsigned long mask = ckd_narrow(ckd_sub(align, 1, 52), unsigned long, 52); unsigned long inv = ckd_narrow(~mask, unsigned long, 83); }
+
+
+
+
+
+
+=== power of two align ===
+void f(unsigned long val, unsigned long bits) { unsigned long aligned = (val + (1UL << bits) - 1) & ~((1UL << bits) - 1); }
+---
+void f(unsigned long val, unsigned long bits) { unsigned long aligned = ckd_narrow((ckd_sub(ckd_add(val, (ckd_shl(1UL, bits, 81)), 74), 1, 74)) & ~(ckd_sub((ckd_shl(1UL, bits, 104)), 1, 103)), unsigned long, 73); }
+
+
+
+
+
+=== section align ===
+void f(unsigned long size, unsigned long align) { unsigned long pad = align - (size % align); unsigned long total = size + pad; }
+---
+void f(unsigned long size, unsigned long align) { unsigned long pad = ckd_narrow(ckd_sub(align, (ckd_mod(size, align, 80)), 71), unsigned long, 71); unsigned long total = ckd_narrow(ckd_add(size, pad, 117), unsigned long, 117); }
+
+
+
+

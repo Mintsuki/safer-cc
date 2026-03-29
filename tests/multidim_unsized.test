@@ -1,0 +1,115 @@
+=== unsized outer sized inner ===
+void f(int m[][4], int i, int j) { m[i][j]; }
+---
+void f(int m[][4], int i, int j) { ckd_bounds(m[i], j, 4, 36); }
+
+
+
+
+
+
+=== sized outer unsized inner ===
+void f(int m[3][], int i, int j) { m[i][j]; }
+---
+void f(int m[3][], int i, int j) { ckd_bounds(m, i, 3, 36)[j]; }
+
+
+
+
+
+
+=== 3d unsized outer ===
+void f(int a[][3][4], int i, int j, int k) { a[i][j][k]; }
+---
+void f(int a[][3][4], int i, int j, int k) { ckd_bounds(ckd_bounds(a[i], j, 3, 46), k, 4, 46); }
+
+
+
+
+
+
+=== unsized outer access first dim only ===
+void f(int m[][4], int i) { m[i]; }
+---
+void f(int m[][4], int i) { m[i]; }
+
+
+
+
+
+
+=== fully sized 3d ===
+void f(int i, int j, int k) {
+    int a[2][3][4];
+    a[i][j][k];
+}
+---
+void f(int i, int j, int k) {
+    int a[2][3][4];
+    ckd_bounds(ckd_bounds(ckd_bounds(a, i, 2, 5), j, 3, 5), k, 4, 5);
+}
+
+
+
+
+
+
+=== local unsized with init ===
+void f(int i) {
+    int m[][3] = {{1,2,3},{4,5,6}};
+    m[i][0];
+}
+---
+void f(int i) {
+    int m[][3] = {{1,2,3},{4,5,6}};
+    ckd_bounds(m[i], 0, 3, 5);
+}
+
+
+
+
+
+
+=== param 3d unsized outer param ===
+void f(int a[][3][4], int i, int j, int k) {
+    a[i][j][k];
+}
+---
+void f(int a[][3][4], int i, int j, int k) {
+    ckd_bounds(ckd_bounds(a[i], j, 3, 5), k, 4, 5);
+}
+
+
+
+
+
+
+=== fully sized 2d param ===
+void f(int m[4][4], int i, int j) { m[i][j]; }
+---
+void f(int m[4][4], int i, int j) { ckd_bounds(ckd_bounds(m, i, 4, 37), j, 4, 37); }
+
+
+
+
+
+
+=== both unsized no check ===
+void f(int m[][], int i, int j) { m[i][j]; }
+---
+void f(int m[][], int i, int j) { m[i][j]; }
+
+
+
+
+
+
+=== unsized outer write inner ===
+void f(int m[][4], int i, int j, int v) { m[i][j] = v; }
+---
+void f(int m[][4], int i, int j, int v) { ckd_bounds(m[i], j, 4, 43) = v; }
+
+
+
+
+

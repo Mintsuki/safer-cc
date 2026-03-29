@@ -1,0 +1,158 @@
+=== int div ===
+void f(int a, int b) { int x = a / b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_div(a, b, 32), int, 32); }
+
+
+
+
+
+=== int mod ===
+void f(int a, int b) { int x = a % b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_mod(a, b, 32), int, 32); }
+
+
+
+
+
+=== unsigned div ===
+void f(unsigned a, unsigned b) { unsigned x = a / b; }
+---
+void f(unsigned a, unsigned b) { unsigned x = ckd_narrow(ckd_div(a, b, 47), unsigned, 47); }
+
+
+
+
+
+=== unsigned mod ===
+void f(unsigned a, unsigned b) { unsigned x = a % b; }
+---
+void f(unsigned a, unsigned b) { unsigned x = ckd_narrow(ckd_mod(a, b, 47), unsigned, 47); }
+
+
+
+
+
+=== div assign ===
+void f(int a, int b) { a /= b; }
+---
+void f(int a, int b) { ckd_compound_narrow(a, ckd_div, b, int, 24); }
+
+
+
+
+=== mod assign ===
+void f(int a, int b) { a %= b; }
+---
+void f(int a, int b) { ckd_compound_narrow(a, ckd_mod, b, int, 24); }
+
+
+
+
+=== const div const ===
+void f(void) { int x = 100 / 10; }
+---
+void f(void) { int x = 100 / 10; }
+
+
+
+
+
+
+=== const mod const ===
+void f(void) { int x = 100 % 7; }
+---
+void f(void) { int x = 100 % 7; }
+
+
+
+
+
+
+=== var div const ===
+void f(int a) { int x = a / 2; }
+---
+void f(int a) { int x = ckd_narrow(ckd_div(a, 2, 25), int, 25); }
+
+
+
+
+
+
+=== div in paren ===
+void f(int a, int b) { int x = (a + b) / 2; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_div((ckd_add(a, b, 33)), 2, 32), int, 32); }
+
+
+
+
+
+=== mod in ring ===
+void f(int h, int n) { int next = (h + 1) % n; }
+---
+void f(int h, int n) { int next = ckd_narrow(ckd_mod((ckd_add(h, 1, 36)), n, 35), int, 35); }
+
+
+
+
+
+=== div round up ===
+void f(int n, int d) { int r = (n + d - 1) / d; }
+---
+void f(int n, int d) { int r = ckd_narrow(ckd_div((ckd_sub(ckd_add(n, d, 33), 1, 33)), d, 32), int, 32); }
+
+
+
+
+
+=== suppress div ===
+void f(int a, int b) { int x = a @/ b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a / b, int, 32); }
+
+
+
+
+
+
+=== suppress mod ===
+void f(int a, int b) { int x = a @% b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a % b, int, 32); }
+
+
+
+
+
+
+=== handles count ===
+void f(unsigned long handles_size) { unsigned long count = handles_size / sizeof(void *); }
+---
+void f(unsigned long handles_size) { unsigned long count = ckd_narrow(ckd_div(handles_size, sizeof(void *), 60), unsigned long, 60); }
+
+
+
+
+
+
+=== bpp div ===
+void f(unsigned bpp) { unsigned bytes = bpp / 8; }
+---
+void f(unsigned bpp) { unsigned bytes = ckd_narrow(ckd_div(bpp, 8, 41), unsigned, 41); }
+
+
+
+
+
+
+=== pitch mod ===
+void f(unsigned pitch, unsigned bpp) { unsigned ok = pitch % (bpp / 8); }
+---
+void f(unsigned pitch, unsigned bpp) { unsigned ok = ckd_narrow(ckd_mod(pitch, (ckd_div(bpp, 8, 63)), 54), unsigned, 54); }
+
+
+
+
+

@@ -1,0 +1,237 @@
+=== div ===
+void f(int a, int b) { int x = a / b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_div(a, b, 32), int, 32); }
+
+
+
+
+
+=== mod ===
+void f(int a, int b) { int x = a % b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_mod(a, b, 32), int, 32); }
+
+
+
+
+
+=== bitand ===
+void f(int a, int b) { int x = a & b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a & b, int, 32); }
+
+
+
+
+
+
+=== bitor ===
+void f(int a, int b) { int x = a | b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a | b, int, 32); }
+
+
+
+
+
+
+=== xor ===
+void f(int a, int b) { int x = a ^ b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a ^ b, int, 32); }
+
+
+
+
+
+
+=== shl ===
+void f(int a, int b) { int x = a << b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_shl(a, b, 32), int, 32); }
+
+
+
+
+
+=== shr ===
+void f(int a, int b) { int x = a >> b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_shr(a, b, 32), int, 32); }
+
+
+
+
+
+=== logical and ===
+void f(int a, int b) { int x = a && b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a && b, int, 32); }
+
+
+
+
+
+
+=== logical or ===
+void f(int a, int b) { int x = a || b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a || b, int, 32); }
+
+
+
+
+
+
+=== eq ===
+void f(int a, int b) { int x = a == b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a == b, int, 32); }
+
+
+
+
+
+
+=== neq ===
+void f(int a, int b) { int x = a != b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a != b, int, 32); }
+
+
+
+
+
+
+=== lt ===
+void f(int a, int b) { int x = a < b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a < b, int, 32); }
+
+
+
+
+
+
+=== gt ===
+void f(int a, int b) { int x = a > b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a > b, int, 32); }
+
+
+
+
+
+
+=== le ===
+void f(int a, int b) { int x = a <= b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a <= b, int, 32); }
+
+
+
+
+
+
+=== ge ===
+void f(int a, int b) { int x = a >= b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a >= b, int, 32); }
+
+
+
+
+
+
+=== plain assign ===
+void f(int a) { int x = a; }
+---
+void f(int a) { int x = ckd_narrow(a, int, 25); }
+
+
+
+
+
+
+=== div assign ===
+void f(int a) { a /= 2; }
+---
+void f(int a) { ckd_compound_narrow(a, ckd_div, 2, int, 17); }
+
+
+
+
+=== mod assign ===
+void f(int a) { a %= 2; }
+---
+void f(int a) { ckd_compound_narrow(a, ckd_mod, 2, int, 17); }
+
+
+
+
+=== and assign ===
+void f(int a) { a &= 0xFF; }
+---
+void f(int a) { a &= 0xFF; }
+
+
+
+
+
+
+=== or assign ===
+void f(int a) { a |= 0x01; }
+---
+void f(int a) { a |= 0x01; }
+
+
+
+
+
+
+=== xor assign ===
+void f(int a) { a ^= 0x55; }
+---
+void f(int a) { a ^= 0x55; }
+
+
+
+
+
+
+=== shl assign ===
+void f(int a) { a <<= 1; }
+---
+void f(int a) { ckd_compound_narrow(a, ckd_shl, 1, int, 17); }
+
+
+
+
+=== shr assign ===
+void f(int a) { a >>= 1; }
+---
+void f(int a) { ckd_compound_narrow(a, ckd_shr, 1, int, 17); }
+
+
+
+
+=== comma no arith ===
+void f(int a, int b) { a, b; }
+---
+void f(int a, int b) { a, b; }
+
+
+
+
+
+
+=== ternary no arith ===
+void f(int c, int a, int b) { int x = c ? a : b; }
+---
+void f(int c, int a, int b) { int x = ckd_narrow(c ? a : b, int, 39); }
+
+
+
+
+

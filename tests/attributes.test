@@ -1,0 +1,57 @@
+=== unused ===
+__attribute__((unused)) void f(int a, int b) { int x = a + b; }
+---
+__attribute__((unused)) void f(int a, int b) { int x = ckd_narrow(ckd_add(a, b, 56), int, 56); }
+
+
+
+
+
+=== packed struct ===
+__attribute__((packed)) struct s { int x; };
+---
+__attribute__((packed)) struct s { int x; };
+
+
+
+
+
+
+=== noreturn ===
+__attribute__((noreturn)) void panic(void); void f(int a) { int x = a + 1; }
+---
+__attribute__((noreturn)) void panic(void); void f(int a) { int x = ckd_narrow(ckd_add(a, 1, 69), int, 69); }
+
+
+
+
+
+
+=== ms abi typedef ===
+typedef void (__attribute__((__ms_abi__)) *fp)(void); void f(int a) { int x = a + 1; }
+---
+typedef void (__attribute__((__ms_abi__)) *fp)(void); void f(int a) { int x = ckd_narrow(ckd_add(a, 1, 79), int, 79); }
+
+
+
+
+
+
+=== format ===
+__attribute__((format(printf, 1, 2))) void pr(const char *, ...); void f(int a) { int x = a + 1; }
+---
+__attribute__((format(printf, 1, 2))) void pr(const char *, ...); void f(int a) { int x = ckd_narrow(ckd_add(a, 1, 91), int, 91); }
+
+
+
+
+
+
+=== multiple attrs ===
+__attribute__((unused)) __attribute__((noinline)) void f(int a, int b) { int x = a + b; }
+---
+__attribute__((unused)) __attribute__((noinline)) void f(int a, int b) { int x = ckd_narrow(ckd_add(a, b, 82), int, 82); }
+
+
+
+

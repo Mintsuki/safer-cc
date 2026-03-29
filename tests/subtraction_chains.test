@@ -1,0 +1,72 @@
+=== a-b-c ===
+void f(int a, int b, int c) { int x = a - b - c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_sub(ckd_sub(a, b, 39), c, 39), int, 39); }
+
+
+
+
+
+=== a-b-c-d ===
+void f(int a, int b, int c, int d) { int x = a - b - c - d; }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow(ckd_sub(ckd_sub(ckd_sub(a, b, 46), c, 46), d, 46), int, 46); }
+
+
+
+
+
+=== a-b*c ===
+void f(int a, int b, int c) { int x = a - b * c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_sub(a, ckd_mul(b, c, 43), 39), int, 39); }
+
+
+
+
+
+=== a*b-c ===
+void f(int a, int b, int c) { int x = a * b - c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_sub(ckd_mul(a, b, 39), c, 39), int, 39); }
+
+
+
+
+
+=== (a-b)*(c-d) ===
+void f(int a, int b, int c, int d) { int x = (a - b) * (c - d); }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow(ckd_mul((ckd_sub(a, b, 47)), (ckd_sub(c, d, 57)), 46), int, 46); }
+
+
+
+
+
+=== a-b+c ===
+void f(int a, int b, int c) { int x = a - b + c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_add(ckd_sub(a, b, 39), c, 39), int, 39); }
+
+
+
+
+
+=== a+b-c ===
+void f(int a, int b, int c) { int x = a + b - c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_sub(ckd_add(a, b, 39), c, 39), int, 39); }
+
+
+
+
+
+=== ptr-a-b ===
+void f(char *p, int a, int b) { char *q = p - a - b; }
+---
+void f(char *p, int a, int b) { char *q = ckd_ptr_sub(ckd_ptr_sub(p, a, 43), b, 43); }
+
+
+
+
+

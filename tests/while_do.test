@@ -1,0 +1,55 @@
+=== while add cond ===
+void f(int a, int b) { while (a + b > 0) { a--; } }
+---
+void f(int a, int b) { while (ckd_add(a, b, 31) > 0) { ckd_predec(a, 44); } }
+
+
+
+
+
+
+=== while ptr walk ===
+void f(char *p, char *end) { while (p < end) { p++; } }
+---
+void f(char *p, char *end) { while (p < end) { ckd_ptr_preinc(p, 48); } }
+
+
+
+
+
+
+=== do while dec ===
+void f(int n) { do { n--; } while (n > 0); }
+---
+void f(int n) { do { ckd_predec(n, 22); } while (n > 0); }
+
+
+
+
+
+
+=== do while add ===
+void f(int x) { do { x += 5; } while (x < 100); }
+---
+void f(int x) { do { ckd_compound_narrow(x, ckd_add, 5, int, 22); } while (x < 100); }
+
+
+
+
+=== while true body arith ===
+void f(int x) { while (1) { x += 1; if (x > 10) break; } }
+---
+void f(int x) { while (1) { ckd_compound_narrow(x, ckd_add, 1, int, 29); if (x > 10) break; } }
+
+
+
+
+=== while mul cond ===
+void f(int a, int b) { while (a * b < 1000) { a++; } }
+---
+void f(int a, int b) { while (ckd_mul(a, b, 31) < 1000) { ckd_preinc(a, 47); } }
+
+
+
+
+

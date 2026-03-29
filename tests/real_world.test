@@ -1,0 +1,78 @@
+=== memmap top ===
+void f(unsigned long long base, unsigned long long length) { unsigned long long top = base + length; }
+---
+void f(unsigned long long base, unsigned long long length) { unsigned long long top = ckd_narrow(ckd_add(base, length, 87), unsigned long long, 87); }
+
+
+
+
+
+=== alloc size ===
+void f(unsigned long count) { unsigned long size = count * sizeof(int); }
+---
+void f(unsigned long count) { unsigned long size = ckd_narrow(ckd_mul(count, sizeof(int), 52), unsigned long, 52); }
+
+
+
+
+
+
+=== checksum ===
+void f(unsigned m, unsigned f, unsigned c) { if (m @+ f @+ c) {} }
+---
+void f(unsigned m, unsigned f, unsigned c) { if (m + f + c) {} }
+
+
+
+
+
+
+=== counter dec ===
+void f(unsigned long i) { if (i@--) {} }
+---
+void f(unsigned long i) { if (i--) {} }
+
+
+
+
+
+
+=== higher half ===
+void f(void) { unsigned long a = 0UL @- (1UL << 47); }
+---
+void f(void) { unsigned long a = 0UL - (1UL << 47); }
+
+
+
+
+
+
+=== loop sup ===
+void f(void) { for (unsigned long i = 0; i <= 10; i@++) { i@--; } }
+---
+void f(void) { for (unsigned long i = 0; i <= 10; i++) { i--; } }
+
+
+
+
+
+
+=== seed mul ===
+void f(unsigned s, unsigned t) { s = (0xc597060c @* t) @* 0xce86d624; }
+---
+void f(unsigned s, unsigned t) { s = ckd_narrow((0xc597060c * t) * 0xce86d624, unsigned, 38); }
+
+
+
+
+
+
+=== gradient dist ===
+void f(unsigned long x, unsigned long stop) { unsigned long d = x @- stop; }
+---
+void f(unsigned long x, unsigned long stop) { unsigned long d = ckd_narrow(x - stop, unsigned long, 65); }
+
+
+
+
+

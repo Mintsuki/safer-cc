@@ -1,0 +1,69 @@
+=== cast result add ===
+void f(long a, int b) { int x = (int)a + b; }
+---
+void f(long a, int b) { int x = ckd_narrow(ckd_add(ckd_narrow(a, int, 33), b, 33), int, 33); }
+
+=== cast operand add ===
+void f(int a) { long x = a + (long)1; }
+---
+void f(int a) { long x = ckd_narrow(ckd_add(a, (long)1, 26), long, 26); }
+
+
+
+
+
+
+=== cast both ===
+void f(short a, short b) { int x = (int)a + (int)b; }
+---
+void f(short a, short b) { int x = ckd_narrow(ckd_add(ckd_narrow(a, int, 36), ckd_narrow(b, int, 45), 36), int, 36); }
+
+=== cast to ptr add ===
+void f(long a) { char *p = (char *)a + 5; }
+---
+void f(long a) { char *p = ckd_ptr_add((char *)a, 5, 28); }
+
+
+
+
+
+
+=== cast int not ptr const ===
+void f(void) { int x = (int)1 + (int)2; }
+---
+void f(void) { int x = (int)1 + (int)2; }
+
+
+
+
+
+
+=== cast mul ===
+void f(int a) { long x = (long)a * 100; }
+---
+void f(int a) { long x = ckd_narrow(ckd_mul(ckd_narrow(a, long, 26), 100, 26), long, 26); }
+
+=== double cast add ===
+void f(short a, short b) { long x = (long)(int)a + b; }
+---
+void f(short a, short b) { long x = ckd_narrow(ckd_add(ckd_narrow(ckd_narrow(a, int, 43), long, 37), b, 37), long, 37); }
+
+=== cast sub ===
+void f(unsigned a) { int x = (int)a - 1; }
+---
+void f(unsigned a) { int x = ckd_narrow(ckd_sub(ckd_narrow(a, int, 30), 1, 30), int, 30); }
+
+=== cast compound assign ===
+void f(long a) { int x = 0; x += (int)a; }
+---
+void f(long a) { int x = 0; ckd_compound_narrow(x, ckd_add, ckd_narrow(a, int, 34), int, 29); }
+
+=== void ptr cast add ===
+void f(void *p) { char *q = (char *)p + 10; }
+---
+void f(void *p) { char *q = ckd_ptr_add((char *)p, 10, 29); }
+
+
+
+
+

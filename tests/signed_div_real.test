@@ -1,0 +1,101 @@
+=== div with sub ===
+void f(long mc, long base, long delta, long t) { long k = (mc - base + delta) / t; }
+---
+void f(long mc, long base, long delta, long t) { long k = ckd_narrow(ckd_div((ckd_add(ckd_sub(mc, base, 60), delta, 60)), t, 59), long, 59); }
+
+
+
+
+
+=== mod then div ===
+void f(int a, int b) { int q = a / b; int r = a % b; }
+---
+void f(int a, int b) { int q = ckd_narrow(ckd_div(a, b, 32), int, 32); int r = ckd_narrow(ckd_mod(a, b, 47), int, 47); }
+
+
+
+
+
+=== div in for ===
+void f(int total, int chunk) {
+    int nchunks = total / chunk;
+    for (int i = 0; i < nchunks; i++) {}
+}
+---
+void f(int total, int chunk) {
+    int nchunks = ckd_narrow(ckd_div(total, chunk, 19), int, 19);
+    for (int i = 0; i < nchunks; ckd_preinc(i, 34)) {}
+}
+
+
+
+
+
+=== unsigned div no signed check ===
+void f(unsigned a, unsigned b) { unsigned q = a / b; unsigned r = a % b; }
+---
+void f(unsigned a, unsigned b) { unsigned q = ckd_narrow(ckd_div(a, b, 47), unsigned, 47); unsigned r = ckd_narrow(ckd_mod(a, b, 67), unsigned, 67); }
+
+
+
+
+
+=== signed div neg literal ===
+void f(int a) { int x = a / -1; }
+---
+void f(int a) { int x = ckd_narrow(ckd_div(a, -1, 25), int, 25); }
+
+
+
+
+
+
+=== div assign ===
+void f(int a, int b) { a /= b; }
+---
+void f(int a, int b) { ckd_compound_narrow(a, ckd_div, b, int, 24); }
+
+
+
+
+=== mod assign ===
+void f(int a, int b) { a %= b; }
+---
+void f(int a, int b) { ckd_compound_narrow(a, ckd_mod, b, int, 24); }
+
+
+
+
+=== div round to zero ===
+void f(int n, int d) {
+    int q = n / d;
+    int r = n - q * d;
+}
+---
+void f(int n, int d) {
+    int q = ckd_narrow(ckd_div(n, d, 13), int, 13);
+    int r = ckd_narrow(ckd_sub(n, ckd_mul(q, d, 17), 13), int, 13);
+}
+
+
+
+
+
+=== chained div ===
+void f(int a, int b, int c) { int x = a / b / c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_div(ckd_div(a, b, 39), c, 39), int, 39); }
+
+
+
+
+
+=== div with sizeof ===
+void f(int total) { int count = total / sizeof(int); }
+---
+void f(int total) { int count = ckd_narrow(ckd_div(total, sizeof(int), 33), int, 33); }
+
+
+
+
+

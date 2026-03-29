@@ -1,0 +1,118 @@
+=== const div ===
+void f(void) { int x = 100 / 10; }
+---
+void f(void) { int x = 100 / 10; }
+
+
+
+
+
+
+=== const mod ===
+void f(void) { int x = 100 % 7; }
+---
+void f(void) { int x = 100 % 7; }
+
+
+
+
+
+
+=== const shl ===
+void f(void) { int x = 1 << 8; }
+---
+void f(void) { int x = 1 << 8; }
+
+
+
+
+
+
+=== const shr ===
+void f(void) { int x = 256 >> 4; }
+---
+void f(void) { int x = 256 >> 4; }
+
+
+
+
+
+
+=== const neg ===
+void f(void) { int x = -42; }
+---
+void f(void) { int x = -42; }
+
+
+
+
+
+
+=== const nested ===
+void f(void) { int x = (10 + 20) / (3 * 2); }
+---
+void f(void) { int x = (10 + 20) / (3 * 2); }
+
+
+
+
+
+
+=== sizeof div ===
+void f(void) { int x = sizeof(long) / sizeof(int); }
+---
+void f(void) { int x = sizeof(long) / sizeof(int); }
+
+
+
+
+
+
+=== sizeof shift ===
+void f(void) { int x = sizeof(int) << 3; }
+---
+void f(void) { int x = sizeof(int) << 3; }
+
+
+
+
+
+
+=== var div const ===
+void f(int a) { int x = a / 4; }
+---
+void f(int a) { int x = ckd_narrow(ckd_div(a, 4, 25), int, 25); }
+
+
+
+
+
+
+=== const div var ===
+void f(int a) { int x = 100 / a; }
+---
+void f(int a) { int x = ckd_narrow(ckd_div(100, a, 25), int, 25); }
+
+
+
+
+
+=== var shl const ===
+void f(int a) { int x = a << 1; }
+---
+void f(int a) { int x = ckd_narrow(ckd_shl(a, 1, 25), int, 25); }
+
+
+
+
+
+
+=== var neg ===
+void f(int a) { int x = -a; }
+---
+void f(int a) { int x = ckd_narrow(ckd_neg(a, 25), int, 25); }
+
+
+
+
+

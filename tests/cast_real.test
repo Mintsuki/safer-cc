@@ -1,0 +1,54 @@
+=== u64 mul ===
+void f(unsigned lba) { unsigned long long off = (unsigned long long)lba * 2048; }
+---
+void f(unsigned lba) { unsigned long long off = ckd_narrow(ckd_mul(ckd_narrow(lba, unsigned long long, 49), 2048, 49), unsigned long long, 49); }
+
+=== u64 mul div chain ===
+unsigned long long f(unsigned a, unsigned b, unsigned c) { return (unsigned long long)a * b / c; }
+---
+unsigned long long f(unsigned a, unsigned b, unsigned c) { return ckd_narrow(ckd_div(ckd_mul(ckd_narrow(a, unsigned long long, 67), b, 67), c, 67), unsigned long long, 67); }
+
+=== size_t cast mul ===
+void f(int x, int y) { unsigned long n = (unsigned long)x * (unsigned long)y; }
+---
+void f(int x, int y) { unsigned long n = ckd_narrow(ckd_mul(ckd_narrow(x, unsigned long, 42), ckd_narrow(y, unsigned long, 61), 42), unsigned long, 42); }
+
+=== int cast add shift ===
+void f(unsigned char *info) { int w = (int)info[2]; w += ((int)info[4] & 0xf0) << 4; }
+---
+void f(unsigned char *info) { int w = ckd_narrow(info[2], int, 39); ckd_compound_narrow(w, ckd_add, ckd_shl((ckd_narrow(info[4], int, 59) & 0xf0), 4, 58), int, 53); }
+
+=== u64 cast both ===
+void f(unsigned a) { unsigned long long off = (unsigned long long)a * sizeof(unsigned); }
+---
+void f(unsigned a) { unsigned long long off = ckd_narrow(ckd_mul(ckd_narrow(a, unsigned long long, 47), sizeof(unsigned), 47), unsigned long long, 47); }
+
+=== cast sub ===
+void f(unsigned long a) { long long r = (long long)a - 1; }
+---
+void f(unsigned long a) { long long r = ckd_narrow(ckd_sub(ckd_narrow(a, long long, 41), 1, 41), long long, 41); }
+
+=== uintptr add ===
+void f(void *p, unsigned long off) { void *q = (void *)((unsigned long)p + off); }
+---
+void f(void *p, unsigned long off) { void *q = (void *)(ckd_add(ckd_narrow(p, unsigned long, 57), off, 57)); }
+
+=== negate via cast ===
+void f(long x) { unsigned long ux = x < 0 ? (unsigned long)0 - (unsigned long)x : (unsigned long)x; }
+---
+void f(long x) { unsigned long ux = ckd_narrow(x < 0 ? ckd_sub((unsigned long)0, ckd_narrow(x, unsigned long, 64), 45) : ckd_narrow(x, unsigned long, 83), unsigned long, 37); }
+
+=== channel extract add ===
+void f(unsigned rgb) { unsigned char r = (unsigned char)((rgb) >> 16); unsigned v = r + 1; }
+---
+void f(unsigned rgb) { unsigned char r = ckd_narrow((ckd_shr((rgb), 16, 58)), unsigned char, 42); unsigned v = ckd_narrow(ckd_add(r, 1, 85), unsigned, 85); }
+
+=== weighted channel ===
+void f(unsigned r, unsigned g, unsigned b) { unsigned lum = r * 77 + g * 150 + b * 29; }
+---
+void f(unsigned r, unsigned g, unsigned b) { unsigned lum = ckd_narrow(ckd_add(ckd_add(ckd_mul(r, 77, 61), ckd_mul(g, 150, 70), 61), ckd_mul(b, 29, 80), 61), unsigned, 61); }
+
+
+
+
+

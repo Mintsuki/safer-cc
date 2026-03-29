@@ -1,0 +1,175 @@
+=== memcpy with bounds ===
+void f(int n) {
+    char src[256];
+    char dst[256];
+    for (int i = 0; i < n; i++) {
+        dst[i] = src[i];
+    }
+}
+---
+void f(int n) {
+    char src[256];
+    char dst[256];
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        ckd_bounds(dst, i, 256, 9) = ckd_narrow(ckd_bounds(src, i, 256, 18), char, 18);
+    }
+}
+
+
+
+
+
+
+=== ring with bounds ===
+void f(int n) {
+    int buf[64];
+    int head = 0;
+    for (int i = 0; i < n; i++) {
+        buf[head] = i;
+        head = (head + 1) % 64;
+    }
+}
+---
+void f(int n) {
+    int buf[64];
+    int head = 0;
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        ckd_bounds(buf, head, 64, 9) = ckd_narrow(i, int, 21);
+        head = ckd_narrow(ckd_mod((ckd_add(head, 1, 17)), 64, 16), int, 16);
+    }
+}
+
+
+
+
+
+
+=== pixel calc all ops ===
+void f(unsigned *fb, unsigned w, unsigned h) {
+    for (unsigned y = 0; y < h; y++) {
+        for (unsigned x = 0; x < w; x++) {
+            unsigned off = y * w + x;
+            unsigned r = (off * 255) / (w * h);
+            fb[off] = r << 16;
+        }
+    }
+}
+---
+void f(unsigned *fb, unsigned w, unsigned h) {
+    for (unsigned y = 0; y < h; ckd_preinc(y, 33)) {
+        for (unsigned x = 0; x < w; ckd_preinc(x, 37)) {
+            unsigned off = ckd_narrow(ckd_add(ckd_mul(y, w, 28), x, 28), unsigned, 28);
+            unsigned r = ckd_narrow(ckd_div((ckd_mul(off, 255, 27)), (ckd_mul(w, h, 41)), 26), unsigned, 26);
+            fb[off] = ckd_narrow(ckd_shl(r, 16, 23), unsigned, 23);
+        }
+    }
+}
+
+
+
+
+
+=== sort with all ===
+void f(int n) {
+    int arr[100];
+    for (int i = 1; i < n; i++) {
+        int key = arr[i];
+        int j = i - 1;
+        while (j >= 0 && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+        arr[j + 1] = key;
+    }
+}
+---
+void f(int n) {
+    int arr[100];
+    for (int i = 1; i < n; ckd_preinc(i, 28)) {
+        int key = ckd_narrow(ckd_bounds(arr, i, 100, 19), int, 19);
+        int j = ckd_narrow(ckd_sub(i, 1, 17), int, 17);
+        while (j >= 0 && ckd_bounds(arr, j, 100, 26) > key) {
+            ckd_bounds(arr, ckd_add(j, 1, 17), 100, 13) = ckd_narrow(ckd_bounds(arr, j, 100, 26), int, 26);
+            ckd_predec(j, 13);
+        }
+        ckd_bounds(arr, ckd_add(j, 1, 13), 100, 9) = ckd_narrow(key, int, 22);
+    }
+}
+
+
+
+
+
+
+=== binary search ===
+int f(int n, int target) {
+    int arr[1024];
+    int lo = 0;
+    int hi = n - 1;
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (arr[mid] == target) {
+            return mid;
+        }
+        if (arr[mid] < target) {
+            lo = mid + 1;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    return -1;
+}
+---
+int f(int n, int target) {
+    int arr[1024];
+    int lo = 0;
+    int hi = ckd_narrow(ckd_sub(n, 1, 14), int, 14);
+    while (lo <= hi) {
+        int mid = ckd_narrow(ckd_add(lo, ckd_div((ckd_sub(hi, lo, 25)), 2, 24), 19), int, 19);
+        if (ckd_bounds(arr, mid, 1024, 13) == target) {
+            return ckd_narrow(mid, int, 20);
+        }
+        if (ckd_bounds(arr, mid, 1024, 13) < target) {
+            lo = ckd_narrow(ckd_add(mid, 1, 18), int, 18);
+        } else {
+            hi = ckd_narrow(ckd_sub(mid, 1, 18), int, 18);
+        }
+    }
+    return -1;
+}
+
+
+
+
+
+=== bubble sort ===
+void f(int n) {
+    int arr[50];
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                int tmp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = tmp;
+            }
+        }
+    }
+}
+---
+void f(int n) {
+    int arr[50];
+    for (int i = 0; i < ckd_sub(n, 1, 25); ckd_preinc(i, 32)) {
+        for (int j = 0; j < ckd_sub(ckd_sub(n, i, 29), 1, 29); ckd_preinc(j, 40)) {
+            if (ckd_bounds(arr, j, 50, 17) > ckd_bounds(arr, ckd_add(j, 1, 30), 50, 26)) {
+                int tmp = ckd_narrow(ckd_bounds(arr, j, 50, 27), int, 27);
+                ckd_bounds(arr, j, 50, 17) = ckd_narrow(ckd_bounds(arr, ckd_add(j, 1, 30), 50, 26), int, 26);
+                ckd_bounds(arr, ckd_add(j, 1, 21), 50, 17) = ckd_narrow(tmp, int, 30);
+            }
+        }
+    }
+}
+
+
+
+
+

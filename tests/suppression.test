@@ -1,0 +1,127 @@
+=== add ===
+void f(int a, int b) { int x = a @+ b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a + b, int, 32); }
+
+
+
+
+
+
+=== sub ===
+void f(int a, int b) { int x = a @- b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a - b, int, 32); }
+
+
+
+
+
+
+=== mul ===
+void f(int a, int b) { int x = a @* b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a * b, int, 32); }
+
+
+
+
+
+
+=== add assign ===
+void f(int x) { x @+= 5; }
+---
+void f(int x) { x += 5; }
+
+
+
+
+
+
+=== postfix inc ===
+void f(int x) { x@++; }
+---
+void f(int x) { x++; }
+
+
+
+
+
+
+=== postfix dec ===
+void f(int x) { x@--; }
+---
+void f(int x) { x--; }
+
+
+
+
+
+
+=== prefix inc ===
+void f(int x) { @++x; }
+---
+void f(int x) { ++x; }
+
+
+
+
+
+
+=== prefix dec ===
+void f(int x) { @--x; }
+---
+void f(int x) { --x; }
+
+
+
+
+
+
+=== at in string ===
+void f(void) { char *s = "a@b"; }
+---
+void f(void) { char *s = "a@b"; }
+
+
+
+
+
+
+=== at in char ===
+void f(void) { char c = '@'; }
+---
+void f(void) { char c = '@'; }
+
+
+
+
+
+
+=== inner sup outer chk ===
+void f(int a, int b, int c) { int x = (a @+ b) * c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_mul((a + b), c, 39), int, 39); }
+
+
+
+
+
+=== inner chk outer sup ===
+void f(int a, int b, int c) { int x = (a + b) @* c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow((ckd_add(a, b, 40)) * c, int, 39); }
+
+
+
+
+
+=== both sup ===
+void f(int a, int b, int c) { int x = (a @+ b) @* c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow((a + b) * c, int, 39); }
+
+
+
+
+

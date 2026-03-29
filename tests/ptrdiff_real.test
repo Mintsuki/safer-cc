@@ -1,0 +1,89 @@
+=== memset range ===
+void f(char *info, char *inode) { unsigned long sz = inode - info; }
+---
+void f(char *info, char *inode) { unsigned long sz = ckd_narrow(ckd_ptr_diff(inode, info, 54), unsigned long, 54); }
+
+
+
+
+
+=== offset calc ===
+void f(char *objp0, char *objp) { unsigned long off = objp0 - objp; }
+---
+void f(char *objp0, char *objp) { unsigned long off = ckd_narrow(ckd_ptr_diff(objp0, objp, 55), unsigned long, 55); }
+
+
+
+
+
+=== ptr diff in call ===
+void memset(void *, int, unsigned long);
+void f(char *start, char *end) { memset(start, 0, end - start); }
+---
+void memset(void *, int, unsigned long);
+void f(char *start, char *end) { memset(start, 0, ckd_narrow(ckd_ptr_diff(end, start, 51), unsigned long, 51)); }
+
+
+
+
+
+=== ptr diff chain ===
+void f(char *a, char *b, char *c) {
+    long d1 = b - a;
+    long d2 = c - b;
+    long total = d1 + d2;
+}
+---
+void f(char *a, char *b, char *c) {
+    long d1 = ckd_narrow(ckd_ptr_diff(b, a, 15), long, 15);
+    long d2 = ckd_narrow(ckd_ptr_diff(c, b, 15), long, 15);
+    long total = ckd_narrow(ckd_add(d1, d2, 18), long, 18);
+}
+
+
+
+
+
+=== int ptr diff ===
+void f(int *end, int *start) { long n = end - start; }
+---
+void f(int *end, int *start) { long n = ckd_narrow(ckd_ptr_diff(end, start, 41), long, 41); }
+
+
+
+
+
+=== void ptr diff cast ===
+void f(void *a, void *b) { unsigned long off = (char *)a - (char *)b; }
+---
+void f(void *a, void *b) { unsigned long off = ckd_narrow(ckd_ptr_diff((char *)a, (char *)b, 48), unsigned long, 48); }
+
+
+
+
+
+
+=== ptr diff negative ===
+void f(char *lo, char *hi) {
+    long neg = lo - hi;
+    long pos = hi - lo;
+}
+---
+void f(char *lo, char *hi) {
+    long neg = ckd_narrow(ckd_ptr_diff(lo, hi, 16), long, 16);
+    long pos = ckd_narrow(ckd_ptr_diff(hi, lo, 16), long, 16);
+}
+
+
+
+
+
+=== suppress ptr diff ===
+void f(char *a, char *b) { long d = a @- b; }
+---
+void f(char *a, char *b) { long d = ckd_narrow(a - b, long, 37); }
+
+
+
+
+

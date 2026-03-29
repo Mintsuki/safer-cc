@@ -1,0 +1,107 @@
+=== rgb extract ===
+void f(unsigned rgb) {
+    unsigned char r = (rgb >> 16) & 0xFF;
+    unsigned char g = (rgb >> 8) & 0xFF;
+    unsigned char b = rgb & 0xFF;
+}
+---
+void f(unsigned rgb) {
+    unsigned char r = ckd_narrow((ckd_shr(rgb, 16, 24)) & 0xFF, unsigned char, 23);
+    unsigned char g = ckd_narrow((ckd_shr(rgb, 8, 24)) & 0xFF, unsigned char, 23);
+    unsigned char b = ckd_narrow(rgb & 0xFF, unsigned char, 23);
+}
+
+
+
+
+
+
+=== truncate to byte ===
+void f(unsigned val) {
+    unsigned char lo = val;
+    unsigned char hi = val >> 8;
+}
+---
+void f(unsigned val) {
+    unsigned char lo = ckd_narrow(val, unsigned char, 24);
+    unsigned char hi = ckd_narrow(ckd_shr(val, 8, 24), unsigned char, 24);
+}
+
+
+
+
+
+
+=== device path len ===
+void f(unsigned len) {
+    unsigned char len_lo = len;
+    unsigned char len_hi = len >> 8;
+}
+---
+void f(unsigned len) {
+    unsigned char len_lo = ckd_narrow(len, unsigned char, 28);
+    unsigned char len_hi = ckd_narrow(ckd_shr(len, 8, 28), unsigned char, 28);
+}
+
+
+
+
+
+
+=== narrow in loop ===
+void f(int *data, int n) {
+    char buf[256];
+    for (int i = 0; i < n; i++) {
+        buf[i] = data[i];
+    }
+}
+---
+void f(int *data, int n) {
+    char buf[256];
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        ckd_bounds(buf, i, 256, 9) = ckd_narrow(data[i], char, 18);
+    }
+}
+
+
+
+
+
+
+=== narrow after arith ===
+void f(int a, int b) {
+    char sum = a + b;
+    short prod = a * b;
+}
+---
+void f(int a, int b) {
+    char sum = ckd_narrow(ckd_add(a, b, 16), char, 16);
+    short prod = ckd_narrow(ckd_mul(a, b, 18), short, 18);
+}
+
+
+
+
+
+
+=== narrow scoped ===
+void f(int x) {
+    char c = x;
+    {
+        int c = x;
+    }
+    char d = x;
+}
+---
+void f(int x) {
+    char c = ckd_narrow(x, char, 14);
+    {
+        int c = ckd_narrow(x, int, 17);
+    }
+    char d = ckd_narrow(x, char, 14);
+}
+
+
+
+
+

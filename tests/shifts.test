@@ -1,0 +1,167 @@
+=== shl ===
+void f(int a, int b) { int x = a << b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_shl(a, b, 32), int, 32); }
+
+
+
+
+
+=== shr ===
+void f(int a, int b) { int x = a >> b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_shr(a, b, 32), int, 32); }
+
+
+
+
+
+=== unsigned shl ===
+void f(unsigned a, unsigned b) { unsigned x = a << b; }
+---
+void f(unsigned a, unsigned b) { unsigned x = ckd_narrow(ckd_shl(a, b, 47), unsigned, 47); }
+
+
+
+
+
+=== unsigned shr ===
+void f(unsigned a, unsigned b) { unsigned x = a >> b; }
+---
+void f(unsigned a, unsigned b) { unsigned x = ckd_narrow(ckd_shr(a, b, 47), unsigned, 47); }
+
+
+
+
+
+=== shl assign ===
+void f(int a) { a <<= 4; }
+---
+void f(int a) { ckd_compound_narrow(a, ckd_shl, 4, int, 17); }
+
+
+
+
+=== shr assign ===
+void f(int a) { a >>= 4; }
+---
+void f(int a) { ckd_compound_narrow(a, ckd_shr, 4, int, 17); }
+
+
+
+
+=== const shl const ===
+void f(void) { int x = 1 << 4; }
+---
+void f(void) { int x = 1 << 4; }
+
+
+
+
+
+
+=== const shr const ===
+void f(void) { int x = 256 >> 2; }
+---
+void f(void) { int x = 256 >> 2; }
+
+
+
+
+
+
+=== var shl const ===
+void f(int a) { int x = a << 4; }
+---
+void f(int a) { int x = ckd_narrow(ckd_shl(a, 4, 25), int, 25); }
+
+
+
+
+
+
+=== mask shift pattern ===
+void f(unsigned val) { unsigned hi = (val & 0xF0) << 4; }
+---
+void f(unsigned val) { unsigned hi = ckd_narrow(ckd_shl((val & 0xF0), 4, 38), unsigned, 38); }
+
+
+
+
+
+
+=== shift in compound ===
+void f(unsigned mask) { mask <<= 1; }
+---
+void f(unsigned mask) { ckd_compound_narrow(mask, ckd_shl, 1, unsigned, 25); }
+
+
+
+
+=== shift then or ===
+void f(unsigned a, unsigned r, unsigned g, unsigned b) { unsigned rgb = (r << 16) | (g << 8) | b; }
+---
+void f(unsigned a, unsigned r, unsigned g, unsigned b) { unsigned rgb = ckd_narrow((ckd_shl(r, 16, 74)) | (ckd_shl(g, 8, 86)) | b, unsigned, 73); }
+
+
+
+
+
+
+=== shift with add ===
+void f(int a, int b) { int x = (a + b) << 2; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_shl((ckd_add(a, b, 33)), 2, 32), int, 32); }
+
+
+
+
+
+=== suppress shl ===
+void f(int a, int b) { int x = a @<< b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a << b, int, 32); }
+
+
+
+
+
+
+=== suppress shr ===
+void f(int a, int b) { int x = a @>> b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a >> b, int, 32); }
+
+
+
+
+
+
+=== page shift ===
+void f(unsigned long pfn) { unsigned long addr = pfn << 12; }
+---
+void f(unsigned long pfn) { unsigned long addr = ckd_narrow(ckd_shl(pfn, 12, 50), unsigned long, 50); }
+
+
+
+
+
+
+=== shr extract field ===
+void f(unsigned rgb) { unsigned r = (rgb >> 16) & 0xFF; }
+---
+void f(unsigned rgb) { unsigned r = ckd_narrow((ckd_shr(rgb, 16, 38)) & 0xFF, unsigned, 37); }
+
+
+
+
+
+
+=== shl 1ul ===
+void f(unsigned long bits) { unsigned long mask = 1UL << bits; }
+---
+void f(unsigned long bits) { unsigned long mask = ckd_narrow(ckd_shl(1UL, bits, 51), unsigned long, 51); }
+
+
+
+

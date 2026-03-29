@@ -1,0 +1,134 @@
+=== funcptr param no pollution ===
+struct s { void (*fp)(int *x); }; void f(int x) { int y = x + 1; }
+---
+struct s { void (*fp)(int *x); }; void f(int x) { int y = ckd_narrow(ckd_add(x, 1, 59), int, 59); }
+
+
+
+
+
+
+=== funcptr two params no pollution ===
+struct s { void (*get)(int *x, int *y); }; void f(int x, int y) { int z = x + y; }
+---
+struct s { void (*get)(int *x, int *y); }; void f(int x, int y) { int z = ckd_narrow(ckd_add(x, y, 75), int, 75); }
+
+
+
+
+
+=== funcptr param name reused as ptr ===
+void (*fp)(int *p); void f(char *p) { char *q = p + 1; }
+---
+void (*fp)(int *p); void f(char *p) { char *q = ckd_ptr_add(p, 1, 49); }
+
+
+
+
+
+
+=== funcptr param name reused as int ===
+void (*fp)(int *n); void f(int n) { int x = n + 1; }
+---
+void (*fp)(int *n); void f(int n) { int x = ckd_narrow(ckd_add(n, 1, 45), int, 45); }
+
+
+
+
+
+
+=== funcptr size_t star param ===
+struct ctx { void (*get_pos)(size_t *x, size_t *y); }; void f(size_t x, size_t y) { size_t d = x - y; }
+---
+struct ctx { void (*get_pos)(size_t *x, size_t *y); }; void f(size_t x, size_t y) { size_t d = ckd_sub(x, y, 96); }
+
+
+
+
+
+
+=== funcptr param inc not ptr ===
+struct s { void (*cb)(int *i); }; void f(int i) { i++; }
+---
+struct s { void (*cb)(int *i); }; void f(int i) { ckd_preinc(i, 51); }
+
+
+
+
+
+
+=== funcptr param mul not ptr ===
+struct s { void (*cb)(int *a, int *b); }; void f(int a, int b) { int c = a * b; }
+---
+struct s { void (*cb)(int *a, int *b); }; void f(int a, int b) { int c = ckd_narrow(ckd_mul(a, b, 74), int, 74); }
+
+
+
+
+
+=== funcptr param assign not ptr ===
+struct s { void (*set)(int *val); }; void f(int val) { val += 10; }
+---
+struct s { void (*set)(int *val); }; void f(int val) { ckd_compound_narrow(val, ckd_add, 10, int, 56); }
+
+
+
+
+=== real func param is ptr ===
+void f(int *p) { char *q = (char *)p + 1; }
+---
+void f(int *p) { char *q = ckd_ptr_add((char *)p, 1, 28); }
+
+
+
+
+
+
+=== typedef funcptr no pollution ===
+typedef void (*callback)(int *data); void f(int data) { int x = data + 1; }
+---
+typedef void (*callback)(int *data); void f(int data) { int x = ckd_narrow(ckd_add(data, 1, 65), int, 65); }
+
+
+
+
+
+
+=== nested funcptr no pollution ===
+struct s { struct { void (*fn)(char *buf); } ops; }; void f(int buf) { int x = buf + 1; }
+---
+struct s { struct { void (*fn)(char *buf); } ops; }; void f(int buf) { int x = ckd_narrow(ckd_add(buf, 1, 80), int, 80); }
+
+
+
+
+
+
+=== funcptr field actual ptr still works ===
+struct s { char *name; void (*fn)(int *x); }; void f(struct s *s) { char *q = s->name + 1; }
+---
+struct s { char *name; void (*fn)(int *x); }; void f(struct s *s) { char *q = ckd_ptr_add(s->name, 1, 79); }
+
+
+
+
+
+
+=== funcptr in func decl no pollution ===
+void register_cb(void (*cb)(int *x)); void f(int x) { int y = x * 2; }
+---
+void register_cb(void (*cb)(int *x)); void f(int x) { int y = ckd_narrow(ckd_mul(x, 2, 63), int, 63); }
+
+
+
+
+
+
+=== multiple funcptrs no pollution ===
+struct s { void (*a)(int *x); void (*b)(int *y); void (*c)(int *z); }; void f(int x, int y, int z) { int r = x + y + z; }
+---
+struct s { void (*a)(int *x); void (*b)(int *y); void (*c)(int *z); }; void f(int x, int y, int z) { int r = ckd_narrow(ckd_add(ckd_add(x, y, 110), z, 110), int, 110); }
+
+
+
+

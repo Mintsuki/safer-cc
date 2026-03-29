@@ -1,0 +1,237 @@
+=== return add short ===
+short f(int a, int b) { return a + b; }
+---
+short f(int a, int b) { return ckd_narrow(ckd_add(a, b, 32), short, 32); }
+
+
+
+
+
+
+=== return sub char ===
+char f(int a, int b) { return a - b; }
+---
+char f(int a, int b) { return ckd_narrow(ckd_sub(a, b, 31), char, 31); }
+
+
+
+
+
+
+=== return mul uchar ===
+unsigned char f(int a, int b) { return a * b; }
+---
+unsigned char f(int a, int b) { return ckd_narrow(ckd_mul(a, b, 40), unsigned char, 40); }
+
+
+
+
+
+
+=== return div short ===
+short f(int a, int b) { return a / b; }
+---
+short f(int a, int b) { return ckd_narrow(ckd_div(a, b, 32), short, 32); }
+
+
+
+
+
+
+=== return shr uchar ===
+typedef unsigned char uint8_t;
+uint8_t f(unsigned v) { return v >> 8; }
+---
+typedef unsigned char uint8_t;
+uint8_t f(unsigned v) { return ckd_narrow(ckd_shr(v, 8, 32), uint8_t, 32); }
+
+
+
+
+
+
+=== return shl short ===
+short f(int x) { return x << 2; }
+---
+short f(int x) { return ckd_narrow(ckd_shl(x, 2, 25), short, 25); }
+
+
+
+
+
+
+=== return neg char ===
+char f(int x) { return -x; }
+---
+char f(int x) { return ckd_narrow(ckd_neg(x, 24), char, 24); }
+
+
+
+
+
+
+=== return from short func ===
+short f(int x) {
+    return x;
+}
+---
+short f(int x) {
+    return ckd_narrow(x, short, 12);
+}
+
+
+
+
+
+
+=== return constant skip ===
+char f(void) { return 42; }
+---
+char f(void) { return 42; }
+
+
+
+
+
+
+=== return void skip ===
+void f(int x) { if (x) return; }
+---
+void f(int x) { if (x) return; }
+
+
+
+
+
+
+=== return pointer skip ===
+char *f(char *p) { return p; }
+---
+char *f(char *p) { return p; }
+
+
+
+
+
+
+=== return int skip ===
+int f(int x) { return x + 1; }
+---
+int f(int x) { return ckd_narrow(ckd_add(x, 1, 23), int, 23); }
+
+
+
+
+
+
+=== return nested expr ===
+typedef unsigned char uint8_t;
+uint8_t f(int a, int b, int c) {
+    return a + b - c;
+}
+---
+typedef unsigned char uint8_t;
+uint8_t f(int a, int b, int c) {
+    return ckd_narrow(ckd_sub(ckd_add(a, b, 12), c, 12), uint8_t, 12);
+}
+
+
+
+
+
+
+=== return shift and add ===
+typedef unsigned char uint8_t;
+uint8_t f(unsigned v, int off) {
+    return (v >> off) + 1;
+}
+---
+typedef unsigned char uint8_t;
+uint8_t f(unsigned v, int off) {
+    return ckd_narrow(ckd_add((ckd_shr(v, off, 13)), 1, 12), uint8_t, 12);
+}
+
+
+
+
+
+
+=== return from two funcs ===
+char narrow(int x) { return x; }
+int wide(int x) { return x; }
+---
+char narrow(int x) { return ckd_narrow(x, char, 29); }
+int wide(int x) { return ckd_narrow(x, int, 26); }
+
+
+
+
+
+
+=== return typedef chain ===
+typedef unsigned char uint8_t;
+typedef uint8_t byte_t;
+byte_t f(int x) { return x; }
+---
+typedef unsigned char uint8_t;
+typedef uint8_t byte_t;
+byte_t f(int x) { return ckd_narrow(x, byte_t, 26); }
+
+
+
+
+
+
+=== return compound expr ===
+typedef unsigned short uint16_t;
+uint16_t f(int a, int b) {
+    return a * b + 1;
+}
+---
+typedef unsigned short uint16_t;
+uint16_t f(int a, int b) {
+    return ckd_narrow(ckd_add(ckd_mul(a, b, 12), 1, 12), uint16_t, 12);
+}
+
+
+
+
+
+
+=== return multiline branches ===
+typedef unsigned char uint8_t;
+uint8_t f(int x) {
+    if (x < 0) return 0;
+    return x;
+}
+---
+typedef unsigned char uint8_t;
+uint8_t f(int x) {
+    if (x < 0) return 0;
+    return ckd_narrow(x, uint8_t, 12);
+}
+
+
+
+
+
+
+=== return from signed char ===
+signed char f(int x) { return x; }
+---
+signed char f(int x) { return ckd_narrow(x, signed char, 31); }
+
+
+
+
+
+
+=== return mod narrow ===
+char f(int v, int m) { return v % m; }
+---
+char f(int v, int m) { return ckd_narrow(ckd_mod(v, m, 31), char, 31); }
+
+
+
+
+

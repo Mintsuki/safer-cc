@@ -1,0 +1,79 @@
+=== pp add assign ===
+void f(char **pp) { pp[0] += 5; }
+---
+void f(char **pp) { ckd_compound(pp[0], ckd_ptr_add, 5, 21); }
+
+
+
+
+
+
+=== pp sub assign ===
+void f(char **pp) { pp[0] -= 5; }
+---
+void f(char **pp) { ckd_compound(pp[0], ckd_ptr_sub, 5, 21); }
+
+
+
+
+
+
+=== pp postdec used ===
+void f(char **pp) { char *q = pp[0]--; }
+---
+void f(char **pp) { char *q = ckd_ptr_postdec(pp[0], 31); }
+
+
+
+
+
+
+=== array of ptr sub ===
+void f(char *arr[10]) { char *q = arr[0] - 5; }
+---
+void f(char *arr[10]) { char *q = ckd_ptr_sub(ckd_bounds(arr, 0, 10, 35), 5, 35); }
+
+
+
+
+
+
+=== deref pp sub ===
+void f(char **pp) { char *q = *pp - 1; }
+---
+void f(char **pp) { char *q = ckd_ptr_sub(*pp, 1, 31); }
+
+
+
+
+
+
+=== deref pp inc ===
+void f(char **pp) { (*pp)++; }
+---
+void f(char **pp) { ckd_ptr_preinc((*pp), 21); }
+
+
+
+
+
+
+=== single ptr subscript add ===
+void f(int *arr) { int x = arr[0] + arr[1]; }
+---
+void f(int *arr) { int x = ckd_narrow(ckd_add(arr[0], arr[1], 28), int, 28); }
+
+
+
+
+
+
+=== pp subscript int add ===
+void f(int **pp) { int x = pp[0][0] + 1; }
+---
+void f(int **pp) { int x = ckd_narrow(ckd_add(pp[0][0], 1, 28), int, 28); }
+
+
+
+
+

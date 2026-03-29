@@ -1,0 +1,204 @@
+=== suppress add ===
+void f(int a, int b) { int c = a @+ b; }
+---
+void f(int a, int b) { int c = ckd_narrow(a + b, int, 32); }
+
+
+
+
+
+
+=== suppress sub ===
+void f(int a, int b) { int c = a @- b; }
+---
+void f(int a, int b) { int c = ckd_narrow(a - b, int, 32); }
+
+
+
+
+
+
+=== suppress mul ===
+void f(int a, int b) { int c = a @* b; }
+---
+void f(int a, int b) { int c = ckd_narrow(a * b, int, 32); }
+
+
+
+
+
+
+=== suppress div ===
+void f(int a, int b) { int c = a @/ b; }
+---
+void f(int a, int b) { int c = ckd_narrow(a / b, int, 32); }
+
+
+
+
+
+
+=== suppress shl ===
+void f(int a, int b) { int c = a @<< b; }
+---
+void f(int a, int b) { int c = ckd_narrow(a << b, int, 32); }
+
+
+
+
+
+
+=== suppress shr ===
+void f(int a, int b) { int c = a @>> b; }
+---
+void f(int a, int b) { int c = ckd_narrow(a >> b, int, 32); }
+
+
+
+
+
+
+=== suppress neg ===
+void f(int x) { int c = @-x; }
+---
+void f(int x) { int c = ckd_narrow(-x, int, 26); }
+
+
+
+
+
+
+=== suppress ptr add ===
+void f(int *p, int n) { int *q = p @+ n; }
+---
+void f(int *p, int n) { int *q = p + n; }
+
+
+
+
+
+
+=== suppress bounds ===
+void f(int i) { int arr[10]; arr@[i]; }
+---
+void f(int i) { int arr[10]; arr[i]; }
+
+
+
+
+
+
+=== suppress narrow assign ===
+void f(int x) { char c; c @= x; }
+---
+void f(int x) { char c; c = x; }
+
+
+
+
+
+
+=== suppress narrow init ===
+void f(int x) { char c @= x; }
+---
+void f(int x) { char c = x; }
+
+
+
+
+
+
+=== suppress compound add ===
+void f(int a, int b) { a @+= b; }
+---
+void f(int a, int b) { a += b; }
+
+
+
+
+
+
+=== suppress pre inc ===
+void f(int i) { @++i; }
+---
+void f(int i) { ++i; }
+
+
+
+
+
+
+=== suppress post inc ===
+void f(int i) { i@++; }
+---
+void f(int i) { i++; }
+
+
+
+
+
+
+=== suppress partial one of two ===
+void f(int a, int b, int c) { int d = a @+ b + c; }
+---
+void f(int a, int b, int c) { int d = ckd_narrow(ckd_add(a + b, c, 39), int, 39); }
+
+
+
+
+
+=== suppress field narrow ===
+struct s { char c; };
+void f(struct s *s, int x) { s->c @= x; }
+---
+struct s { char c; };
+void f(struct s *s, int x) { s->c = x; }
+
+
+
+
+
+
+=== suppress return narrow ===
+char f(int x) { @return x; }
+---
+char f(int x) { return x; }
+
+
+
+
+
+
+=== suppress ptr diff ===
+void f(char *a, char *b) { long d = a @- b; }
+---
+void f(char *a, char *b) { long d = ckd_narrow(a - b, long, 37); }
+
+
+
+
+
+
+=== no suppress without marker ===
+void f(int a, int b) { int c = a + b; }
+---
+void f(int a, int b) { int c = ckd_narrow(ckd_add(a, b, 32), int, 32); }
+
+
+
+
+
+=== suppress one keep other ===
+void f(int a, int b) {
+    int x = a @+ b;
+    int y = a + b;
+}
+---
+void f(int a, int b) {
+    int x = ckd_narrow(a + b, int, 13);
+    int y = ckd_narrow(ckd_add(a, b, 13), int, 13);
+}
+
+
+
+

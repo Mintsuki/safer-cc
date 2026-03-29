@@ -1,0 +1,136 @@
+=== sup add only ===
+void f(int a, int b, int c) { int x = a @+ b - c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_sub(a + b, c, 39), int, 39); }
+
+
+
+
+
+=== sup mul only ===
+void f(int a, int b, int c) { int x = a @* b + c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_add(a * b, c, 39), int, 39); }
+
+
+
+
+
+=== sup sub only ===
+void f(int a, int b, int c) { int x = a @- b + c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_add(a - b, c, 39), int, 39); }
+
+
+
+
+
+=== sup add assign ===
+void f(int x, int a) { x @+= a; }
+---
+void f(int x, int a) { x += a; }
+
+
+
+
+
+
+=== sup sub assign ===
+void f(int x, int a) { x @-= a; }
+---
+void f(int x, int a) { x -= a; }
+
+
+
+
+
+
+=== sup mul assign ===
+void f(int x, int a) { x @*= a; }
+---
+void f(int x, int a) { x *= a; }
+
+
+
+
+
+
+=== sup preinc ===
+void f(int x) { @++x; }
+---
+void f(int x) { ++x; }
+
+
+
+
+
+
+=== sup predec ===
+void f(int x) { @--x; }
+---
+void f(int x) { --x; }
+
+
+
+
+
+
+=== sup postinc ===
+void f(int x) { x@++; }
+---
+void f(int x) { x++; }
+
+
+
+
+
+
+=== sup postdec ===
+void f(int x) { x@--; }
+---
+void f(int x) { x--; }
+
+
+
+
+
+
+=== sup ptr add ===
+void f(char *p) { char *q = p @+ 1; }
+---
+void f(char *p) { char *q = p + 1; }
+
+
+
+
+
+
+=== sup ptr sub ===
+void f(char *p) { char *q = p @- 1; }
+---
+void f(char *p) { char *q = p - 1; }
+
+
+
+
+
+
+=== sup ptr add assign ===
+void f(char *p) { p @+= 1; }
+---
+void f(char *p) { p += 1; }
+
+
+
+
+
+
+=== sup ptr inc ===
+void f(char *p) { p@++; }
+---
+void f(char *p) { p++; }
+
+
+
+
+

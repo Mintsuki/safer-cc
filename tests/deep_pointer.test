@@ -1,0 +1,119 @@
+=== pp subscript add ===
+void f(char **pp) { char *q = pp[0] + 1; }
+---
+void f(char **pp) { char *q = ckd_ptr_add(pp[0], 1, 31); }
+
+
+
+
+
+
+=== pp subscript sub ===
+void f(char **pp) { char *q = pp[0] - 1; }
+---
+void f(char **pp) { char *q = ckd_ptr_sub(pp[0], 1, 31); }
+
+
+
+
+
+
+=== pp subscript add assign ===
+void f(char **pp) { pp[0] += 5; }
+---
+void f(char **pp) { ckd_compound(pp[0], ckd_ptr_add, 5, 21); }
+
+
+
+
+
+
+=== p subscript not ptr ===
+void f(char *p) { int x = p[0] + 1; }
+---
+void f(char *p) { int x = ckd_narrow(ckd_add(p[0], 1, 27), int, 27); }
+
+
+
+
+
+
+=== deref pp is ptr ===
+void f(char **pp) { char *q = *pp + 1; }
+---
+void f(char **pp) { char *q = ckd_ptr_add(*pp, 1, 31); }
+
+
+
+
+
+
+=== deref p not ptr ===
+void f(char *p) { int x = *p + 1; }
+---
+void f(char *p) { int x = ckd_narrow(ckd_add(*p, 1, 27), int, 27); }
+
+
+
+
+
+
+=== arr of ptrs subscript ===
+void f(char *arr[10]) { char *q = arr[0] + 5; }
+---
+void f(char *arr[10]) { char *q = ckd_ptr_add(ckd_bounds(arr, 0, 10, 35), 5, 35); }
+
+
+
+
+
+
+=== arr of int subscript ===
+void f(int arr[10]) { int x = arr[0] + 5; }
+---
+void f(int arr[10]) { int x = ckd_narrow(ckd_add(ckd_bounds(arr, 0, 10, 31), 5, 31), int, 31); }
+
+
+
+
+
+
+=== pp postinc disc ===
+void f(char **pp) { pp[0]++; }
+---
+void f(char **pp) { ckd_ptr_preinc(pp[0], 21); }
+
+
+
+
+
+
+=== pp predec disc ===
+void f(char **pp) { --pp[0]; }
+---
+void f(char **pp) { ckd_ptr_predec(pp[0], 21); }
+
+
+
+
+
+
+=== p postinc not ptr ===
+void f(char *p) { p[0]++; }
+---
+void f(char *p) { ckd_preinc(p[0], 19); }
+
+
+
+
+
+
+=== triple ptr subscript ===
+void f(char ***ppp) { char **q = ppp[0]; }
+---
+void f(char ***ppp) { char **q = ppp[0]; }
+
+
+
+
+

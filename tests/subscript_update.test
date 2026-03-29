@@ -1,0 +1,92 @@
+=== arr postinc disc ===
+void f(int *arr) { arr[0]++; }
+---
+void f(int *arr) { ckd_preinc(arr[0], 20); }
+
+
+
+
+
+
+=== arr preinc disc ===
+void f(int *arr) { ++arr[0]; }
+---
+void f(int *arr) { ckd_preinc(arr[0], 20); }
+
+
+
+
+
+
+=== arr postinc used ===
+void f(int *arr) { int x = arr[0]++; }
+---
+void f(int *arr) { int x = ckd_narrow(ckd_postinc(arr[0], 28), int, 28); }
+
+
+
+
+
+
+=== arr predec disc ===
+void f(int *arr) { --arr[0]; }
+---
+void f(int *arr) { ckd_predec(arr[0], 20); }
+
+
+
+
+
+
+=== arr add assign ===
+void f(int *arr) { arr[0] += 5; }
+---
+void f(int *arr) { ckd_compound_narrow(arr[0], ckd_add, 5, int, 20); }
+
+
+
+
+=== arr sub assign ===
+void f(int *arr) { arr[0] -= 5; }
+---
+void f(int *arr) { ckd_compound_narrow(arr[0], ckd_sub, 5, int, 20); }
+
+
+
+
+=== arr mul assign ===
+void f(int *arr) { arr[0] *= 5; }
+---
+void f(int *arr) { ckd_compound_narrow(arr[0], ckd_mul, 5, int, 20); }
+
+
+
+
+=== arr add ===
+void f(int *arr, int b) { int x = arr[0] + b; }
+---
+void f(int *arr, int b) { int x = ckd_narrow(ckd_add(arr[0], b, 35), int, 35); }
+
+
+
+
+
+=== ptr arr postinc disc ===
+void f(char **pp) { pp[0]++; }
+---
+void f(char **pp) { ckd_ptr_preinc(pp[0], 21); }
+
+
+
+
+
+
+=== ptr arr preinc used ===
+void f(char **pp) { char *q = ++pp[0]; }
+---
+void f(char **pp) { char *q = ckd_ptr_preinc(pp[0], 31); }
+
+
+
+
+

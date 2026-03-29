@@ -1,0 +1,91 @@
+=== empty string ===
+
+---
+
+
+=== whitespace only ===
+   
+
+   
+---
+
+
+=== no arith func ===
+void f(int a) { int x = a; }
+---
+void f(int a) { int x = ckd_narrow(a, int, 25); }
+
+
+
+
+
+
+=== only funccall ===
+void g(int); void f(int a) { g(a); }
+---
+void g(int); void f(int a) { g(ckd_narrow(a, int, 32)); }
+
+
+
+
+
+
+=== only decl ===
+int x;
+---
+int x;
+
+
+
+
+
+
+=== struct decl ===
+struct s { int x; char *p; };
+---
+struct s { int x; char *p; };
+
+
+
+
+
+
+=== typedef ===
+typedef unsigned long size_t;
+---
+typedef unsigned long size_t;
+
+
+
+
+
+
+=== extern ===
+extern int foo;
+---
+extern int foo;
+
+
+
+
+
+
+=== enum ===
+enum { A, B, C };
+---
+enum { A, B, C };
+
+
+
+
+
+
+=== func proto ===
+int add(int, int);
+---
+int add(int, int);
+
+
+
+
+

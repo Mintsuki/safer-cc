@@ -1,0 +1,77 @@
+=== sizeof in add ===
+void f(int a) { int x = sizeof(a + 1); }
+---
+void f(int a) { int x = sizeof(a + 1); }
+
+
+
+
+
+
+=== sizeof in mul ===
+void f(int a) { int x = sizeof(a * 2); }
+---
+void f(int a) { int x = sizeof(a * 2); }
+
+
+
+
+
+
+=== sizeof as operand ===
+void f(int n) { int x = n * sizeof(int); }
+---
+void f(int n) { int x = ckd_narrow(ckd_mul(n, sizeof(int), 25), int, 25); }
+
+
+
+
+
+
+=== add sizeof ===
+void f(int n) { int x = n + sizeof(long); }
+---
+void f(int n) { int x = ckd_narrow(ckd_add(n, sizeof(long), 25), int, 25); }
+
+
+
+
+
+
+=== sizeof both ===
+void f(void) { int x = sizeof(int) + sizeof(long); }
+---
+void f(void) { int x = sizeof(int) + sizeof(long); }
+
+
+
+
+
+
+=== sizeof ptr ===
+void f(int n) { unsigned long x = n * sizeof(void *); }
+---
+void f(int n) { unsigned long x = ckd_narrow(ckd_mul(n, sizeof(void *), 35), unsigned long, 35); }
+
+
+
+
+
+
+=== alignof untouched ===
+void f(int a) { int x = _Alignof(int) + a; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(_Alignof(int), a, 25), int, 25); }
+
+
+
+
+
+=== sizeof plus var ===
+void f(int a) { int x = sizeof(char) + a; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(sizeof(char), a, 25), int, 25); }
+
+
+
+

@@ -1,0 +1,119 @@
+=== deref compound single eval ===
+void f(unsigned *idx, unsigned n) { *idx += n; }
+---
+void f(unsigned *idx, unsigned n) { ckd_compound_narrow(*idx, ckd_add, n, unsigned, 37); }
+
+
+
+
+=== subscript compound single eval ===
+void f(int *arr, int v) { arr[0] += v; }
+---
+void f(int *arr, int v) { ckd_compound_narrow(arr[0], ckd_add, v, int, 27); }
+
+
+
+
+=== ptr inc single eval ===
+void f(int *p) { (*p)++; }
+---
+void f(int *p) { ckd_preinc((*p), 18); }
+
+
+
+
+
+
+=== ptr dec single eval ===
+void f(int *p) { (*p)--; }
+---
+void f(int *p) { ckd_predec((*p), 18); }
+
+
+
+
+
+
+=== ptr postinc single eval ===
+void f(int *p) {
+    int old = (*p)++;
+}
+---
+void f(int *p) {
+    int old = ckd_narrow(ckd_postinc((*p), 15), int, 15);
+}
+
+
+
+
+
+
+=== field compound single eval ===
+struct s { int val; };
+void f(struct s *s) { s->val += 1; }
+---
+struct s { int val; };
+void f(struct s *s) { ckd_compound_narrow(s->val, ckd_add, 1, int, 23); }
+
+
+
+
+=== subscript compound sub single eval ===
+void f(int *arr, int v) { arr[0] -= v; }
+---
+void f(int *arr, int v) { ckd_compound_narrow(arr[0], ckd_sub, v, int, 27); }
+
+
+
+
+=== subscript compound mul single eval ===
+void f(int *arr, int v) { arr[0] *= v; }
+---
+void f(int *arr, int v) { ckd_compound_narrow(arr[0], ckd_mul, v, int, 27); }
+
+
+
+
+=== ptr compound add single eval ===
+void f(int **pp, int n) { *pp += n; }
+---
+void f(int **pp, int n) { ckd_compound(*pp, ckd_ptr_add, n, 27); }
+
+
+
+
+
+
+=== narrow deref compound single eval ===
+void f(unsigned char *p, int x) { *p += x; }
+---
+void f(unsigned char *p, int x) { ckd_compound_narrow(*p, ckd_add, x, unsigned char, 35); }
+
+
+
+
+
+
+=== narrow subscript compound single eval ===
+void f(unsigned char *buf, int i, int x) { buf[i] += x; }
+---
+void f(unsigned char *buf, int i, int x) { ckd_compound_narrow(buf[i], ckd_add, x, unsigned char, 44); }
+
+
+
+
+
+
+=== bounds compound single eval ===
+void f(int i) {
+    int arr[10];
+    arr[i] += 1;
+}
+---
+void f(int i) {
+    int arr[10];
+    ckd_compound_narrow(ckd_bounds(arr, i, 10, 5), ckd_add, 1, int, 5);
+}
+
+
+

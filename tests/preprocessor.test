@@ -1,0 +1,21 @@
+=== line directive ===
+# 1 "test.c"
+int x = a + b;
+---
+# 1 "test.c"
+int x = ckd_add(a, b, 9);
+
+
+
+=== multi directive ===
+# 1 "a.c"
+int x = a + b;
+# 1 "b.h" 1
+int y = c + d;
+---
+# 1 "a.c"
+int x = ckd_add(a, b, 9);
+# 1 "b.h" 1
+int y = ckd_add(c, d, 9);
+
+

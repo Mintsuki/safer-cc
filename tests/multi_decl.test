@@ -1,0 +1,49 @@
+=== ptr ptr int ===
+void f(void) { char *a, *b, c; char *d = a + 1; int x = c + 1; }
+---
+void f(void) { char *a, *b, c; char *d = ckd_ptr_add(a, 1, 42); int x = ckd_narrow(ckd_add(c, 1, 57), int, 57); }
+
+
+
+
+
+
+=== all ptrs ===
+void f(void) { int *a, *b, *c; int *d = a + b - c; }
+---
+void f(void) { int *a, *b, *c; int *d = ckd_ptr_diff(ckd_ptr_add(a, b, 41), c, 41); }
+
+
+
+
+
+
+=== typedef multi ===
+typedef int *iptr; void f(void) { iptr a, b; iptr c = a + 1; }
+---
+typedef int *iptr; void f(void) { iptr a, b; iptr c = ckd_ptr_add(a, 1, 55); }
+
+
+
+
+
+
+=== mixed init ===
+void f(int a) { int x = a + 1, y = a * 2, z = a - 3; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(a, 1, 25), int, 25), y = ckd_narrow(ckd_mul(a, 2, 36), int, 36), z = ckd_narrow(ckd_sub(a, 3, 47), int, 47); }
+
+
+
+
+
+
+=== array and scalar ===
+void f(int i) { int arr[10], x; arr[i] = 0; x = arr[i] + 1; }
+---
+void f(int i) { int arr[10], x; ckd_bounds(arr, i, 10, 33) = 0; x = ckd_narrow(ckd_add(ckd_bounds(arr, i, 10, 49), 1, 49), int, 49); }
+
+
+
+
+

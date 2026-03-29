@@ -1,0 +1,60 @@
+=== two funcs ===
+void f(int a) { int x = a + 1; }
+void g(int b) { int y = b * 2; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(a, 1, 25), int, 25); }
+void g(int b) { int y = ckd_narrow(ckd_mul(b, 2, 25), int, 25); }
+
+
+
+
+
+
+=== multi stmt ===
+void f(int a, int b) {
+    int x = a + b;
+    int y = a * b;
+    int z = x - y;
+}
+---
+void f(int a, int b) {
+    int x = ckd_narrow(ckd_add(a, b, 13), int, 13);
+    int y = ckd_narrow(ckd_mul(a, b, 13), int, 13);
+    int z = ckd_narrow(ckd_sub(x, y, 13), int, 13);
+}
+
+
+
+
+
+=== different col per line ===
+void f(int a) {
+    int x = a + 1;
+    if (x) { int y = a + 2; }
+}
+---
+void f(int a) {
+    int x = ckd_narrow(ckd_add(a, 1, 13), int, 13);
+    if (x) { int y = ckd_narrow(ckd_add(a, 2, 22), int, 22); }
+}
+
+
+
+
+
+
+=== ptr and int same func ===
+void f(int a, char *p) {
+    int x = a + 1;
+    char *q = p + 1;
+}
+---
+void f(int a, char *p) {
+    int x = ckd_narrow(ckd_add(a, 1, 13), int, 13);
+    char *q = ckd_ptr_add(p, 1, 15);
+}
+
+
+
+
+

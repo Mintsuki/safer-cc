@@ -1,0 +1,204 @@
+=== page alloc ===
+void f(unsigned long *bitmap, unsigned long nr) {
+    unsigned long word = nr / 64;
+    unsigned long bit = nr % 64;
+    unsigned long mask = 1UL << bit;
+    bitmap[word] |= mask;
+}
+---
+void f(unsigned long *bitmap, unsigned long nr) {
+    unsigned long word = ckd_narrow(ckd_div(nr, 64, 26), unsigned long, 26);
+    unsigned long bit = ckd_narrow(ckd_mod(nr, 64, 25), unsigned long, 25);
+    unsigned long mask = ckd_narrow(ckd_shl(1UL, bit, 26), unsigned long, 26);
+    bitmap[word] |= mask;
+}
+
+
+
+
+
+=== ring buffer ===
+void f(int *buf, int size) {
+    int head = 0;
+    for (int i = 0; i < 100; i++) {
+        buf[head] = i;
+        head = (head + 1) % size;
+    }
+}
+---
+void f(int *buf, int size) {
+    int head = 0;
+    for (int i = 0; i < 100; ckd_preinc(i, 30)) {
+        buf[head] = ckd_narrow(i, int, 21);
+        head = ckd_narrow(ckd_mod((ckd_add(head, 1, 17)), size, 16), int, 16);
+    }
+}
+
+
+
+
+
+=== elf phdr walk ===
+void f(char *elf, unsigned phoff, unsigned phsize, unsigned phnum) {
+    for (unsigned i = 0; i < phnum; i++) {
+        char *phdr = elf + phoff + i * phsize;
+    }
+}
+---
+void f(char *elf, unsigned phoff, unsigned phsize, unsigned phnum) {
+    for (unsigned i = 0; i < phnum; ckd_preinc(i, 37)) {
+        char *phdr = ckd_ptr_add(ckd_ptr_add(elf, phoff, 22), ckd_mul(i, phsize, 36), 22);
+    }
+}
+
+
+
+
+
+
+=== checksum with suppress ===
+unsigned checksum(unsigned *data, int n) {
+    unsigned sum = 0;
+    for (int i = 0; i < n; i++) {
+        sum @+= data[i];
+    }
+    return sum;
+}
+---
+unsigned checksum(unsigned *data, int n) {
+    unsigned sum = 0;
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        sum += data[i];
+    }
+    return ckd_narrow(sum, unsigned, 12);
+}
+
+
+
+
+
+
+=== fat cluster chain ===
+void f(unsigned *fat, unsigned cluster, unsigned count) {
+    for (unsigned i = 0; i < count; i++) {
+        unsigned next = fat[cluster];
+        cluster = next;
+    }
+}
+---
+void f(unsigned *fat, unsigned cluster, unsigned count) {
+    for (unsigned i = 0; i < count; ckd_preinc(i, 37)) {
+        unsigned next = ckd_narrow(fat[cluster], unsigned, 25);
+        cluster = ckd_narrow(next, unsigned, 19);
+    }
+}
+
+
+
+
+
+
+=== align and alloc ===
+void *alloc(unsigned long);
+void f(unsigned long size, unsigned long align) {
+    unsigned long mask = align - 1;
+    unsigned long aligned = (size + mask) & ~mask;
+    char *buf = (char *)alloc(aligned);
+    char *end = buf + aligned;
+}
+---
+void *alloc(unsigned long);
+void f(unsigned long size, unsigned long align) {
+    unsigned long mask = ckd_narrow(ckd_sub(align, 1, 26), unsigned long, 26);
+    unsigned long aligned = ckd_narrow((ckd_add(size, mask, 30)) & ~mask, unsigned long, 29);
+    char *buf = (char *)alloc(ckd_narrow(aligned, unsigned long, 31));
+    char *end = ckd_ptr_add(buf, aligned, 17);
+}
+
+
+
+
+
+=== screen coord calc ===
+void f(unsigned *fb, unsigned pitch, unsigned bpp,
+       unsigned x, unsigned y, unsigned color) {
+    unsigned bytes_pp = bpp / 8;
+    unsigned offset = y * (pitch / bytes_pp) + x;
+    fb[offset] = color;
+}
+---
+void f(unsigned *fb, unsigned pitch, unsigned bpp,
+       unsigned x, unsigned y, unsigned color) {
+    unsigned bytes_pp = ckd_narrow(ckd_div(bpp, 8, 25), unsigned, 25);
+    unsigned offset = ckd_narrow(ckd_add(ckd_mul(y, (ckd_div(pitch, bytes_pp, 28)), 23), x, 23), unsigned, 23);
+    fb[offset] = ckd_narrow(color, unsigned, 18);
+}
+
+
+
+
+
+=== string length ===
+unsigned long f(const char *s) {
+    const char *p = s;
+    while (*p) {
+        p++;
+    }
+    return p - s;
+}
+---
+unsigned long f(const char *s) {
+    const char *p = s;
+    while (*p) {
+        ckd_ptr_preinc(p, 9);
+    }
+    return ckd_narrow(ckd_ptr_diff(p, s, 12), unsigned long, 12);
+}
+
+
+
+
+
+=== saturating add ===
+unsigned f(unsigned a, unsigned b) {
+    unsigned sum = a + b;
+    if (sum < a) {
+        return ~0U;
+    }
+    return sum;
+}
+---
+unsigned f(unsigned a, unsigned b) {
+    unsigned sum = ckd_narrow(ckd_add(a, b, 20), unsigned, 20);
+    if (sum < a) {
+        return ~0U;
+    }
+    return ckd_narrow(sum, unsigned, 12);
+}
+
+
+
+
+
+=== gcd with all ops ===
+unsigned gcd(unsigned a, unsigned b) {
+    while (b != 0) {
+        unsigned t = a % b;
+        a = b;
+        b = t;
+    }
+    return a;
+}
+---
+unsigned gcd(unsigned a, unsigned b) {
+    while (b != 0) {
+        unsigned t = ckd_narrow(ckd_mod(a, b, 22), unsigned, 22);
+        a = ckd_narrow(b, unsigned, 13);
+        b = ckd_narrow(t, unsigned, 13);
+    }
+    return ckd_narrow(a, unsigned, 12);
+}
+
+
+
+

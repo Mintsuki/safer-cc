@@ -1,0 +1,81 @@
+=== add assign with add rhs ===
+void f(int x, int a, int b) { x += a + b; }
+---
+void f(int x, int a, int b) { ckd_compound_narrow(x, ckd_add, ckd_add(a, b, 36), int, 31); }
+
+
+
+
+=== add assign with mul rhs ===
+void f(int x, int a, int b) { x += a * b; }
+---
+void f(int x, int a, int b) { ckd_compound_narrow(x, ckd_add, ckd_mul(a, b, 36), int, 31); }
+
+
+
+
+=== sub assign with add rhs ===
+void f(int x, int a, int b) { x -= a + b; }
+---
+void f(int x, int a, int b) { ckd_compound_narrow(x, ckd_sub, ckd_add(a, b, 36), int, 31); }
+
+
+
+
+=== mul assign with sub rhs ===
+void f(int x, int a, int b) { x *= a - b; }
+---
+void f(int x, int a, int b) { ckd_compound_narrow(x, ckd_mul, ckd_sub(a, b, 36), int, 31); }
+
+
+
+
+=== add assign with paren rhs ===
+void f(int x, int a, int b) { x += (a + b); }
+---
+void f(int x, int a, int b) { ckd_compound_narrow(x, ckd_add, (ckd_add(a, b, 37)), int, 31); }
+
+
+
+
+=== ptr add assign with mul rhs ===
+void f(char *p, int a, int b) { p += a * b; }
+---
+void f(char *p, int a, int b) { ckd_compound(p, ckd_ptr_add, ckd_mul(a, b, 38), 33); }
+
+
+
+
+
+
+=== add assign const rhs ===
+void f(int x) { x += 5; }
+---
+void f(int x) { ckd_compound_narrow(x, ckd_add, 5, int, 17); }
+
+
+
+
+=== mul assign const rhs ===
+void f(int x) { x *= 100; }
+---
+void f(int x) { ckd_compound_narrow(x, ckd_mul, 100, int, 17); }
+
+
+
+
+=== add assign sizeof rhs ===
+void f(int x) { x += sizeof(int); }
+---
+void f(int x) { ckd_compound_narrow(x, ckd_add, sizeof(int), int, 17); }
+
+
+
+
+=== sub assign neg rhs ===
+void f(int x, int a) { x -= -a; }
+---
+void f(int x, int a) { ckd_compound_narrow(x, ckd_sub, ckd_neg(a, 29), int, 24); }
+
+
+

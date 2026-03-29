@@ -1,0 +1,269 @@
+=== page number ===
+void f(unsigned long addr) {
+    unsigned long page = addr >> 12;
+}
+---
+void f(unsigned long addr) {
+    unsigned long page = ckd_narrow(ckd_shr(addr, 12, 26), unsigned long, 26);
+}
+
+
+
+
+
+
+=== page offset to short ===
+void f(unsigned long addr) {
+    unsigned short off = addr;
+}
+---
+void f(unsigned long addr) {
+    unsigned short off = ckd_narrow(addr, unsigned short, 26);
+}
+
+
+
+
+
+
+=== page count div ===
+void f(unsigned long size) {
+    unsigned long n = size / 4096;
+}
+---
+void f(unsigned long size) {
+    unsigned long n = ckd_narrow(ckd_div(size, 4096, 23), unsigned long, 23);
+}
+
+
+
+
+
+
+=== block offset mod ===
+void f(unsigned long loc, unsigned bs) {
+    unsigned off = loc % bs;
+}
+---
+void f(unsigned long loc, unsigned bs) {
+    unsigned off = ckd_narrow(ckd_mod(loc, bs, 20), unsigned, 20);
+}
+
+
+
+
+
+=== size add pages ===
+void f(unsigned long a, unsigned long b) {
+    unsigned long total = a + b;
+}
+---
+void f(unsigned long a, unsigned long b) {
+    unsigned long total = ckd_narrow(ckd_add(a, b, 27), unsigned long, 27);
+}
+
+
+
+
+
+=== overlap size ===
+void f(unsigned long top, unsigned long bot) {
+    unsigned long sz = top - bot;
+}
+---
+void f(unsigned long top, unsigned long bot) {
+    unsigned long sz = ckd_narrow(ckd_sub(top, bot, 24), unsigned long, 24);
+}
+
+
+
+
+
+=== stride multiply ===
+void f(unsigned h, unsigned pitch) {
+    unsigned sz = h * pitch;
+}
+---
+void f(unsigned h, unsigned pitch) {
+    unsigned sz = ckd_narrow(ckd_mul(h, pitch, 19), unsigned, 19);
+}
+
+
+
+
+
+=== sector number ===
+void f(unsigned long off, unsigned ss) {
+    unsigned long sec = off / ss;
+}
+---
+void f(unsigned long off, unsigned ss) {
+    unsigned long sec = ckd_narrow(ckd_div(off, ss, 25), unsigned long, 25);
+}
+
+
+
+
+
+=== bitmap index ===
+void f(unsigned bit) {
+    unsigned idx = bit / 8;
+    unsigned off = bit % 8;
+}
+---
+void f(unsigned bit) {
+    unsigned idx = ckd_narrow(ckd_div(bit, 8, 20), unsigned, 20);
+    unsigned off = ckd_narrow(ckd_mod(bit, 8, 20), unsigned, 20);
+}
+
+
+
+
+
+
+=== dma addr ===
+void f(unsigned long base, unsigned long off) {
+    unsigned long dma = base + off;
+}
+---
+void f(unsigned long base, unsigned long off) {
+    unsigned long dma = ckd_narrow(ckd_add(base, off, 25), unsigned long, 25);
+}
+
+
+
+
+
+=== pitch calc ===
+void f(unsigned w, unsigned bpp) {
+    unsigned pitch = w * bpp / 8;
+}
+---
+void f(unsigned w, unsigned bpp) {
+    unsigned pitch = ckd_narrow(ckd_div(ckd_mul(w, bpp, 22), 8, 22), unsigned, 22);
+}
+
+
+
+
+
+=== slot number ===
+void f(unsigned off, unsigned slotsize) {
+    unsigned slot = off / slotsize;
+}
+---
+void f(unsigned off, unsigned slotsize) {
+    unsigned slot = ckd_narrow(ckd_div(off, slotsize, 21), unsigned, 21);
+}
+
+
+
+
+
+=== table index shift ===
+void f(unsigned long addr) {
+    unsigned long idx = (addr >> 12) - 1;
+}
+---
+void f(unsigned long addr) {
+    unsigned long idx = ckd_narrow(ckd_sub((ckd_shr(addr, 12, 26)), 1, 25), unsigned long, 25);
+}
+
+
+
+
+
+
+=== block count ceil ===
+void f(unsigned long sz, unsigned bs) {
+    unsigned long n = (sz + bs - 1) / bs;
+}
+---
+void f(unsigned long sz, unsigned bs) {
+    unsigned long n = ckd_narrow(ckd_div((ckd_sub(ckd_add(sz, bs, 24), 1, 24)), bs, 23), unsigned long, 23);
+}
+
+
+
+
+
+=== address clamp sub ===
+void f(unsigned long end, unsigned long start) {
+    unsigned long rem = end - start;
+}
+---
+void f(unsigned long end, unsigned long start) {
+    unsigned long rem = ckd_narrow(ckd_sub(end, start, 25), unsigned long, 25);
+}
+
+
+
+
+
+=== segment offset ===
+void f(unsigned long base, unsigned off) {
+    unsigned long addr = base + off;
+}
+---
+void f(unsigned long base, unsigned off) {
+    unsigned long addr = ckd_narrow(ckd_add(base, off, 26), unsigned long, 26);
+}
+
+
+
+
+
+=== phys from virt ===
+void f(unsigned long virt, unsigned long off) {
+    unsigned long phys = virt - off;
+}
+---
+void f(unsigned long virt, unsigned long off) {
+    unsigned long phys = ckd_narrow(ckd_sub(virt, off, 26), unsigned long, 26);
+}
+
+
+
+
+
+=== frame count ===
+void f(unsigned long size) {
+    unsigned long frames = size >> 12;
+}
+---
+void f(unsigned long size) {
+    unsigned long frames = ckd_narrow(ckd_shr(size, 12, 28), unsigned long, 28);
+}
+
+
+
+
+
+
+=== narrow page offset ===
+void f(unsigned long addr) {
+    unsigned short pgoff = addr >> 12;
+}
+---
+void f(unsigned long addr) {
+    unsigned short pgoff = ckd_narrow(ckd_shr(addr, 12, 28), unsigned short, 28);
+}
+
+
+
+
+
+
+=== size mul narrow ===
+void f(unsigned n, unsigned esz) {
+    unsigned short total = n * esz;
+}
+---
+void f(unsigned n, unsigned esz) {
+    unsigned short total = ckd_narrow(ckd_mul(n, esz, 28), unsigned short, 28);
+}
+
+
+
+
+

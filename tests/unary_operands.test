@@ -1,0 +1,79 @@
+=== neg var add ===
+void f(int a, int b) { int x = a + -b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_add(a, ckd_neg(b, 36), 32), int, 32); }
+
+
+
+
+
+
+=== neg var sub ===
+void f(int a, int b) { int x = a - -b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_sub(a, ckd_neg(b, 36), 32), int, 32); }
+
+
+
+
+
+
+=== complement add ===
+void f(int a, int b) { int x = a + ~b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_add(a, ~b, 32), int, 32); }
+
+
+
+
+
+
+=== complement mul ===
+void f(int a, int b) { int x = a * ~b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_mul(a, ~b, 32), int, 32); }
+
+
+
+
+
+
+=== neg const still const ===
+void f(void) { int x = -1 + -2; }
+---
+void f(void) { int x = -1 + -2; }
+
+
+
+
+
+
+=== complement const still const ===
+void f(void) { int x = ~0 + ~1; }
+---
+void f(void) { int x = ~0 + ~1; }
+
+
+
+
+
+
+=== neg var times const ===
+void f(int a) { int x = -a * 3; }
+---
+void f(int a) { int x = ckd_narrow(ckd_mul(ckd_neg(a, 25), 3, 25), int, 25); }
+
+
+
+
+
+
+=== double neg ===
+void f(int a, int b) { int x = -a + -b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_add(ckd_neg(a, 32), ckd_neg(b, 37), 32), int, 32); }
+
+
+
+
+

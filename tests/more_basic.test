@@ -1,0 +1,188 @@
+=== div assign ===
+void f(int a) { a /= 2; }
+---
+void f(int a) { ckd_compound_narrow(a, ckd_div, 2, int, 17); }
+
+
+
+
+=== mod assign ===
+void f(int a) { a %= 2; }
+---
+void f(int a) { ckd_compound_narrow(a, ckd_mod, 2, int, 17); }
+
+
+
+
+=== and assign ===
+void f(int a) { a &= 2; }
+---
+void f(int a) { a &= 2; }
+
+
+
+
+
+
+=== or assign ===
+void f(int a) { a |= 2; }
+---
+void f(int a) { a |= 2; }
+
+
+
+
+
+
+=== xor assign ===
+void f(int a) { a ^= 2; }
+---
+void f(int a) { a ^= 2; }
+
+
+
+
+
+
+=== lsh assign ===
+void f(int a) { a <<= 2; }
+---
+void f(int a) { ckd_compound_narrow(a, ckd_shl, 2, int, 17); }
+
+
+
+
+=== rsh assign ===
+void f(int a) { a >>= 2; }
+---
+void f(int a) { ckd_compound_narrow(a, ckd_shr, 2, int, 17); }
+
+
+
+
+=== neq untouched ===
+void f(int a, int b) { int x = a != b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a != b, int, 32); }
+
+
+
+
+
+
+=== eq untouched ===
+void f(int a, int b) { int x = a == b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a == b, int, 32); }
+
+
+
+
+
+
+=== gt untouched ===
+void f(int a, int b) { int x = a > b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a > b, int, 32); }
+
+
+
+
+
+
+=== le untouched ===
+void f(int a, int b) { int x = a <= b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a <= b, int, 32); }
+
+
+
+
+
+
+=== ge untouched ===
+void f(int a, int b) { int x = a >= b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a >= b, int, 32); }
+
+
+
+
+
+
+=== lor untouched ===
+void f(int a, int b) { int x = a || b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a || b, int, 32); }
+
+
+
+
+
+
+=== xor untouched ===
+void f(int a, int b) { int x = a ^ b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a ^ b, int, 32); }
+
+
+
+
+
+
+=== rshift untouched ===
+void f(int a, int b) { int x = a >> b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_shr(a, b, 32), int, 32); }
+
+
+
+
+
+=== self add ===
+void f(int a) { int x = a + a; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(a, a, 25), int, 25); }
+
+
+
+
+
+=== zero add ===
+void f(int a) { int x = a + 0; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(a, 0, 25), int, 25); }
+
+
+
+
+
+
+=== neg lit operand ===
+void f(int a) { int x = a + -1; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(a, -1, 25), int, 25); }
+
+
+
+
+
+
+=== complement operand ===
+void f(int a) { int x = a + ~0; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(a, ~0, 25), int, 25); }
+
+
+
+
+
+
+=== multi stmt ===
+void f(int a, int b, int c) { int x = a + b; int y = b * c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_add(a, b, 39), int, 39); int y = ckd_narrow(ckd_mul(b, c, 54), int, 54); }
+
+
+
+

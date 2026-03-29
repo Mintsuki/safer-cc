@@ -1,0 +1,168 @@
+=== bitand ===
+void f(int a, int b) { int x = a & b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a & b, int, 32); }
+
+
+
+
+
+
+=== bitor ===
+void f(int a, int b) { int x = a | b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a | b, int, 32); }
+
+
+
+
+
+
+=== xor ===
+void f(int a, int b) { int x = a ^ b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a ^ b, int, 32); }
+
+
+
+
+
+
+=== logical and ===
+void f(int a, int b) { int x = a && b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a && b, int, 32); }
+
+
+
+
+
+
+=== logical or ===
+void f(int a, int b) { int x = a || b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a || b, int, 32); }
+
+
+
+
+
+
+=== eq ===
+void f(int a, int b) { int x = a == b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a == b, int, 32); }
+
+
+
+
+
+
+=== neq ===
+void f(int a, int b) { int x = a != b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a != b, int, 32); }
+
+
+
+
+
+
+=== lt ===
+void f(int a, int b) { int x = a < b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a < b, int, 32); }
+
+
+
+
+
+
+=== gt ===
+void f(int a, int b) { int x = a > b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a > b, int, 32); }
+
+
+
+
+
+
+=== complement ===
+void f(int a) { int x = ~a; }
+---
+void f(int a) { int x = ckd_narrow(~a, int, 25); }
+
+
+
+
+
+
+=== logical not ===
+void f(int a) { int x = !a; }
+---
+void f(int a) { int x = ckd_narrow(!a, int, 25); }
+
+
+
+
+
+
+=== ternary ===
+void f(int a, int b) { int x = a > b ? a : b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a > b ? a : b, int, 32); }
+
+
+
+
+
+
+=== assign ===
+void f(int a) { int x = a; }
+---
+void f(int a) { int x = ckd_narrow(a, int, 25); }
+
+
+
+
+
+
+=== and assign ===
+void f(int a) { a &= 0xFF; }
+---
+void f(int a) { a &= 0xFF; }
+
+
+
+
+
+
+=== or assign ===
+void f(int a) { a |= 0x01; }
+---
+void f(int a) { a |= 0x01; }
+
+
+
+
+
+
+=== xor assign ===
+void f(int a) { a ^= 0x55; }
+---
+void f(int a) { a ^= 0x55; }
+
+
+
+
+
+
+=== ptr diff ===
+void f(char *a, char *b) { long d = a - b; }
+---
+void f(char *a, char *b) { long d = ckd_narrow(ckd_ptr_diff(a, b, 37), long, 37); }
+
+
+
+

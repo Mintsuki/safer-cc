@@ -1,0 +1,194 @@
+=== long param name add ===
+void f(int variable_one, int variable_two) { int x = variable_one + variable_two; }
+---
+void f(int variable_one, int variable_two) { int x = ckd_narrow(ckd_add(variable_one, variable_two, 54), int, 54); }
+
+
+
+
+
+=== single char var ===
+void f(int a) { int x = a + a; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(a, a, 25), int, 25); }
+
+
+
+
+
+=== many spaces ===
+void f(int a, int b) { int x = a   +   b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_add(a, b, 32), int, 32); }
+
+
+
+
+
+=== tab indent ===
+void f(int a) {
+	int x = a + 1;
+}
+---
+void f(int a) {
+	int x = ckd_narrow(ckd_add(a, 1, 10), int, 10);
+}
+
+
+
+
+
+
+=== zero literal ===
+void f(int a) { int x = a + 0; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(a, 0, 25), int, 25); }
+
+
+
+
+
+
+=== negative zero ===
+void f(int a) { int x = a + -0; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(a, -0, 25), int, 25); }
+
+
+
+
+
+
+=== very long line ===
+void f(int a, int b, int c, int d, int e, int f_) { int x = a + b + c + d + e + f_; }
+---
+void f(int a, int b, int c, int d, int e, int f_) { int x = ckd_narrow(ckd_add(ckd_add(ckd_add(ckd_add(ckd_add(a, b, 61), c, 61), d, 61), e, 61), f_, 61), int, 61); }
+
+
+
+
+
+=== array decay add ===
+void f(void) { int arr[10]; int *p = arr + 5; }
+---
+void f(void) { int arr[10]; int *p = ckd_ptr_add(arr, 5, 38); }
+
+
+
+
+
+
+=== void ptr add ===
+void f(void *p, int n) { void *q = p + n; }
+---
+void f(void *p, int n) { void *q = ckd_ptr_add(p, n, 36); }
+
+
+
+
+
+
+=== unsigned add ===
+void f(unsigned a, unsigned b) { unsigned x = a + b; }
+---
+void f(unsigned a, unsigned b) { unsigned x = ckd_narrow(ckd_add(a, b, 47), unsigned, 47); }
+
+
+
+
+
+=== unsigned long mul ===
+void f(unsigned long a, unsigned long b) { unsigned long x = a * b; }
+---
+void f(unsigned long a, unsigned long b) { unsigned long x = ckd_narrow(ckd_mul(a, b, 62), unsigned long, 62); }
+
+
+
+
+
+=== u8 add ===
+void f(unsigned char a, unsigned char b) { unsigned char x = a + b; }
+---
+void f(unsigned char a, unsigned char b) { unsigned char x = ckd_narrow(ckd_add(a, b, 62), unsigned char, 62); }
+
+
+
+
+
+
+=== ptr to const add ===
+void f(const int *p, int n) { const int *q = p + n; }
+---
+void f(const int *p, int n) { const int *q = ckd_ptr_add(p, n, 46); }
+
+
+
+
+
+
+=== extern func ret ===
+int add(int, int); void f(int a, int b) { int x = add(a, b) + 1; }
+---
+int add(int, int); void f(int a, int b) { int x = ckd_narrow(ckd_add(add(ckd_narrow(a, int, 55), ckd_narrow(b, int, 58)), 1, 51), int, 51); }
+
+
+
+
+
+
+=== multi stmt single line ===
+void f(int a) { int x = a + 1; int y = a * 2; int z = x + y; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(a, 1, 25), int, 25); int y = ckd_narrow(ckd_mul(a, 2, 40), int, 40); int z = ckd_narrow(ckd_add(x, y, 55), int, 55); }
+
+
+
+
+
+=== empty for ===
+void f(void) { for (;;) {} }
+---
+void f(void) { for (;;) {} }
+
+
+
+
+
+
+=== semicolons only ===
+;;;
+---
+;;;
+
+
+
+
+
+
+=== nested sizeof skip ===
+void f(int a) { int x = sizeof(a + 1) + a; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(sizeof(a + 1), a, 25), int, 25); }
+
+
+
+
+
+=== alignof plus var ===
+void f(int a) { int x = _Alignof(int) + a; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(_Alignof(int), a, 25), int, 25); }
+
+
+
+
+
+=== string lit plus int ===
+void f(void) { const char *p = "hello" + 2; }
+---
+void f(void) { const char *p = ckd_ptr_add("hello", 2, 32); }
+
+
+
+
+

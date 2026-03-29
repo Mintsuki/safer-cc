@@ -1,0 +1,109 @@
+=== chain 3 ===
+void f(int a, int b, int c, int d) { int x = a + b + c + d; }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow(ckd_add(ckd_add(ckd_add(a, b, 46), c, 46), d, 46), int, 46); }
+
+
+
+
+
+=== two muls add ===
+void f(int a, int b, int c, int d) { int x = a * b + c * d; }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow(ckd_add(ckd_mul(a, b, 46), ckd_mul(c, d, 54), 46), int, 46); }
+
+
+
+
+
+=== sub of muls ===
+void f(int a, int b, int c, int d) { int x = a * b - c * d; }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow(ckd_sub(ckd_mul(a, b, 46), ckd_mul(c, d, 54), 46), int, 46); }
+
+
+
+
+
+=== ptr plus mul ===
+void f(char *p, int a, int b) { char *q = p + a * b; }
+---
+void f(char *p, int a, int b) { char *q = ckd_ptr_add(p, ckd_mul(a, b, 47), 43); }
+
+
+
+
+
+
+=== compound rhs ===
+void f(int x, int a, int b) { x += a * b; }
+---
+void f(int x, int a, int b) { ckd_compound_narrow(x, ckd_add, ckd_mul(a, b, 36), int, 31); }
+
+
+
+
+=== const inner ===
+void f(int x) { int y = (1 + 2) * x; }
+---
+void f(int x) { int y = ckd_narrow(ckd_mul((1 + 2), x, 25), int, 25); }
+
+
+
+
+
+=== in return ===
+int f(int a, int b, int c) { return a * b + c; }
+---
+int f(int a, int b, int c) { return ckd_narrow(ckd_add(ckd_mul(a, b, 37), c, 37), int, 37); }
+
+
+
+
+
+=== in func arg ===
+void g(int); void f(int a, int b, int c) { g(a * b + c); }
+---
+void g(int); void f(int a, int b, int c) { g(ckd_narrow(ckd_add(ckd_mul(a, b, 46), c, 46), int, 46)); }
+
+
+
+
+
+=== offset calc ===
+void f(unsigned long base, unsigned long off, unsigned long stride) { unsigned long addr = base + off * stride; }
+---
+void f(unsigned long base, unsigned long off, unsigned long stride) { unsigned long addr = ckd_narrow(ckd_add(base, ckd_mul(off, stride, 99), 92), unsigned long, 92); }
+
+
+
+
+
+=== page align ===
+void f(unsigned long addr) { unsigned long r = (addr + 0xFFF) & ~0xFFF; }
+---
+void f(unsigned long addr) { unsigned long r = ckd_narrow((ckd_add(addr, 0xFFF, 49)) & ~0xFFF, unsigned long, 48); }
+
+
+
+
+
+
+=== pixel offset ===
+void f(unsigned long pitch, unsigned long y, unsigned long x, unsigned long bpp) { unsigned long off = pitch * y + x * bpp; }
+---
+void f(unsigned long pitch, unsigned long y, unsigned long x, unsigned long bpp) { unsigned long off = ckd_narrow(ckd_add(ckd_mul(pitch, y, 104), ckd_mul(x, bpp, 116), 104), unsigned long, 104); }
+
+
+
+
+
+=== deep parens ===
+void f(int a) { int x = ((((a + 1) + 2) + 3) + 4); }
+---
+void f(int a) { int x = ckd_narrow((ckd_add((ckd_add((ckd_add((ckd_add(a, 1, 29)), 2, 28)), 3, 27)), 4, 26)), int, 25); }
+
+
+
+
+

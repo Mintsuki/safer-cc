@@ -1,0 +1,121 @@
+=== div in bounds index ===
+void f(int i, int d) { int arr[10]; int x = arr[i / d]; }
+---
+void f(int i, int d) { int arr[10]; int x = ckd_narrow(ckd_bounds(arr, ckd_div(i, d, 49), 10, 45), int, 45); }
+
+
+
+
+
+=== mod in bounds index ===
+void f(int i, int n) { int arr[16]; int x = arr[i % n]; }
+---
+void f(int i, int n) { int arr[16]; int x = ckd_narrow(ckd_bounds(arr, ckd_mod(i, n, 49), 16, 45), int, 45); }
+
+
+
+
+
+=== shift in bounds index ===
+void f(int i) { int arr[32]; int x = arr[i >> 1]; }
+---
+void f(int i) { int arr[32]; int x = ckd_narrow(ckd_bounds(arr, ckd_shr(i, 1, 42), 32, 38), int, 38); }
+
+
+
+
+
+
+=== neg of div ===
+void f(int a, int b) { int x = -(a / b); }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_neg((ckd_div(a, b, 34)), 32), int, 32); }
+
+
+
+
+
+=== shl of add ===
+void f(int a, int b) { int x = (a + b) << 4; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_shl((ckd_add(a, b, 33)), 4, 32), int, 32); }
+
+
+
+
+
+=== mod of mul ===
+void f(int a, int b, int c) { int x = (a * b) % c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_mod((ckd_mul(a, b, 40)), c, 39), int, 39); }
+
+
+
+
+
+=== div then mul roundtrip ===
+void f(int a, int b) { int x = (a / b) * b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_mul((ckd_div(a, b, 33)), b, 32), int, 32); }
+
+
+
+
+
+=== ptr add checked index ===
+void f(char *p, int i, int stride) { char *q = p + i * stride; }
+---
+void f(char *p, int i, int stride) { char *q = ckd_ptr_add(p, ckd_mul(i, stride, 52), 48); }
+
+
+
+
+
+
+=== bounds with div size ===
+void f(int i, int total) { int arr[100]; int x = arr[i % (total / 10)]; }
+---
+void f(int i, int total) { int arr[100]; int x = ckd_narrow(ckd_bounds(arr, ckd_mod(i, (ckd_div(total, 10, 59)), 54), 100, 50), int, 50); }
+
+
+
+
+
+
+=== neg ptr not allowed ===
+void f(int a) { int x = -a; }
+---
+void f(int a) { int x = ckd_narrow(ckd_neg(a, 25), int, 25); }
+
+
+
+
+
+
+=== suppress in chain ===
+void f(int a, int b, int c) { int x = a @+ b * c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(a + ckd_mul(b, c, 44), int, 39); }
+
+
+
+
+
+=== suppress outer keep inner ===
+void f(int a, int b, int c) { int x = (a + b) @/ c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow((ckd_add(a, b, 40)) / c, int, 39); }
+
+
+
+
+
+=== all suppress ===
+void f(int a, int b) { int x = a @+ b @- a @* b @/ a @% b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a + b - a * b / a % b, int, 32); }
+
+
+
+
+

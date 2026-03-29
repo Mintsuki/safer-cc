@@ -1,0 +1,190 @@
+=== basic call narrow ===
+void f(char c, int x);
+void g(int y) { f(y, y); }
+---
+void f(char c, int x);
+void g(int y) { f(ckd_narrow(y, char, 19), ckd_narrow(y, int, 22)); }
+
+
+
+
+
+
+=== const arg skip ===
+void f(char c);
+void g(void) { f(42); }
+---
+void f(char c);
+void g(void) { f(42); }
+
+
+
+
+
+
+=== multiple narrow params ===
+void f(char a, short b, int c);
+void g(int x) { f(x, x, x); }
+---
+void f(char a, short b, int c);
+void g(int x) { f(ckd_narrow(x, char, 19), ckd_narrow(x, short, 22), ckd_narrow(x, int, 25)); }
+
+
+
+
+
+
+=== expr arg narrow ===
+typedef unsigned char uint8_t;
+void f(uint8_t c);
+void g(int a, int b) { f(a + b); }
+---
+typedef unsigned char uint8_t;
+void f(uint8_t c);
+void g(int a, int b) { f(ckd_narrow(ckd_add(a, b, 26), uint8_t, 26)); }
+
+
+
+
+
+
+=== pointer param no narrow ===
+void f(char *p);
+void g(char *q) { f(q); }
+---
+void f(char *p);
+void g(char *q) { f(q); }
+
+
+
+
+
+
+=== variadic stops checking ===
+int printf(const char *fmt, ...);
+void f(int x) { printf("hi", x); }
+---
+int printf(const char *fmt, ...);
+void f(int x) { printf("hi", x); }
+
+
+
+
+
+
+=== unsigned char param ===
+void f(unsigned char c);
+void g(int x) { f(x); }
+---
+void f(unsigned char c);
+void g(int x) { f(ckd_narrow(x, unsigned char, 19)); }
+
+
+
+
+
+
+=== typedef param ===
+typedef unsigned short uint16_t;
+void f(uint16_t val);
+void g(int x) { f(x); }
+---
+typedef unsigned short uint16_t;
+void f(uint16_t val);
+void g(int x) { f(ckd_narrow(x, uint16_t, 19)); }
+
+
+
+
+
+
+=== int param no narrow ===
+void f(int x);
+void g(int y) { f(y); }
+---
+void f(int x);
+void g(int y) { f(ckd_narrow(y, int, 19)); }
+
+
+
+
+
+
+=== from definition not just decl ===
+void f(char c) {}
+void g(int x) { f(x); }
+---
+void f(char c) {}
+void g(int x) { f(ckd_narrow(x, char, 19)); }
+
+
+
+
+
+
+=== mixed narrow and non narrow ===
+typedef unsigned char uint8_t;
+void f(int a, uint8_t b, int c, short d);
+void g(int x) { f(x, x, x, x); }
+---
+typedef unsigned char uint8_t;
+void f(int a, uint8_t b, int c, short d);
+void g(int x) { f(ckd_narrow(x, int, 19), ckd_narrow(x, uint8_t, 22), ckd_narrow(x, int, 25), ckd_narrow(x, short, 28)); }
+
+
+
+
+
+=== call with neg arg ===
+void f(char c);
+void g(int x) { f(-x); }
+---
+void f(char c);
+void g(int x) { f(ckd_narrow(ckd_neg(x, 19), char, 19)); }
+
+
+
+
+
+
+=== no decl visible no narrow ===
+void g(int x) { unknown(x); }
+---
+void g(int x) { unknown(x); }
+
+
+
+
+
+
+=== call multiline ===
+typedef unsigned char uint8_t;
+void f(uint8_t a, uint8_t b);
+void g(int x, int y) {
+    f(x, y);
+}
+---
+typedef unsigned char uint8_t;
+void f(uint8_t a, uint8_t b);
+void g(int x, int y) {
+    f(ckd_narrow(x, uint8_t, 7), ckd_narrow(y, uint8_t, 10));
+}
+
+
+
+
+
+
+=== call with shift arg ===
+typedef unsigned char uint8_t;
+void f(uint8_t hi);
+void g(unsigned v) { f(v >> 8); }
+---
+typedef unsigned char uint8_t;
+void f(uint8_t hi);
+void g(unsigned v) { f(ckd_narrow(ckd_shr(v, 8, 24), uint8_t, 24)); }
+
+
+
+
+

@@ -1,0 +1,157 @@
+=== char field arrow ===
+struct s { char c; }; void f(struct s *s, int x) { s->c = x; }
+---
+struct s { char c; }; void f(struct s *s, int x) { s->c = ckd_narrow(x, char, 59); }
+
+
+
+
+
+
+=== short field arrow ===
+struct s { short v; }; void f(struct s *s, int x) { s->v = x; }
+---
+struct s { short v; }; void f(struct s *s, int x) { s->v = ckd_narrow(x, short, 60); }
+
+
+
+
+
+
+=== unsigned char field arrow ===
+struct s { unsigned char b; }; void f(struct s *s, int x) { s->b = x; }
+---
+struct s { unsigned char b; }; void f(struct s *s, int x) { s->b = ckd_narrow(x, unsigned char, 68); }
+
+
+
+
+
+
+=== typedef field arrow ===
+typedef unsigned char uint8_t; struct s { uint8_t val; }; void f(struct s *s, int x) { s->val = x; }
+---
+typedef unsigned char uint8_t; struct s { uint8_t val; }; void f(struct s *s, int x) { s->val = ckd_narrow(x, uint8_t, 97); }
+
+
+
+
+
+
+=== int field no narrow ===
+struct s { int x; }; void f(struct s *s, int x) { s->x = x; }
+---
+struct s { int x; }; void f(struct s *s, int x) { s->x = ckd_narrow(x, int, 58); }
+
+
+
+
+
+
+=== ptr field no narrow ===
+struct s { char *p; }; void f(struct s *s, char *p) { s->p = p; }
+---
+struct s { char *p; }; void f(struct s *s, char *p) { s->p = p; }
+
+
+
+
+
+
+=== dot access narrow ===
+struct s { char c; }; void f(struct s s, int x) { s.c = x; }
+---
+struct s { char c; }; void f(struct s s, int x) { s.c = ckd_narrow(x, char, 57); }
+
+
+
+
+
+
+=== field from expr ===
+struct s { short val; }; void f(struct s *s, int a, int b) { s->val = a + b; }
+---
+struct s { short val; }; void f(struct s *s, int a, int b) { s->val = ckd_narrow(ckd_add(a, b, 71), short, 71); }
+
+
+
+
+
+
+=== field const skip ===
+struct s { char c; }; void f(struct s *s) { s->c = 0; }
+---
+struct s { char c; }; void f(struct s *s) { s->c = 0; }
+
+
+
+
+
+
+=== field suppress ===
+struct s { char c; }; void f(struct s *s, int x) { s->c @= x; }
+---
+struct s { char c; }; void f(struct s *s, int x) { s->c = x; }
+
+
+
+
+
+
+=== multiple fields ===
+struct pixel { unsigned char r; unsigned char g; unsigned char b; };
+void f(struct pixel *p, int rv, int gv, int bv) {
+    p->r = rv;
+    p->g = gv;
+    p->b = bv;
+}
+---
+struct pixel { unsigned char r; unsigned char g; unsigned char b; };
+void f(struct pixel *p, int rv, int gv, int bv) {
+    p->r = ckd_narrow(rv, unsigned char, 12);
+    p->g = ckd_narrow(gv, unsigned char, 12);
+    p->b = ckd_narrow(bv, unsigned char, 12);
+}
+
+
+
+
+
+
+=== field shift narrow ===
+typedef unsigned char uint8_t;
+struct hdr { uint8_t lo; uint8_t hi; };
+void f(struct hdr *h, unsigned val) {
+    h->lo = val;
+    h->hi = val >> 8;
+}
+---
+typedef unsigned char uint8_t;
+struct hdr { uint8_t lo; uint8_t hi; };
+void f(struct hdr *h, unsigned val) {
+    h->lo = ckd_narrow(val, uint8_t, 13);
+    h->hi = ckd_narrow(ckd_shr(val, 8, 13), uint8_t, 13);
+}
+
+
+
+
+
+
+=== collision ptr wins ===
+struct a { char *label; };
+struct b { char label[11]; };
+void f(struct a *a, char *p) {
+    a->label = p;
+}
+---
+struct a { char *label; };
+struct b { char label[11]; };
+void f(struct a *a, char *p) {
+    a->label = p;
+}
+
+
+
+
+

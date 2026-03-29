@@ -1,0 +1,199 @@
+=== char from int ===
+void f(int a) { char c = a; }
+---
+void f(int a) { char c = ckd_narrow(a, char, 26); }
+
+
+
+
+
+
+=== unsigned char from int ===
+void f(int a) { unsigned char c = a; }
+---
+void f(int a) { unsigned char c = ckd_narrow(a, unsigned char, 35); }
+
+
+
+
+
+
+=== short from int ===
+void f(int a) { short s = a; }
+---
+void f(int a) { short s = ckd_narrow(a, short, 27); }
+
+
+
+
+
+
+=== unsigned short from int ===
+void f(int a) { unsigned short s = a; }
+---
+void f(int a) { unsigned short s = ckd_narrow(a, unsigned short, 36); }
+
+
+
+
+
+
+=== char from long ===
+void f(long a) { char c = a; }
+---
+void f(long a) { char c = ckd_narrow(a, char, 27); }
+
+
+
+
+
+
+=== char from expr ===
+void f(int a, int b) { char c = a + b; }
+---
+void f(int a, int b) { char c = ckd_narrow(ckd_add(a, b, 33), char, 33); }
+
+
+
+
+
+
+=== short from mul ===
+void f(int a, int b) { short s = a * b; }
+---
+void f(int a, int b) { short s = ckd_narrow(ckd_mul(a, b, 34), short, 34); }
+
+
+
+
+
+
+=== no narrow int from int ===
+void f(int a) { int x = a; }
+---
+void f(int a) { int x = ckd_narrow(a, int, 25); }
+
+
+
+
+
+
+=== no narrow long from int ===
+void f(int a) { long x = a; }
+---
+void f(int a) { long x = ckd_narrow(a, long, 26); }
+
+
+
+
+
+
+=== no narrow ll from int ===
+void f(int a) { long long x = a; }
+---
+void f(int a) { long long x = ckd_narrow(a, long long, 31); }
+
+
+
+
+
+
+=== no narrow unsigned from int ===
+void f(int a) { unsigned x = a; }
+---
+void f(int a) { unsigned x = ckd_narrow(a, unsigned, 30); }
+
+
+
+
+
+
+=== no narrow char from const ===
+void f(void) { char c = 65; }
+---
+void f(void) { char c = 65; }
+
+
+
+
+
+
+=== no narrow ptr ===
+void f(char *p) { char *q = p; }
+---
+void f(char *p) { char *q = p; }
+
+
+
+
+
+
+=== no narrow string init ===
+void f(void) { char s[] = "hello"; }
+---
+void f(void) { char s[] = "hello"; }
+
+
+
+
+
+
+=== narrow assignment ===
+void f(long a) { char c; c = a; }
+---
+void f(long a) { char c; c = ckd_narrow(a, char, 30); }
+
+
+
+
+
+
+=== narrow assignment short ===
+void f(int a) { short s; s = a; }
+---
+void f(int a) { short s; s = ckd_narrow(a, short, 30); }
+
+
+
+
+
+
+=== no narrow assignment int ===
+void f(int a) { int x; x = a; }
+---
+void f(int a) { int x; x = ckd_narrow(a, int, 28); }
+
+
+
+
+
+
+=== suppress narrow init ===
+void f(int a) { char c @= a; }
+---
+void f(int a) { char c = a; }
+
+
+
+
+
+
+=== suppress narrow assign ===
+void f(int a) { char c; c @= a; }
+---
+void f(int a) { char c; c = a; }
+
+
+
+
+
+
+=== narrow with bounds ===
+void f(int i) { char arr[10]; char c = arr[i]; }
+---
+void f(int i) { char arr[10]; char c = ckd_narrow(ckd_bounds(arr, i, 10, 40), char, 40); }
+
+
+
+
+

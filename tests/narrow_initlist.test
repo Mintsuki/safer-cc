@@ -1,0 +1,89 @@
+=== basic init list ===
+void f(int a, int b) { char arr[3] = {a, b, 42}; }
+---
+void f(int a, int b) { char arr[3] = {ckd_narrow(a, char, 39), ckd_narrow(b, char, 42), 42}; }
+
+
+
+
+
+
+=== all vars ===
+void f(int a, int b, int c) { unsigned char buf[3] = {a, b, c}; }
+---
+void f(int a, int b, int c) { unsigned char buf[3] = {ckd_narrow(a, unsigned char, 55), ckd_narrow(b, unsigned char, 58), ckd_narrow(c, unsigned char, 61)}; }
+
+
+
+
+
+
+=== all const ===
+void f(void) { char arr[3] = {1, 2, 3}; }
+---
+void f(void) { char arr[3] = {1, 2, 3}; }
+
+
+
+
+
+
+=== mixed const var ===
+void f(int x) { short arr[4] = {0, x, 10, x}; }
+---
+void f(int x) { short arr[4] = {0, ckd_narrow(x, short, 36), 10, ckd_narrow(x, short, 43)}; }
+
+
+
+
+
+
+=== expr in init list ===
+void f(int a, int b) { char arr[2] = {a + b, a - b}; }
+---
+void f(int a, int b) { char arr[2] = {ckd_narrow(ckd_add(a, b, 39), char, 39), ckd_narrow(ckd_sub(a, b, 46), char, 46)}; }
+
+
+
+
+
+
+=== string init not list ===
+void f(void) { char arr[] = "hello"; }
+---
+void f(void) { char arr[] = "hello"; }
+
+
+
+
+
+
+=== init list zero ===
+void f(void) { char arr[10] = {0}; }
+---
+void f(void) { char arr[10] = {0}; }
+
+
+
+
+
+
+=== int array no narrow ===
+void f(int a, int b) { int arr[2] = {a, b}; }
+---
+void f(int a, int b) { int arr[2] = {ckd_narrow(a, int, 38), ckd_narrow(b, int, 41)}; }
+
+
+
+
+
+
+=== short array from long ===
+void f(long a, long b) { short arr[2] = {a, b}; }
+---
+void f(long a, long b) { short arr[2] = {ckd_narrow(a, short, 42), ckd_narrow(b, short, 45)}; }
+
+
+
+
+

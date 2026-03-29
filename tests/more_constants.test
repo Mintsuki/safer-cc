@@ -1,0 +1,78 @@
+=== ull ===
+void f(void) { unsigned long long x = 1ULL + 2ULL; }
+---
+void f(void) { unsigned long long x = 1ULL + 2ULL; }
+
+
+
+
+
+
+=== char lit ===
+void f(void) { int x = 'a' + 'b'; }
+---
+void f(void) { int x = 'a' + 'b'; }
+
+
+
+
+
+
+=== sizeof*lit ===
+void f(void) { int x = 10 * sizeof(int); }
+---
+void f(void) { int x = 10 * sizeof(int); }
+
+
+
+
+
+
+=== zero+zero ===
+void f(void) { int x = 0 + 0; }
+---
+void f(void) { int x = 0 + 0; }
+
+
+
+
+
+
+=== long lit ===
+void f(void) { long x = 1L + 2L; }
+---
+void f(void) { long x = 1L + 2L; }
+
+
+
+
+
+
+=== unsigned lit ===
+void f(void) { unsigned x = 1U + 2U; }
+---
+void f(void) { unsigned x = 1U + 2U; }
+
+
+
+
+
+
+=== sizeof+var ===
+void f(int a) { int x = sizeof(int) + a; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(sizeof(int), a, 25), int, 25); }
+
+
+
+
+
+=== parens const ===
+void f(void) { int x = (1 + 2) * 3; }
+---
+void f(void) { int x = (1 + 2) * 3; }
+
+
+
+
+

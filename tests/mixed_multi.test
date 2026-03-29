@@ -1,0 +1,173 @@
+=== bounds plus arith ===
+void f(int n) {
+    int arr[100];
+    for (int i = 0; i < n; i++) {
+        arr[i] = arr[i] + 1;
+    }
+}
+---
+void f(int n) {
+    int arr[100];
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        ckd_bounds(arr, i, 100, 9) = ckd_narrow(ckd_add(ckd_bounds(arr, i, 100, 18), 1, 18), int, 18);
+    }
+}
+
+
+
+
+
+
+=== div mod shift ===
+void f(unsigned x, unsigned bits) {
+    unsigned word = x / 32;
+    unsigned bit = x % 32;
+    unsigned mask = 1U << bit;
+    unsigned val = mask >> 1;
+}
+---
+void f(unsigned x, unsigned bits) {
+    unsigned word = ckd_narrow(ckd_div(x, 32, 21), unsigned, 21);
+    unsigned bit = ckd_narrow(ckd_mod(x, 32, 20), unsigned, 20);
+    unsigned mask = ckd_narrow(ckd_shl(1U, bit, 21), unsigned, 21);
+    unsigned val = ckd_narrow(ckd_shr(mask, 1, 20), unsigned, 20);
+}
+
+
+
+
+
+=== neg in ternary ===
+int f(int a) {
+    return a > 0 ? a : -a;
+}
+---
+int f(int a) {
+    return ckd_narrow(a > 0 ? a : ckd_neg(a, 24), int, 12);
+}
+
+
+
+
+
+
+=== ptr bounds neg ===
+void f(int i) {
+    char arr[64];
+    char *p = arr + i;
+    char c = arr[-i];
+}
+---
+void f(int i) {
+    char arr[64];
+    char *p = ckd_ptr_add(arr, i, 15);
+    char c = ckd_narrow(ckd_bounds(arr, ckd_neg(i, 18), 64, 14), char, 14);
+}
+
+
+
+
+
+
+=== chain all ===
+int f(int a, int b, int c) {
+    int sum = a + b;
+    int diff = a - b;
+    int prod = a * b;
+    int quot = a / b;
+    int rem = a % b;
+    int shl = a << c;
+    int shr = a >> c;
+    int neg = -a;
+    return sum + diff + prod + quot + rem + shl + shr + neg;
+}
+---
+int f(int a, int b, int c) {
+    int sum = ckd_narrow(ckd_add(a, b, 15), int, 15);
+    int diff = ckd_narrow(ckd_sub(a, b, 16), int, 16);
+    int prod = ckd_narrow(ckd_mul(a, b, 16), int, 16);
+    int quot = ckd_narrow(ckd_div(a, b, 16), int, 16);
+    int rem = ckd_narrow(ckd_mod(a, b, 15), int, 15);
+    int shl = ckd_narrow(ckd_shl(a, c, 15), int, 15);
+    int shr = ckd_narrow(ckd_shr(a, c, 15), int, 15);
+    int neg = ckd_narrow(ckd_neg(a, 15), int, 15);
+    return ckd_narrow(ckd_add(ckd_add(ckd_add(ckd_add(ckd_add(ckd_add(ckd_add(sum, diff, 12), prod, 12), quot, 12), rem, 12), shl, 12), shr, 12), neg, 12), int, 12);
+}
+
+
+
+
+
+=== suppress mix ===
+void f(unsigned a, unsigned b) {
+    unsigned x = a @+ b;
+    unsigned y = a @/ b;
+    unsigned z = a @<< b;
+    unsigned w = @-a;
+    unsigned v = a + b;
+}
+---
+void f(unsigned a, unsigned b) {
+    unsigned x = ckd_narrow(a + b, unsigned, 18);
+    unsigned y = ckd_narrow(a / b, unsigned, 18);
+    unsigned z = ckd_narrow(a << b, unsigned, 18);
+    unsigned w = ckd_narrow(-a, unsigned, 19);
+    unsigned v = ckd_narrow(ckd_add(a, b, 18), unsigned, 18);
+}
+
+
+
+
+
+=== real pixel blend ===
+unsigned blend(unsigned fg, unsigned bg, unsigned alpha) {
+    unsigned inv = 256 - alpha;
+    unsigned r = (unsigned char)((fg) >> 16);
+    unsigned g = (unsigned char)((fg) >> 8);
+    unsigned b = (unsigned char)((fg) & 0xFF);
+    unsigned rb = (unsigned char)((bg) >> 16);
+    unsigned gb = (unsigned char)((bg) >> 8);
+    unsigned bb = (unsigned char)((bg) & 0xFF);
+    unsigned ro = (alpha * r + inv * rb) / 256;
+    unsigned go = (alpha * g + inv * gb) / 256;
+    unsigned bo = (alpha * b + inv * bb) / 256;
+    return (ro << 16) | (go << 8) | bo;
+}
+---
+unsigned blend(unsigned fg, unsigned bg, unsigned alpha) {
+    unsigned inv = ckd_narrow(ckd_sub(256, alpha, 20), unsigned, 20);
+    unsigned r = ckd_narrow(ckd_narrow((ckd_shr((fg), 16, 34)), unsigned char, 18), unsigned, 18);
+    unsigned g = ckd_narrow(ckd_narrow((ckd_shr((fg), 8, 34)), unsigned char, 18), unsigned, 18);
+    unsigned b = ckd_narrow(ckd_narrow(((fg) & 0xFF), unsigned char, 18), unsigned, 18);
+    unsigned rb = ckd_narrow(ckd_narrow((ckd_shr((bg), 16, 35)), unsigned char, 19), unsigned, 19);
+    unsigned gb = ckd_narrow(ckd_narrow((ckd_shr((bg), 8, 35)), unsigned char, 19), unsigned, 19);
+    unsigned bb = ckd_narrow(ckd_narrow(((bg) & 0xFF), unsigned char, 19), unsigned, 19);
+    unsigned ro = ckd_narrow(ckd_div((ckd_add(ckd_mul(alpha, r, 20), ckd_mul(inv, rb, 32), 20)), 256, 19), unsigned, 19);
+    unsigned go = ckd_narrow(ckd_div((ckd_add(ckd_mul(alpha, g, 20), ckd_mul(inv, gb, 32), 20)), 256, 19), unsigned, 19);
+    unsigned bo = ckd_narrow(ckd_div((ckd_add(ckd_mul(alpha, b, 20), ckd_mul(inv, bb, 32), 20)), 256, 19), unsigned, 19);
+    return ckd_narrow((ckd_shl(ro, 16, 13)) | (ckd_shl(go, 8, 26)) | bo, unsigned, 12);
+}
+
+=== memmap entry calc ===
+void f(char *base, unsigned count, unsigned desc_size) {
+    for (unsigned i = 0; i < count; i++) {
+        char *entry = base + i * desc_size;
+        unsigned long phys = *(unsigned long *)entry;
+        unsigned long pages = *(unsigned long *)(entry + 8);
+        unsigned long size = pages * 4096;
+    }
+}
+---
+void f(char *base, unsigned count, unsigned desc_size) {
+    for (unsigned i = 0; i < count; ckd_preinc(i, 37)) {
+        char *entry = ckd_ptr_add(base, ckd_mul(i, desc_size, 30), 23);
+        unsigned long phys = *(unsigned long *)entry;
+        unsigned long pages = *(unsigned long *)(ckd_ptr_add(entry, 8, 50));
+        unsigned long size = ckd_narrow(pages * 4096, unsigned long, 30);
+    }
+}
+
+
+
+
+

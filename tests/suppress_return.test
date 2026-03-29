@@ -1,0 +1,69 @@
+=== suppress return narrow ===
+char f(int x) { @return x; }
+---
+char f(int x) { return x; }
+
+
+
+
+
+
+=== suppress return short ===
+short f(int x) { @return x; }
+---
+short f(int x) { return x; }
+
+
+
+
+
+
+=== suppress return typedef ===
+typedef unsigned char uint8_t;
+uint8_t f(int x) { @return x; }
+---
+typedef unsigned char uint8_t;
+uint8_t f(int x) { return x; }
+
+
+
+
+
+
+=== no suppress return int ===
+int f(int x) { return x; }
+---
+int f(int x) { return ckd_narrow(x, int, 23); }
+
+
+
+
+
+
+=== suppress return but not inner ===
+char f(int a, int b) { @return a + b; }
+---
+char f(int a, int b) { return ckd_add(a, b, 32); }
+
+
+
+
+
+
+=== suppress return multiline ===
+typedef unsigned char uint8_t;
+uint8_t f(int x) {
+    if (x < 0) @return x;
+    return x;
+}
+---
+typedef unsigned char uint8_t;
+uint8_t f(int x) {
+    if (x < 0) return x;
+    return ckd_narrow(x, uint8_t, 12);
+}
+
+
+
+
+

@@ -1,0 +1,54 @@
+=== bang dec ===
+void f(int x) { if (!x--) {} }
+---
+void f(int x) { if (!x--) {} }
+
+
+
+
+
+
+=== empty ===
+
+---
+
+
+=== global const ===
+int x = 1 + 2;
+---
+int x = 1 + 2;
+
+
+
+
+
+
+=== builtin untouched ===
+void f(int a, int b) { int r; __builtin_add_overflow(a, b, &r); }
+---
+void f(int a, int b) { int r; __builtin_add_overflow(a, b, &r); }
+
+
+
+
+
+
+=== empty func ===
+void f(void) {}
+---
+void f(void) {}
+
+
+
+
+
+
+=== decls only ===
+int x; struct s { int a; };
+---
+int x; struct s { int a; };
+
+
+
+
+

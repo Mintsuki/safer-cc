@@ -1,0 +1,400 @@
+=== inner block shadows array ===
+void f(int i) {
+    int arr[10];
+    {
+        int arr[5];
+        arr[i];
+    }
+    arr[i];
+}
+---
+void f(int i) {
+    int arr[10];
+    {
+        int arr[5];
+        ckd_bounds(arr, i, 5, 9);
+    }
+    ckd_bounds(arr, i, 10, 5);
+}
+
+
+
+
+
+
+=== inner block different narrow ===
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+void f(int x) {
+    uint8_t a = x;
+    {
+        uint16_t a = x;
+    }
+}
+---
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+void f(int x) {
+    uint8_t a = ckd_narrow(x, uint8_t, 17);
+    {
+        uint16_t a = ckd_narrow(x, uint16_t, 22);
+    }
+}
+
+
+
+
+
+
+=== two funcs same var ===
+void f(int x) {
+    char c = x;
+}
+void g(int x) {
+    int c = x;
+}
+---
+void f(int x) {
+    char c = ckd_narrow(x, char, 14);
+}
+void g(int x) {
+    int c = ckd_narrow(x, int, 13);
+}
+
+
+
+
+
+
+=== two funcs same array ===
+void f(int i) {
+    int buf[10];
+    buf[i];
+}
+void g(int i) {
+    int buf[5];
+    buf[i];
+}
+---
+void f(int i) {
+    int buf[10];
+    ckd_bounds(buf, i, 10, 5);
+}
+void g(int i) {
+    int buf[5];
+    ckd_bounds(buf, i, 5, 5);
+}
+
+
+
+
+
+
+=== block scope ptr override ===
+void f(int *p, int n) {
+    p += n;
+    {
+        int p;
+        p += n;
+    }
+}
+---
+void f(int *p, int n) {
+    ckd_compound(p, ckd_ptr_add, n, 5);
+    {
+        int p;
+        ckd_compound_narrow(p, ckd_add, n, int, 9);
+    }
+}
+
+
+
+
+=== for loop scope ===
+void f(int n) {
+    int sum = 0;
+    for (int i = 0; i < n; ++i) {
+        sum += i;
+    }
+}
+---
+void f(int n) {
+    int sum = 0;
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        ckd_compound_narrow(sum, ckd_add, i, int, 9);
+    }
+}
+
+
+
+
+=== if block narrow ===
+void f(int x) {
+    if (x > 0) {
+        char c = x;
+    }
+}
+---
+void f(int x) {
+    if (x > 0) {
+        char c = ckd_narrow(x, char, 18);
+    }
+}
+
+
+
+
+
+
+=== nested blocks three deep ===
+void f(int x) {
+    char a = x;
+    {
+        short b = x;
+        {
+            char c = x;
+        }
+    }
+}
+---
+void f(int x) {
+    char a = ckd_narrow(x, char, 14);
+    {
+        short b = ckd_narrow(x, short, 19);
+        {
+            char c = ckd_narrow(x, char, 22);
+        }
+    }
+}
+
+
+
+
+
+
+=== func param narrow ===
+void f(char c, int x) {
+    c = x;
+}
+---
+void f(char c, int x) {
+    c = ckd_narrow(x, char, 9);
+}
+
+
+
+
+
+
+=== param ptr no narrow ===
+void f(char *p, int x) {
+    p[0] = x;
+}
+---
+void f(char *p, int x) {
+    p[0] = ckd_narrow(x, char, 12);
+}
+
+
+
+
+
+
+=== param array no bounds ===
+void f(int arr[10], int i) {
+    arr[i];
+}
+---
+void f(int arr[10], int i) {
+    ckd_bounds(arr, i, 10, 5);
+}
+
+
+
+
+
+
+=== funcptr no pollute ===
+void f(void (*cb)(int *p)) {
+    int x;
+    x += 1;
+}
+---
+void f(void (*cb)(int *p)) {
+    int x;
+    ckd_compound_narrow(x, ckd_add, 1, int, 5);
+}
+
+
+
+
+=== prototype no pollute ===
+int foo(int *p);
+void f(int x) { x += 1; }
+---
+int foo(int *p);
+void f(int x) { ckd_compound_narrow(x, ckd_add, 1, int, 17); }
+
+
+
+
+=== scope with struct field ===
+struct s { char c; };
+void f(struct s *s, int x) {
+    s->c = x;
+    {
+        int c;
+        c = x;
+    }
+}
+---
+struct s { char c; };
+void f(struct s *s, int x) {
+    s->c = ckd_narrow(x, char, 12);
+    {
+        int c;
+        c = ckd_narrow(x, int, 13);
+    }
+}
+
+
+
+
+
+
+=== scope narrow then non narrow ===
+void f(int x) {
+    {
+        char c = x;
+    }
+    {
+        int c = x;
+    }
+}
+---
+void f(int x) {
+    {
+        char c = ckd_narrow(x, char, 18);
+    }
+    {
+        int c = ckd_narrow(x, int, 17);
+    }
+}
+
+
+
+
+
+
+=== scope with typedef ===
+typedef unsigned char uint8_t;
+void f(int x) {
+    uint8_t a = x;
+    {
+        int a = x;
+    }
+    uint8_t b = x;
+}
+---
+typedef unsigned char uint8_t;
+void f(int x) {
+    uint8_t a = ckd_narrow(x, uint8_t, 17);
+    {
+        int a = ckd_narrow(x, int, 17);
+    }
+    uint8_t b = ckd_narrow(x, uint8_t, 17);
+}
+
+
+
+
+
+
+=== scope bounds then no bounds ===
+void f(int i) {
+    {
+        int arr[8];
+        arr[i];
+    }
+    {
+        int arr[16];
+        arr[i];
+    }
+}
+---
+void f(int i) {
+    {
+        int arr[8];
+        ckd_bounds(arr, i, 8, 9);
+    }
+    {
+        int arr[16];
+        ckd_bounds(arr, i, 16, 9);
+    }
+}
+
+
+
+
+
+
+=== while loop scope ===
+void f(int n) {
+    int i = 0;
+    while (i < n) {
+        ++i;
+    }
+}
+---
+void f(int n) {
+    int i = 0;
+    while (i < n) {
+        ckd_preinc(i, 9);
+    }
+}
+
+
+
+
+
+
+=== scope return narrow ===
+typedef unsigned char uint8_t;
+uint8_t f(int x) {
+    {
+        int y = x;
+    }
+    return x;
+}
+---
+typedef unsigned char uint8_t;
+uint8_t f(int x) {
+    {
+        int y = ckd_narrow(x, int, 17);
+    }
+    return ckd_narrow(x, uint8_t, 12);
+}
+
+
+
+
+
+
+=== block scope suppress ===
+void f(int a, int b) {
+    int x = a @+ b;
+    {
+        int y = a + b;
+    }
+}
+---
+void f(int a, int b) {
+    int x = ckd_narrow(a + b, int, 13);
+    {
+        int y = ckd_narrow(ckd_add(a, b, 17), int, 17);
+    }
+}
+
+
+
+

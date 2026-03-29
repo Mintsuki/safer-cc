@@ -1,0 +1,99 @@
+=== suppress in loop body ===
+void f(unsigned *state, int n) {
+    for (int i = 0; i < n; i++) {
+        state[i] = state[i] @* 0x6c078965;
+    }
+}
+---
+void f(unsigned *state, int n) {
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        state[i] = ckd_narrow(state[i] * 0x6c078965, unsigned, 20);
+    }
+}
+
+
+
+
+
+
+=== mixed suppress and checked ===
+void f(unsigned seed, int n) {
+    seed = seed @* 1103515245;
+    seed = seed @+ 12345;
+    int x = seed + n;
+}
+---
+void f(unsigned seed, int n) {
+    seed = ckd_narrow(seed * 1103515245, unsigned, 12);
+    seed = ckd_narrow(seed + 12345, unsigned, 12);
+    int x = ckd_narrow(ckd_add(seed, n, 13), int, 13);
+}
+
+
+
+
+
+=== checksum multiline ===
+unsigned checksum(unsigned a, unsigned b, unsigned c) {
+    unsigned sum = a @+ b;
+    sum = sum @+ c;
+    return sum;
+}
+---
+unsigned checksum(unsigned a, unsigned b, unsigned c) {
+    unsigned sum = ckd_narrow(a + b, unsigned, 20);
+    sum = ckd_narrow(sum + c, unsigned, 11);
+    return ckd_narrow(sum, unsigned, 12);
+}
+
+
+
+
+
+
+=== suppress dec in countdown ===
+void f(int n) {
+    while (n > 0) {
+        n@--;
+    }
+}
+---
+void f(int n) {
+    while (n > 0) {
+        n--;
+    }
+}
+
+
+
+
+
+
+=== suppress add check mul ===
+void f(int a, int b, int c) {
+    int x = a @+ b;
+    int y = x * c;
+}
+---
+void f(int a, int b, int c) {
+    int x = ckd_narrow(a + b, int, 13);
+    int y = ckd_narrow(ckd_mul(x, c, 13), int, 13);
+}
+
+
+
+
+
+=== higher half address ===
+void f(unsigned long phys) {
+    unsigned long virt = 0UL @- phys;
+}
+---
+void f(unsigned long phys) {
+    unsigned long virt = ckd_narrow(0UL - phys, unsigned long, 26);
+}
+
+
+
+
+

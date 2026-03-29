@@ -1,0 +1,56 @@
+=== all checks in one func ===
+typedef unsigned char uint8_t; typedef unsigned short uint16_t;
+void f(int *data, int n) {
+    uint8_t buf[256];
+    uint16_t total = 0;
+    for (int i = 0; i < n; i++) {
+        buf[i] = data[i];
+        total += buf[i];
+    }
+    uint8_t avg = total / n;
+    int neg = -avg;
+    uint16_t shifted = avg << 4;
+}
+---
+typedef unsigned char uint8_t; typedef unsigned short uint16_t;
+void f(int *data, int n) {
+    uint8_t buf[256];
+    uint16_t total = 0;
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        ckd_bounds(buf, i, 256, 9) = ckd_narrow(data[i], uint8_t, 18);
+        ckd_compound_narrow(total, ckd_add, ckd_bounds(buf, i, 256, 18), uint16_t, 9);
+    }
+    uint8_t avg = ckd_narrow(ckd_div(total, n, 19), uint8_t, 19);
+    int neg = ckd_narrow(ckd_neg(avg, 15), int, 15);
+    uint16_t shifted = ckd_narrow(ckd_shl(avg, 4, 24), uint16_t, 24);
+}
+
+
+
+
+
+
+=== pixel format conversion ===
+typedef unsigned int uint32_t; typedef unsigned char uint8_t;
+void f(uint32_t *src, uint8_t *dst, int n) {
+    for (int i = 0; i < n; i++) {
+        uint32_t px = src[i];
+        dst[i * 3] = px >> 16;
+        dst[i * 3 + 1] = px >> 8;
+        dst[i * 3 + 2] = px;
+    }
+}
+---
+typedef unsigned int uint32_t; typedef unsigned char uint8_t;
+void f(uint32_t *src, uint8_t *dst, int n) {
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        uint32_t px = ckd_narrow(src[i], uint32_t, 23);
+        dst[ckd_mul(i, 3, 13)] = ckd_narrow(ckd_shr(px, 16, 22), uint8_t, 22);
+        dst[ckd_add(ckd_mul(i, 3, 13), 1, 13)] = ckd_narrow(ckd_shr(px, 8, 26), uint8_t, 26);
+        dst[ckd_add(ckd_mul(i, 3, 13), 2, 13)] = ckd_narrow(px, uint8_t, 26);
+    }
+}
+
+
+
+

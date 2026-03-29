@@ -1,0 +1,231 @@
+=== narrow init add ===
+void f(int a, int b) { char c = a + b; }
+---
+void f(int a, int b) { char c = ckd_narrow(ckd_add(a, b, 33), char, 33); }
+
+
+
+
+
+
+=== narrow init sub ===
+void f(int a, int b) { char c = a - b; }
+---
+void f(int a, int b) { char c = ckd_narrow(ckd_sub(a, b, 33), char, 33); }
+
+
+
+
+
+
+=== narrow init mul ===
+void f(int a, int b) { short s = a * b; }
+---
+void f(int a, int b) { short s = ckd_narrow(ckd_mul(a, b, 34), short, 34); }
+
+
+
+
+
+
+=== narrow init div ===
+void f(int a, int b) { char c = a / b; }
+---
+void f(int a, int b) { char c = ckd_narrow(ckd_div(a, b, 33), char, 33); }
+
+
+
+
+
+
+=== narrow init shr ===
+void f(unsigned v) { unsigned char lo = v >> 4; }
+---
+void f(unsigned v) { unsigned char lo = ckd_narrow(ckd_shr(v, 4, 41), unsigned char, 41); }
+
+
+
+
+
+
+=== narrow init shl ===
+void f(int x) { short s = x << 1; }
+---
+void f(int x) { short s = ckd_narrow(ckd_shl(x, 1, 27), short, 27); }
+
+
+
+
+
+
+=== narrow init neg ===
+void f(int x) { char c = -x; }
+---
+void f(int x) { char c = ckd_narrow(ckd_neg(x, 26), char, 26); }
+
+
+
+
+
+
+=== narrow assign add ===
+void f(int a, int b) { char c; c = a + b; }
+---
+void f(int a, int b) { char c; c = ckd_narrow(ckd_add(a, b, 36), char, 36); }
+
+
+
+
+
+
+=== narrow assign mul ===
+void f(int a, int b) { short s; s = a * b; }
+---
+void f(int a, int b) { short s; s = ckd_narrow(ckd_mul(a, b, 37), short, 37); }
+
+
+
+
+
+
+=== narrow assign shr ===
+void f(unsigned v) {
+    unsigned char lo;
+    lo = v >> 4;
+}
+---
+void f(unsigned v) {
+    unsigned char lo;
+    lo = ckd_narrow(ckd_shr(v, 4, 10), unsigned char, 10);
+}
+
+
+
+
+
+
+=== narrow field add ===
+typedef unsigned char uint8_t;
+struct s { uint8_t val; };
+void f(struct s *s, int a, int b) {
+    s->val = a + b;
+}
+---
+typedef unsigned char uint8_t;
+struct s { uint8_t val; };
+void f(struct s *s, int a, int b) {
+    s->val = ckd_narrow(ckd_add(a, b, 14), uint8_t, 14);
+}
+
+
+
+
+
+
+=== narrow field shift ===
+typedef unsigned char uint8_t;
+struct s { uint8_t hi; };
+void f(struct s *s, unsigned v) {
+    s->hi = v >> 8;
+}
+---
+typedef unsigned char uint8_t;
+struct s { uint8_t hi; };
+void f(struct s *s, unsigned v) {
+    s->hi = ckd_narrow(ckd_shr(v, 8, 13), uint8_t, 13);
+}
+
+
+
+
+
+
+=== narrow field div ===
+struct s { char avg; };
+void f(struct s *s, int t, int n) {
+    s->avg = t / n;
+}
+---
+struct s { char avg; };
+void f(struct s *s, int t, int n) {
+    s->avg = ckd_narrow(ckd_div(t, n, 14), char, 14);
+}
+
+
+
+
+
+
+=== narrow return add ===
+char f(int a, int b) { return a + b; }
+---
+char f(int a, int b) { return ckd_narrow(ckd_add(a, b, 31), char, 31); }
+
+
+
+
+
+
+=== narrow return shr ===
+typedef unsigned char uint8_t;
+uint8_t f(unsigned v) { return v >> 8; }
+---
+typedef unsigned char uint8_t;
+uint8_t f(unsigned v) { return ckd_narrow(ckd_shr(v, 8, 32), uint8_t, 32); }
+
+
+
+
+
+
+=== narrow return mul ===
+short f(int a, int b) { return a * b; }
+---
+short f(int a, int b) { return ckd_narrow(ckd_mul(a, b, 32), short, 32); }
+
+
+
+
+
+
+=== narrow return mod ===
+char f(int v, int m) { return v % m; }
+---
+char f(int v, int m) { return ckd_narrow(ckd_mod(v, m, 31), char, 31); }
+
+
+
+
+
+
+=== narrow return neg ===
+char f(int x) { return -x; }
+---
+char f(int x) { return ckd_narrow(ckd_neg(x, 24), char, 24); }
+
+
+
+
+
+
+=== narrow field const skip ===
+struct s { char c; };
+void f(struct s *s) { s->c = 42; }
+---
+struct s { char c; };
+void f(struct s *s) { s->c = 42; }
+
+
+
+
+
+
+=== narrow init const skip ===
+void f(void) { char c = 0; }
+---
+void f(void) { char c = 0; }
+
+
+
+
+

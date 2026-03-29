@@ -1,0 +1,253 @@
+=== typical function ===
+int sum(int a, int b) {
+    return a + b;
+}
+---
+int sum(int a, int b) {
+    return ckd_narrow(ckd_add(a, b, 12), int, 12);
+}
+
+
+
+
+
+=== locals and return ===
+int f(int a, int b) {
+    int x = a + b;
+    int y = a * b;
+    return x - y;
+}
+---
+int f(int a, int b) {
+    int x = ckd_narrow(ckd_add(a, b, 13), int, 13);
+    int y = ckd_narrow(ckd_mul(a, b, 13), int, 13);
+    return ckd_narrow(ckd_sub(x, y, 12), int, 12);
+}
+
+
+
+
+
+=== if else branches ===
+int f(int a, int b) {
+    if (a > 0) {
+        return a + b;
+    } else {
+        return a - b;
+    }
+}
+---
+int f(int a, int b) {
+    if (a > 0) {
+        return ckd_narrow(ckd_add(a, b, 16), int, 16);
+    } else {
+        return ckd_narrow(ckd_sub(a, b, 16), int, 16);
+    }
+}
+
+
+
+
+
+=== nested loops ===
+void f(int n) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            int x = i * n + j;
+        }
+    }
+}
+---
+void f(int n) {
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        for (int j = 0; j < n; ckd_preinc(j, 32)) {
+            int x = ckd_narrow(ckd_add(ckd_mul(i, n, 21), j, 21), int, 21);
+        }
+    }
+}
+
+
+
+
+
+=== ptr walk multiline ===
+void f(char *buf, int len) {
+    char *end = buf + len;
+    while (buf < end) {
+        buf++;
+    }
+}
+---
+void f(char *buf, int len) {
+    char *end = ckd_ptr_add(buf, len, 17);
+    while (buf < end) {
+        ckd_ptr_preinc(buf, 9);
+    }
+}
+
+
+
+
+
+
+=== struct init multiline ===
+struct vec2 { int x; int y; };
+int f(struct vec2 a, struct vec2 b) {
+    int dx = a.x - b.x;
+    int dy = a.y - b.y;
+    return dx * dx + dy * dy;
+}
+---
+struct vec2 { int x; int y; };
+int f(struct vec2 a, struct vec2 b) {
+    int dx = ckd_narrow(ckd_sub(a.x, b.x, 14), int, 14);
+    int dy = ckd_narrow(ckd_sub(a.y, b.y, 14), int, 14);
+    return ckd_narrow(ckd_add(ckd_mul(dx, dx, 12), ckd_mul(dy, dy, 22), 12), int, 12);
+}
+
+
+
+
+
+=== mixed suppress multiline ===
+void f(unsigned s, unsigned n) {
+    s = s @* n;
+    s = s @+ n;
+    unsigned x = s + 1;
+}
+---
+void f(unsigned s, unsigned n) {
+    s = ckd_narrow(s * n, unsigned, 9);
+    s = ckd_narrow(s + n, unsigned, 9);
+    unsigned x = ckd_narrow(ckd_add(s, 1, 18), unsigned, 18);
+}
+
+
+
+
+
+
+=== function with ptr and int ===
+void process(char *data, int count) {
+    int total = 0;
+    for (int i = 0; i < count; i++) {
+        total += data[i];
+        data++;
+    }
+}
+---
+void process(char *data, int count) {
+    int total = 0;
+    for (int i = 0; i < count; ckd_preinc(i, 32)) {
+        ckd_compound_narrow(total, ckd_add, data[i], int, 9);
+        ckd_ptr_preinc(data, 9);
+    }
+}
+
+
+
+
+=== align up multiline ===
+unsigned long align_up(unsigned long val, unsigned long align) {
+    unsigned long mask = align - 1;
+    return (val + mask) & ~mask;
+}
+---
+unsigned long align_up(unsigned long val, unsigned long align) {
+    unsigned long mask = ckd_narrow(ckd_sub(align, 1, 26), unsigned long, 26);
+    return ckd_narrow((ckd_add(val, mask, 13)) & ~mask, unsigned long, 12);
+}
+
+
+
+
+
+=== color blend multiline ===
+unsigned blend(unsigned fg, unsigned bg, unsigned alpha) {
+    unsigned inv = 256 - alpha;
+    unsigned r = alpha * (unsigned char)((fg) >> 16) + inv * (unsigned char)((bg) >> 16);
+    unsigned g = alpha * (unsigned char)((fg) >> 8) + inv * (unsigned char)((bg) >> 8);
+    unsigned b = alpha * (unsigned char)((fg) & 0xFF) + inv * (unsigned char)((bg) & 0xFF);
+    return r + g + b;
+}
+---
+unsigned blend(unsigned fg, unsigned bg, unsigned alpha) {
+    unsigned inv = ckd_narrow(ckd_sub(256, alpha, 20), unsigned, 20);
+    unsigned r = ckd_narrow(ckd_add(ckd_mul(alpha, ckd_narrow((ckd_shr((fg), 16, 42)), unsigned char, 26), 18), ckd_mul(inv, ckd_narrow((ckd_shr((bg), 16, 78)), unsigned char, 62), 56), 18), unsigned, 18);
+    unsigned g = ckd_narrow(ckd_add(ckd_mul(alpha, ckd_narrow((ckd_shr((fg), 8, 42)), unsigned char, 26), 18), ckd_mul(inv, ckd_narrow((ckd_shr((bg), 8, 77)), unsigned char, 61), 55), 18), unsigned, 18);
+    unsigned b = ckd_narrow(ckd_add(ckd_mul(alpha, ckd_narrow(((fg) & 0xFF), unsigned char, 26), 18), ckd_mul(inv, ckd_narrow(((bg) & 0xFF), unsigned char, 63), 57), 18), unsigned, 18);
+    return ckd_narrow(ckd_add(ckd_add(r, g, 12), b, 12), unsigned, 12);
+}
+
+=== indented chain ===
+void f(int a, int b, int c) {
+    int x =
+        a + b + c;
+}
+---
+void f(int a, int b, int c) {
+    int x =
+        ckd_narrow(ckd_add(ckd_add(a, b, 9), c, 9), int, 9);
+}
+
+
+
+
+
+=== multiline condition ===
+void f(int a, int b) {
+    if (a + b
+        > 100) {
+        a++;
+    }
+}
+---
+void f(int a, int b) {
+    if (ckd_add(a, b, 9)
+        > 100) {
+        ckd_preinc(a, 9);
+    }
+}
+
+
+
+
+
+
+=== switch with arith ===
+int f(int op, int a, int b) {
+    switch (op) {
+    case 0: return a + b;
+    case 1: return a - b;
+    case 2: return a * b;
+    default: return 0;
+    }
+}
+---
+int f(int op, int a, int b) {
+    switch (op) {
+    case 0: return ckd_narrow(ckd_add(a, b, 20), int, 20);
+    case 1: return ckd_narrow(ckd_sub(a, b, 20), int, 20);
+    case 2: return ckd_narrow(ckd_mul(a, b, 20), int, 20);
+    default: return 0;
+    }
+}
+
+
+
+
+
+=== prototype then definition ===
+int add(int, int);
+int add(int a, int b) {
+    return a + b;
+}
+---
+int add(int, int);
+int add(int a, int b) {
+    return ckd_narrow(ckd_add(a, b, 12), int, 12);
+}
+
+
+
+

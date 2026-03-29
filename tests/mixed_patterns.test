@@ -1,0 +1,90 @@
+=== index calc ===
+void f(int row, int cols, int col) { int idx = row * cols + col; }
+---
+void f(int row, int cols, int col) { int idx = ckd_narrow(ckd_add(ckd_mul(row, cols, 48), col, 48), int, 48); }
+
+
+
+
+
+=== area ===
+void f(int w, int h) { int area = w * h; }
+---
+void f(int w, int h) { int area = ckd_narrow(ckd_mul(w, h, 35), int, 35); }
+
+
+
+
+
+=== midpoint ===
+void f(int a, int b) { int mid = (a + b) / 2; }
+---
+void f(int a, int b) { int mid = ckd_narrow(ckd_div((ckd_add(a, b, 35)), 2, 34), int, 34); }
+
+
+
+
+
+=== distance sq ===
+void f(int dx, int dy) { int d2 = dx * dx + dy * dy; }
+---
+void f(int dx, int dy) { int d2 = ckd_narrow(ckd_add(ckd_mul(dx, dx, 35), ckd_mul(dy, dy, 45), 35), int, 35); }
+
+
+
+
+
+=== clamp add ===
+void f(int x, int lo) { int r = (x + lo) & ~(lo - 1); }
+---
+void f(int x, int lo) { int r = ckd_narrow((ckd_add(x, lo, 34)) & ~(ckd_sub(lo, 1, 46)), int, 33); }
+
+
+
+
+
+=== ring inc ===
+void f(int i, int n) { int next = (i + 1) % n; }
+---
+void f(int i, int n) { int next = ckd_narrow(ckd_mod((ckd_add(i, 1, 36)), n, 35), int, 35); }
+
+
+
+
+
+=== total size ===
+void f(int count, int elem) { int total = count * elem + 16; }
+---
+void f(int count, int elem) { int total = ckd_narrow(ckd_add(ckd_mul(count, elem, 43), 16, 43), int, 43); }
+
+
+
+
+
+=== offset to end ===
+void f(char *base, int count, int sz) { char *end = base + count * sz; }
+---
+void f(char *base, int count, int sz) { char *end = ckd_ptr_add(base, ckd_mul(count, sz, 60), 53); }
+
+
+
+
+
+
+=== acc loop ===
+void f(int *arr, int n) { int sum = 0; for (int i = 0; i < n; i++) { sum += arr[i]; } }
+---
+void f(int *arr, int n) { int sum = 0; for (int i = 0; i < n; ckd_preinc(i, 63)) { ckd_compound_narrow(sum, ckd_add, arr[i], int, 70); } }
+
+
+
+
+=== ptr walk ===
+void f(char *p, int n) { char *end = p + n; while (p < end) { p++; } }
+---
+void f(char *p, int n) { char *end = ckd_ptr_add(p, n, 38); while (p < end) { ckd_ptr_preinc(p, 63); } }
+
+
+
+
+

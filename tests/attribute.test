@@ -1,0 +1,18 @@
+=== attr preserved ===
+__attribute__((unused)) void f(int a, int b) { int x = a + b; }
+---
+__attribute__((unused)) void f(int a, int b) { int x = ckd_narrow(ckd_add(a, b, 56), int, 56); }
+
+
+
+
+
+=== packed struct ===
+__attribute__((packed)) struct s { int x; };
+---
+__attribute__((packed)) struct s { int x; };
+
+
+
+
+

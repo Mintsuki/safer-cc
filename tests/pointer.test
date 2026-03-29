@@ -1,0 +1,137 @@
+=== add ===
+void f(char *p) { char *q = p + 5; }
+---
+void f(char *p) { char *q = ckd_ptr_add(p, 5, 29); }
+
+
+
+
+
+
+=== sub ===
+void f(char *p) { char *q = p - 5; }
+---
+void f(char *p) { char *q = ckd_ptr_sub(p, 5, 29); }
+
+
+
+
+
+
+=== add assign ===
+void f(char *p) { p += 5; }
+---
+void f(char *p) { ckd_compound(p, ckd_ptr_add, 5, 19); }
+
+
+
+
+
+
+=== sub assign ===
+void f(char *p) { p -= 5; }
+---
+void f(char *p) { ckd_compound(p, ckd_ptr_sub, 5, 19); }
+
+
+
+
+
+
+=== postinc disc ===
+void f(char *p) { p++; }
+---
+void f(char *p) { ckd_ptr_preinc(p, 19); }
+
+
+
+
+
+
+=== predec disc ===
+void f(char *p) { --p; }
+---
+void f(char *p) { ckd_ptr_predec(p, 19); }
+
+
+
+
+
+
+=== postinc used ===
+void f(char *p) { char *q = p++; }
+---
+void f(char *p) { char *q = ckd_ptr_postinc(p, 29); }
+
+
+
+
+
+
+=== postdec used ===
+void f(char *p) { char *q = p--; }
+---
+void f(char *p) { char *q = ckd_ptr_postdec(p, 29); }
+
+
+
+
+
+
+=== reversed ===
+void f(char *p) { char *q = 5 + p; }
+---
+void f(char *p) { char *q = ckd_ptr_add(p, 5, 29); }
+
+
+
+
+
+
+=== ptr-ptr ===
+void f(char *a, char *b) { long d = a - b; }
+---
+void f(char *a, char *b) { long d = ckd_narrow(ckd_ptr_diff(a, b, 37), long, 37); }
+
+
+
+
+
+=== string lit ===
+void f(void) { char *p = "hello" + 1; }
+---
+void f(void) { char *p = ckd_ptr_add("hello", 1, 26); }
+
+
+
+
+
+
+=== addr of ===
+void f(void) { int x; int *p = &x + 1; }
+---
+void f(void) { int x; int *p = ckd_ptr_add(&x, 1, 32); }
+
+
+
+
+
+
+=== array decay ===
+void f(void) { char arr[10]; char *p = arr + 5; }
+---
+void f(void) { char arr[10]; char *p = ckd_ptr_add(arr, 5, 40); }
+
+
+
+
+
+
+=== int not ptr ===
+void f(int a, int b) { int x = a + b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_add(a, b, 32), int, 32); }
+
+
+
+

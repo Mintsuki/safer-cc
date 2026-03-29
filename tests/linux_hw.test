@@ -1,0 +1,288 @@
+=== irq vector extract ===
+typedef unsigned char uint8_t;
+void f(unsigned msi, uint8_t *vec) {
+    *vec = msi;
+}
+---
+typedef unsigned char uint8_t;
+void f(unsigned msi, uint8_t *vec) {
+    *vec = ckd_narrow(msi, uint8_t, 12);
+}
+
+
+
+
+
+
+=== pci devfn split ===
+typedef unsigned char uint8_t;
+void f(unsigned devfn) {
+    uint8_t slot = devfn >> 3;
+    uint8_t func = devfn;
+}
+---
+typedef unsigned char uint8_t;
+void f(unsigned devfn) {
+    uint8_t slot = ckd_narrow(ckd_shr(devfn, 3, 20), uint8_t, 20);
+    uint8_t func = ckd_narrow(devfn, uint8_t, 20);
+}
+
+
+
+
+
+
+=== rss array compound ===
+void f(int type) {
+    long rss[4];
+    rss[type] += 1;
+}
+---
+void f(int type) {
+    long rss[4];
+    ckd_compound_narrow(ckd_bounds(rss, type, 4, 5), ckd_add, 1, long, 5);
+}
+
+
+
+
+=== walk nr pages 3d ===
+void f(int g, int t, int z, int d) {
+    int nr[2][3][4];
+    nr[g][t][z] += d;
+}
+---
+void f(int g, int t, int z, int d) {
+    int nr[2][3][4];
+    ckd_compound(ckd_bounds(ckd_bounds(ckd_bounds(nr, g, 2, 5), t, 3, 5), z, 4, 5), ckd_add, d, 5);
+}
+
+
+
+
+
+
+=== task exit accum ===
+void f(unsigned long *sig_utime, unsigned long utime) {
+    *sig_utime += utime;
+}
+---
+void f(unsigned long *sig_utime, unsigned long utime) {
+    ckd_compound_narrow(*sig_utime, ckd_add, utime, unsigned long, 5);
+}
+
+
+
+
+=== page shift calc ===
+void f(unsigned long pageno, unsigned long *addr) {
+    *addr = pageno << 12;
+}
+---
+void f(unsigned long pageno, unsigned long *addr) {
+    *addr = ckd_narrow(ckd_shl(pageno, 12, 13), unsigned long, 13);
+}
+
+
+
+
+
+
+=== hash fn shift mask ===
+void f(unsigned long addr) {
+    unsigned idx = addr >> 12;
+}
+---
+void f(unsigned long addr) {
+    unsigned idx = ckd_narrow(ckd_shr(addr, 12, 20), unsigned, 20);
+}
+
+
+
+
+
+
+=== softirq pending ===
+void f(unsigned long *pending, int nr) {
+    *pending += 1 << nr;
+}
+---
+void f(unsigned long *pending, int nr) {
+    ckd_compound_narrow(*pending, ckd_add, ckd_shl(1, nr, 17), unsigned long, 5);
+}
+
+
+
+
+=== exit code pack ===
+void f(int code, int *stat) {
+    *stat = code << 8;
+}
+---
+void f(int code, int *stat) {
+    *stat = ckd_narrow(ckd_shl(code, 8, 13), int, 13);
+}
+
+
+
+
+
+
+=== kmem order objects ===
+void f(unsigned order, unsigned size, unsigned *result) {
+    *result = (4096 << order) / size;
+}
+---
+void f(unsigned order, unsigned size, unsigned *result) {
+    *result = ckd_narrow(ckd_div((ckd_shl(4096, order, 16)), size, 15), unsigned, 15);
+}
+
+
+
+
+
+=== maple node metadata ===
+typedef unsigned char uint8_t;
+struct meta { uint8_t end; uint8_t gap; };
+void f(struct meta *m, unsigned node_size, unsigned gap_off) {
+    m->end = node_size;
+    m->gap = gap_off;
+}
+---
+typedef unsigned char uint8_t;
+struct meta { uint8_t end; uint8_t gap; };
+void f(struct meta *m, unsigned node_size, unsigned gap_off) {
+    m->end = ckd_narrow(node_size, uint8_t, 14);
+    m->gap = ckd_narrow(gap_off, uint8_t, 14);
+}
+
+
+
+
+
+
+=== qspin tail pack ===
+void f(int cpu, int idx, unsigned *tail) {
+    *tail = (cpu + 1) << 2;
+}
+---
+void f(int cpu, int idx, unsigned *tail) {
+    *tail = ckd_narrow(ckd_shl((ckd_add(cpu, 1, 14)), 2, 13), unsigned, 13);
+}
+
+
+
+
+
+
+=== qspin tail unpack ===
+void f(unsigned tail) {
+    int cpu = (tail >> 2) - 1;
+}
+---
+void f(unsigned tail) {
+    int cpu = ckd_narrow(ckd_sub((ckd_shr(tail, 2, 16)), 1, 15), int, 15);
+}
+
+
+
+
+
+
+=== nr scan subtract ===
+void f(long *nr, int lru, long scanned) {
+    nr[lru] -= scanned;
+}
+---
+void f(long *nr, int lru, long scanned) {
+    ckd_compound_narrow(nr[lru], ckd_sub, scanned, long, 5);
+}
+
+
+
+
+=== slub random seq ===
+void f(unsigned *seq, int i, unsigned size) {
+    seq[i] *= size;
+}
+---
+void f(unsigned *seq, int i, unsigned size) {
+    ckd_compound_narrow(seq[i], ckd_mul, size, unsigned, 5);
+}
+
+
+
+
+=== relay buf len ===
+void f(char *in, char *buf) {
+    long len = in - buf;
+}
+---
+void f(char *in, char *buf) {
+    long len = ckd_narrow(ckd_ptr_diff(in, buf, 16), long, 16);
+}
+
+
+
+
+
+=== vmscan gen move ===
+void f(int old_gen, int new_gen, int type, int zone, int delta) {
+    int nr[2][2][4];
+    nr[old_gen][type][zone] -= delta;
+    nr[new_gen][type][zone] += delta;
+}
+---
+void f(int old_gen, int new_gen, int type, int zone, int delta) {
+    int nr[2][2][4];
+    ckd_compound(ckd_bounds(ckd_bounds(ckd_bounds(nr, old_gen, 2, 5), type, 2, 5), zone, 4, 5), ckd_sub, delta, 5);
+    ckd_compound(ckd_bounds(ckd_bounds(ckd_bounds(nr, new_gen, 2, 5), type, 2, 5), zone, 4, 5), ckd_add, delta, 5);
+}
+
+
+
+
+
+
+=== dma coherent page ===
+void f(unsigned long vaddr, unsigned long vbase) {
+    int page = (vaddr - vbase) >> 12;
+}
+---
+void f(unsigned long vaddr, unsigned long vbase) {
+    int page = ckd_narrow(ckd_shr((ckd_sub(vaddr, vbase, 17)), 12, 16), int, 16);
+}
+
+
+
+
+
+=== padata seq nr ===
+void f(int *pd_seq, int *pa_seq) {
+    *pa_seq = ++(*pd_seq);
+}
+---
+void f(int *pd_seq, int *pa_seq) {
+    *pa_seq = ckd_narrow(ckd_preinc((*pd_seq), 15), int, 15);
+}
+
+
+
+
+
+
+=== ubifs nrbits shift ===
+typedef unsigned char uint8_t;
+void f(uint8_t *p, unsigned val, int b) {
+    *p = val >> b;
+}
+---
+typedef unsigned char uint8_t;
+void f(uint8_t *p, unsigned val, int b) {
+    *p = ckd_narrow(ckd_shr(val, b, 10), uint8_t, 10);
+}
+
+
+
+
+

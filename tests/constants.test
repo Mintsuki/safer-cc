@@ -1,0 +1,99 @@
+=== two ints ===
+void f(void) { int x = 1 + 2; }
+---
+void f(void) { int x = 1 + 2; }
+
+
+
+
+
+
+=== hex ===
+void f(void) { int x = 0xFF + 0x01; }
+---
+void f(void) { int x = 0xFF + 0x01; }
+
+
+
+
+
+
+=== neg lits ===
+void f(void) { int x = -1 + -2; }
+---
+void f(void) { int x = -1 + -2; }
+
+
+
+
+
+
+=== cast int const ===
+void f(void) { int x = (int)1 + (int)2; }
+---
+void f(void) { int x = (int)1 + (int)2; }
+
+
+
+
+
+
+=== sizeof+sizeof ===
+void f(void) { int x = sizeof(int) + sizeof(char); }
+---
+void f(void) { int x = sizeof(int) + sizeof(char); }
+
+
+
+
+
+
+=== nested const ===
+void f(void) { int x = (1 + 2) * (3 - 4); }
+---
+void f(void) { int x = (1 + 2) * (3 - 4); }
+
+
+
+
+
+
+=== one var ===
+void f(int a) { int x = a + 42; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(a, 42, 25), int, 25); }
+
+
+
+
+
+
+=== sizeof untouched ===
+void f(int a) { int x = sizeof(a + 1); }
+---
+void f(int a) { int x = sizeof(a + 1); }
+
+
+
+
+
+
+=== cast ptr not const ===
+void f(void) { char *p = (char *)0x1000 + 1; }
+---
+void f(void) { char *p = ckd_ptr_add((char *)0x1000, 1, 26); }
+
+
+
+
+
+
+=== var*sizeof ===
+void f(unsigned long n) { unsigned long sz = n * sizeof(void *); }
+---
+void f(unsigned long n) { unsigned long sz = ckd_narrow(ckd_mul(n, sizeof(void *), 46), unsigned long, 46); }
+
+
+
+
+

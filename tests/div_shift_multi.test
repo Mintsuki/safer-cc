@@ -1,0 +1,168 @@
+=== div then mul ===
+void f(int a, int b) {
+    int q = a / b;
+    int r = a * q;
+}
+---
+void f(int a, int b) {
+    int q = ckd_narrow(ckd_div(a, b, 13), int, 13);
+    int r = ckd_narrow(ckd_mul(a, q, 13), int, 13);
+}
+
+
+
+
+
+=== mod then add ===
+void f(int a, int b) {
+    int r = a % b;
+    int x = r + 1;
+}
+---
+void f(int a, int b) {
+    int r = ckd_narrow(ckd_mod(a, b, 13), int, 13);
+    int x = ckd_narrow(ckd_add(r, 1, 13), int, 13);
+}
+
+
+
+
+
+=== shl then shr ===
+void f(unsigned a) {
+    unsigned x = a << 4;
+    unsigned y = x >> 2;
+}
+---
+void f(unsigned a) {
+    unsigned x = ckd_narrow(ckd_shl(a, 4, 18), unsigned, 18);
+    unsigned y = ckd_narrow(ckd_shr(x, 2, 18), unsigned, 18);
+}
+
+
+
+
+
+
+=== div assign loop ===
+void f(int *arr, int n, int d) {
+    for (int i = 0; i < n; i++) {
+        arr[i] /= d;
+    }
+}
+---
+void f(int *arr, int n, int d) {
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        ckd_compound_narrow(arr[i], ckd_div, d, int, 9);
+    }
+}
+
+
+
+
+=== neg in condition ===
+void f(int a) {
+    if (-a > 0) {
+        int x = a + 1;
+    }
+}
+---
+void f(int a) {
+    if (ckd_neg(a, 9) > 0) {
+        int x = ckd_narrow(ckd_add(a, 1, 17), int, 17);
+    }
+}
+
+
+
+
+
+
+=== shift mask loop ===
+void f(unsigned *bits, int n) {
+    for (int i = 0; i < n; i++) {
+        bits[i] = (bits[i] >> 1) | (bits[i] << 31);
+    }
+}
+---
+void f(unsigned *bits, int n) {
+    for (int i = 0; i < n; ckd_preinc(i, 28)) {
+        bits[i] = ckd_narrow((ckd_shr(bits[i], 1, 20)) | (ckd_shl(bits[i], 31, 37)), unsigned, 19);
+    }
+}
+
+
+
+
+
+
+=== fat sectors calc ===
+void f(unsigned entries, unsigned bps) {
+    unsigned root_sects = ((entries * 32) + (bps - 1)) / bps;
+    unsigned data_start = root_sects + 1;
+}
+---
+void f(unsigned entries, unsigned bps) {
+    unsigned root_sects = ckd_narrow(ckd_div((ckd_add((ckd_mul(entries, 32, 29)), (ckd_sub(bps, 1, 46)), 28)), bps, 27), unsigned, 27);
+    unsigned data_start = ckd_narrow(ckd_add(root_sects, 1, 27), unsigned, 27);
+}
+
+
+
+
+
+=== pixel offset div mod ===
+void f(unsigned off, unsigned pitch) {
+    unsigned y = off / pitch;
+    unsigned x = off % pitch;
+}
+---
+void f(unsigned off, unsigned pitch) {
+    unsigned y = ckd_narrow(ckd_div(off, pitch, 18), unsigned, 18);
+    unsigned x = ckd_narrow(ckd_mod(off, pitch, 18), unsigned, 18);
+}
+
+
+
+
+
+=== bitmap set ===
+void f(unsigned long *bm, unsigned long bit) {
+    unsigned long word = bit / 64;
+    unsigned long mask = 1UL << (bit % 64);
+    bm[word] = bm[word] | mask;
+}
+---
+void f(unsigned long *bm, unsigned long bit) {
+    unsigned long word = ckd_narrow(ckd_div(bit, 64, 26), unsigned long, 26);
+    unsigned long mask = ckd_narrow(ckd_shl(1UL, (ckd_mod(bit, 64, 34)), 26), unsigned long, 26);
+    bm[word] = ckd_narrow(bm[word] | mask, unsigned long, 16);
+}
+
+
+
+
+
+
+=== euclidean gcd ===
+int gcd(int a, int b) {
+    while (b != 0) {
+        int t = b;
+        b = a % b;
+        a = t;
+    }
+    return a;
+}
+---
+int gcd(int a, int b) {
+    while (b != 0) {
+        int t = ckd_narrow(b, int, 17);
+        b = ckd_narrow(ckd_mod(a, b, 13), int, 13);
+        a = ckd_narrow(t, int, 13);
+    }
+    return ckd_narrow(a, int, 12);
+}
+
+
+
+

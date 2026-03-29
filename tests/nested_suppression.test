@@ -1,0 +1,94 @@
+=== inner sup ===
+void f(int a, int b, int c) { int x = (a @+ b) * c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_mul((a + b), c, 39), int, 39); }
+
+
+
+
+
+=== outer sup ===
+void f(int a, int b, int c) { int x = (a + b) @* c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow((ckd_add(a, b, 40)) * c, int, 39); }
+
+
+
+
+
+=== both sup ===
+void f(int a, int b, int c) { int x = (a @+ b) @* c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow((a + b) * c, int, 39); }
+
+
+
+
+
+
+=== chain inner sup ===
+void f(int a, int b, int c) { int x = a @+ b + c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_add(a + b, c, 39), int, 39); }
+
+
+
+
+
+=== chain outer sup ===
+void f(int a, int b, int c) { int x = a + b @+ c; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(ckd_add(a, b, 39) + c, int, 39); }
+
+
+
+
+
+=== mid sup ===
+void f(int a, int b, int c, int d) { int x = a + b @* c + d; }
+---
+void f(int a, int b, int c, int d) { int x = ckd_narrow(ckd_add(ckd_add(a, b * c, 46), d, 46), int, 46); }
+
+
+
+
+
+=== all sup ===
+void f(int a, int b) { int x = a @+ b @* a @- b; }
+---
+void f(int a, int b) { int x = ckd_narrow(a + b * a - b, int, 32); }
+
+
+
+
+
+
+=== ptr inner sup ===
+void f(char *p, int a, int b) { char *q = p + a @* b; }
+---
+void f(char *p, int a, int b) { char *q = ckd_ptr_add(p, a * b, 43); }
+
+
+
+
+
+
+=== checksum ===
+void f(unsigned m, unsigned f, unsigned c) { unsigned x = m @+ f @+ c; }
+---
+void f(unsigned m, unsigned f, unsigned c) { unsigned x = ckd_narrow(m + f + c, unsigned, 59); }
+
+
+
+
+
+
+=== seed ===
+void f(unsigned s, unsigned t) { s = s @* t; }
+---
+void f(unsigned s, unsigned t) { s = ckd_narrow(s * t, unsigned, 38); }
+
+
+
+
+

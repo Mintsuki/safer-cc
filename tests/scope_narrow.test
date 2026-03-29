@@ -1,0 +1,97 @@
+=== narrow type scoped ===
+typedef unsigned char uint8_t;
+void f(int x) {
+    uint8_t a = x;
+    {
+        int a = x;
+    }
+    uint8_t b = x;
+}
+---
+typedef unsigned char uint8_t;
+void f(int x) {
+    uint8_t a = ckd_narrow(x, uint8_t, 17);
+    {
+        int a = ckd_narrow(x, int, 17);
+    }
+    uint8_t b = ckd_narrow(x, uint8_t, 17);
+}
+
+
+
+
+
+
+=== two funcs different width ===
+typedef unsigned char uint8_t; typedef unsigned short uint16_t;
+void f(int x) {
+    uint8_t a = x;
+}
+void g(int x) {
+    uint16_t b = x;
+}
+---
+typedef unsigned char uint8_t; typedef unsigned short uint16_t;
+void f(int x) {
+    uint8_t a = ckd_narrow(x, uint8_t, 17);
+}
+void g(int x) {
+    uint16_t b = ckd_narrow(x, uint16_t, 18);
+}
+
+
+
+
+
+
+=== narrow in if ===
+typedef unsigned char uint8_t;
+void f(int x) {
+    if (x > 0) {
+        uint8_t a = x;
+    }
+}
+---
+typedef unsigned char uint8_t;
+void f(int x) {
+    if (x > 0) {
+        uint8_t a = ckd_narrow(x, uint8_t, 21);
+    }
+}
+
+
+
+
+
+
+=== narrow in for init ===
+typedef unsigned char uint8_t;
+void f(int n) {
+    for (uint8_t i = 0; i < n; i++) {}
+}
+---
+typedef unsigned char uint8_t;
+void f(int n) {
+    for (uint8_t i = 0; i < n; ckd_preinc(i, 32)) {}
+}
+
+
+
+
+
+
+=== narrow return ===
+typedef unsigned char uint8_t;
+uint8_t f(int x) {
+    return x;
+}
+---
+typedef unsigned char uint8_t;
+uint8_t f(int x) {
+    return ckd_narrow(x, uint8_t, 12);
+}
+
+
+
+
+

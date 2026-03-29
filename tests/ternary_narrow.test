@@ -1,0 +1,103 @@
+=== ternary init narrow ===
+void f(long a, long b, int c) { char x = c ? a : b; }
+---
+void f(long a, long b, int c) { char x = ckd_narrow(c ? a : b, char, 42); }
+
+
+
+=== ternary return narrow ===
+char f(long a, long b, int c) { return c ? a : b; }
+---
+char f(long a, long b, int c) { return ckd_narrow(c ? a : b, char, 40); }
+
+
+
+=== ternary call narrow ===
+void g(char c);
+void f(long a, long b, int c) { g(c ? a : b); }
+---
+void g(char c);
+void f(long a, long b, int c) { g(ckd_narrow(c ? a : b, char, 35)); }
+
+
+
+=== ternary assign narrow ===
+void f(int a, int b, int c) {
+    char x;
+    x = c ? a : b;
+}
+---
+void f(int a, int b, int c) {
+    char x;
+    x = ckd_narrow(c ? a : b, char, 9);
+}
+
+
+
+=== ternary with arith in branch ===
+void f(int a, int b, int c) { char x = c ? a + b : a - b; }
+---
+void f(int a, int b, int c) { char x = ckd_narrow(c ? ckd_add(a, b, 44) : ckd_sub(a, b, 52), char, 40); }
+
+
+
+=== ternary same width no truncation ===
+void f(int a, int b, int c) { int x = c ? a : b; }
+---
+void f(int a, int b, int c) { int x = ckd_narrow(c ? a : b, int, 39); }
+
+
+
+=== ternary struct field narrow ===
+struct s { char val; };
+void f(struct s *s, int a, int b, int c) {
+    s->val = c ? a : b;
+}
+---
+struct s { char val; };
+void f(struct s *s, int a, int b, int c) {
+    s->val = ckd_narrow(c ? a : b, char, 14);
+}
+
+
+
+=== ternary const branches still narrow ===
+void f(int c) { char x = c ? 1 : 2; }
+---
+void f(int c) { char x = ckd_narrow(c ? 1 : 2, char, 26); }
+
+
+
+=== ternary one const branch ===
+void f(int a, int c) { char x = c ? a : 0; }
+---
+void f(int a, int c) { char x = ckd_narrow(c ? a : 0, char, 33); }
+
+
+
+=== ternary typedef narrow ===
+typedef unsigned char uint8_t;
+uint8_t f(int a, int b, int c) { return c ? a : b; }
+---
+typedef unsigned char uint8_t;
+uint8_t f(int a, int b, int c) { return ckd_narrow(c ? a : b, uint8_t, 41); }
+
+
+
+=== ternary nested ===
+void f(int a, int b, int c, int d) {
+    char x = c ? (d ? a : b) : b;
+}
+---
+void f(int a, int b, int c, int d) {
+    char x = ckd_narrow(c ? (d ? a : b) : b, char, 14);
+}
+
+
+
+=== ternary ptr no narrow ===
+void f(int *a, int *b, int c) { int *x = c ? a : b; }
+---
+void f(int *a, int *b, int c) { int *x = c ? a : b; }
+
+

@@ -1,0 +1,157 @@
+=== two consts add ===
+void f(void) { int x = 10 + 20; }
+---
+void f(void) { int x = 10 + 20; }
+
+
+
+
+
+
+=== two consts mul ===
+void f(void) { int x = 5 * 6; }
+---
+void f(void) { int x = 5 * 6; }
+
+
+
+
+
+
+=== two consts sub ===
+void f(void) { int x = 100 - 50; }
+---
+void f(void) { int x = 100 - 50; }
+
+
+
+
+
+
+=== nested consts ===
+void f(void) { int x = (1 + 2) * (3 + 4); }
+---
+void f(void) { int x = (1 + 2) * (3 + 4); }
+
+
+
+
+
+
+=== char consts ===
+void f(void) { int x = 'A' + 'B'; }
+---
+void f(void) { int x = 'A' + 'B'; }
+
+
+
+
+
+
+=== hex consts ===
+void f(void) { int x = 0x10 + 0x20; }
+---
+void f(void) { int x = 0x10 + 0x20; }
+
+
+
+
+
+
+=== neg consts ===
+void f(void) { int x = -5 + -10; }
+---
+void f(void) { int x = -5 + -10; }
+
+
+
+
+
+
+=== sizeof sizeof ===
+void f(void) { int x = sizeof(int) * sizeof(long); }
+---
+void f(void) { int x = sizeof(int) * sizeof(long); }
+
+
+
+
+
+
+=== complement consts ===
+void f(void) { int x = ~0xFF + ~0x00; }
+---
+void f(void) { int x = ~0xFF + ~0x00; }
+
+
+
+
+
+
+=== const plus var ===
+void f(int a) { int x = 10 + a; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(10, a, 25), int, 25); }
+
+
+
+
+
+=== var plus const ===
+void f(int a) { int x = a + 10; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(a, 10, 25), int, 25); }
+
+
+
+
+
+
+=== const plus const paren ===
+void f(void) { int x = (5) + (10); }
+---
+void f(void) { int x = (5) + (10); }
+
+
+
+
+
+
+=== not const bang ===
+void f(void) { int x = !0 + !1; }
+---
+void f(void) { int x = !0 + !1; }
+
+
+
+
+
+
+=== cast const ===
+void f(void) { int x = (int)5 + (int)10; }
+---
+void f(void) { int x = (int)5 + (int)10; }
+
+
+
+
+
+
+=== cast ptr const not const ===
+void f(void) { char *p = (char *)0x1000 + 1; }
+---
+void f(void) { char *p = ckd_ptr_add((char *)0x1000, 1, 26); }
+
+
+
+
+
+
+=== sizeof plus var ===
+void f(int n) { int x = sizeof(int) + n; }
+---
+void f(int n) { int x = ckd_narrow(ckd_add(sizeof(int), n, 25), int, 25); }
+
+
+
+

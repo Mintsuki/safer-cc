@@ -1,0 +1,92 @@
+=== init ptr from add ===
+void f(char *a, int b) { char *p = a + b; }
+---
+void f(char *a, int b) { char *p = ckd_ptr_add(a, b, 36); }
+
+
+
+
+
+
+=== assign ptr from add ===
+void f(char *p, char *a, int b) { p = a + b; }
+---
+void f(char *p, char *a, int b) { p = ckd_ptr_add(a, b, 39); }
+
+
+
+
+
+
+=== init int from mul ===
+void f(int a, int b) { int x = a * b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_mul(a, b, 32), int, 32); }
+
+
+
+
+
+=== multiple inits ===
+void f(int a, int b) { int x = a + b, y = a * b; }
+---
+void f(int a, int b) { int x = ckd_narrow(ckd_add(a, b, 32), int, 32), y = ckd_narrow(ckd_mul(a, b, 43), int, 43); }
+
+
+
+
+
+=== chain assign ===
+void f(int a, int b) { int x, y; x = y = a + b; }
+---
+void f(int a, int b) { int x, y; x = ckd_narrow(y = ckd_narrow(ckd_add(a, b, 42), int, 42), int, 38); }
+
+
+
+
+
+=== assign add to global ===
+int g; void f(int a) { g += a; }
+---
+int g; void f(int a) { ckd_compound_narrow(g, ckd_add, a, int, 24); }
+
+
+
+
+=== static var add ===
+void f(int a) { static int s = 0; s += a; }
+---
+void f(int a) { static int s = 0; ckd_compound_narrow(s, ckd_add, a, int, 35); }
+
+
+
+
+=== const expr init ===
+void f(void) { int x = 3 + 4; }
+---
+void f(void) { int x = 3 + 4; }
+
+
+
+
+
+
+=== mixed const var init ===
+void f(int a) { int x = a + 3 + 4; }
+---
+void f(int a) { int x = ckd_narrow(ckd_add(ckd_add(a, 3, 25), 4, 25), int, 25); }
+
+
+
+
+
+
+=== ptr init from cast ===
+void f(int a) { char *p = (char *)0x1000 + a; }
+---
+void f(int a) { char *p = ckd_ptr_add((char *)0x1000, a, 27); }
+
+
+
+
+

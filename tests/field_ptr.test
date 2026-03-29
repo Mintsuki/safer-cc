@@ -1,0 +1,96 @@
+=== field add ===
+struct s { char *p; }; void f(struct s *x) { char *q = x->p + 1; }
+---
+struct s { char *p; }; void f(struct s *x) { char *q = ckd_ptr_add(x->p, 1, 56); }
+
+
+
+
+
+
+=== field sub ===
+struct s { char *p; }; void f(struct s *x) { char *q = x->p - 1; }
+---
+struct s { char *p; }; void f(struct s *x) { char *q = ckd_ptr_sub(x->p, 1, 56); }
+
+
+
+
+
+
+=== field inc disc ===
+struct s { char *p; }; void f(struct s *x) { x->p++; }
+---
+struct s { char *p; }; void f(struct s *x) { ckd_ptr_preinc(x->p, 46); }
+
+
+
+
+
+
+=== field dec disc ===
+struct s { char *p; }; void f(struct s *x) { --x->p; }
+---
+struct s { char *p; }; void f(struct s *x) { ckd_ptr_predec(x->p, 46); }
+
+
+
+
+
+
+=== field add assign ===
+struct s { char *p; }; void f(struct s *x) { x->p += 5; }
+---
+struct s { char *p; }; void f(struct s *x) { ckd_compound(x->p, ckd_ptr_add, 5, 46); }
+
+
+
+
+
+
+=== field int add ===
+struct s { int x; }; void f(struct s *s, int a) { int r = s->x + a; }
+---
+struct s { int x; }; void f(struct s *s, int a) { int r = ckd_narrow(ckd_add(s->x, a, 59), int, 59); }
+
+
+
+
+
+=== field int inc ===
+struct s { int x; }; void f(struct s *s) { s->x++; }
+---
+struct s { int x; }; void f(struct s *s) { ckd_preinc(s->x, 44); }
+
+
+
+
+
+
+=== dot field add ===
+struct s { int x; }; void f(struct s s, int a) { int r = s.x + a; }
+---
+struct s { int x; }; void f(struct s s, int a) { int r = ckd_narrow(ckd_add(s.x, a, 58), int, 58); }
+
+
+
+
+
+=== nested field ===
+struct inner { int v; }; struct outer { struct inner i; }; void f(struct outer *o, int a) { int r = o->i.v + a; }
+---
+struct inner { int v; }; struct outer { struct inner i; }; void f(struct outer *o, int a) { int r = ckd_narrow(ckd_add(o->i.v, a, 101), int, 101); }
+
+
+
+
+
+=== no arith field ===
+struct s { int x; }; void f(struct s *s) { int r = s->x; }
+---
+struct s { int x; }; void f(struct s *s) { int r = ckd_narrow(s->x, int, 52); }
+
+
+
+
+
