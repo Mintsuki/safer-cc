@@ -764,6 +764,13 @@ class PointerTracker:
             if has_pointer_declarator(child) or self._has_array_declarator(child):
                 self.pointer_type_names.add(name)
                 return
+        # Check if the typedef resolves to a known pointer/array type
+        for child in node.children:
+            if child.type == "type_identifier":
+                type_text = node_text(child)
+                if type_text != name and type_text in self.pointer_type_names:
+                    self.pointer_type_names.add(name)
+                    return
         # Check if the typedef resolves to a narrow type
         for child in node.children:
             if child.type in ("primitive_type", "sized_type_specifier",

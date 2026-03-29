@@ -1,0 +1,38 @@
+=== pointer typedef chain ===
+typedef char *str_t;
+typedef str_t mystr;
+void f(mystr p, int i) { char *q = p + i; }
+---
+typedef char *str_t;
+typedef str_t mystr;
+void f(mystr p, int i) { char *q = ckd_ptr_add(p, i, 36); }
+
+=== pointer typedef triple chain ===
+typedef int *intptr;
+typedef intptr intptr2;
+typedef intptr2 intptr3;
+void f(intptr3 p, int i) { int *q = p + i; }
+---
+typedef int *intptr;
+typedef intptr intptr2;
+typedef intptr2 intptr3;
+void f(intptr3 p, int i) { int *q = ckd_ptr_add(p, i, 37); }
+
+=== narrow typedef chain still works ===
+typedef unsigned char u8;
+typedef u8 byte_t;
+typedef byte_t mybyte;
+void f(int x) { mybyte y = x; }
+---
+typedef unsigned char u8;
+typedef u8 byte_t;
+typedef byte_t mybyte;
+void f(int x) { mybyte y = ckd_narrow(x, mybyte, 28); }
+
+=== direct pointer typedef still works ===
+typedef char *str_t;
+void f(str_t p, int i) { char *q = p + i; }
+---
+typedef char *str_t;
+void f(str_t p, int i) { char *q = ckd_ptr_add(p, i, 36); }
+
