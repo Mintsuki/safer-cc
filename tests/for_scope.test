@@ -1,0 +1,30 @@
+=== for init does not shadow outer ===
+void f(int n) {
+    char *p = (char *)0;
+    for (int p = 0; p < n; p++) {
+        int x = p + 1;
+    }
+    char *q = p + 1;
+}
+---
+void f(int n) {
+    char *p = (char *)0;
+    for (int p = 0; p < n; ckd_preinc(p, 28)) {
+        int x = ckd_narrow(ckd_add(p, 1, 17), int, 17);
+    }
+    char *q = ckd_ptr_add(p, 1, 15);
+}
+
+=== for init scope isolated ===
+void f(int n) {
+    int x = 0;
+    for (char *x = (char *)0; x; x++) { }
+    int y = x + 1;
+}
+---
+void f(int n) {
+    int x = 0;
+    for (char *x = (char *)0; x; ckd_ptr_preinc(x, 34)) { }
+    int y = ckd_narrow(ckd_add(x, 1, 13), int, 13);
+}
+

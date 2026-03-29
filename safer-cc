@@ -593,9 +593,10 @@ class PointerTracker:
             self._check_func_params(node)
             return
 
-        # In block-scan mode, don't recurse into nested compound_statements —
-        # each block creates its own scope during transform.
-        if (skip_nested_blocks and node.type == "compound_statement"
+        # In block-scan mode, don't recurse into nested compound_statements
+        # or for_statements — each creates its own scope during transform.
+        if (skip_nested_blocks
+                and node.type in ("compound_statement", "for_statement")
                 and node is not scan_root):
             return
 
@@ -954,30 +955,6 @@ class PointerTracker:
                     self.struct_narrow_fields.setdefault(struct_name, {})[name] = type_text
                     return
 
-    def is_assigned_to_pointer(self, node: Node) -> bool:
-        """Check if this expression is the initializer of a pointer declaration
-        or the RHS of an assignment to a known pointer."""
-        parent = node.parent
-        if parent is None:
-            return False
-
-        # init_declarator: TYPE *name = <expr>
-        if parent.type == "init_declarator":
-            grandparent = parent.parent
-            if grandparent is not None and grandparent.type == "declaration":
-                if has_pointer_declarator(parent):
-                    return True
-
-        # assignment: ptr = <expr> (only plain =, not compound +=/-=/*=)
-        if parent.type == "assignment_expression" and parent.child_count >= 2:
-            op = parent.children[1]
-            if op.type == "=" :
-                left = parent.children[0]
-                if self.is_pointer_expr(left):
-                    return True
-
-        return False
-
     def is_pointer_expr(self, node: Node) -> bool:
         """Determine if an expression node is a pointer type."""
         # Direct identifier lookup (pointer or array — arrays decay to pointers)
@@ -1179,6 +1156,16 @@ def transform(node: Node, rewriter: Rewriter, ptrs: PointerTracker) -> str | Non
         block_ptrs.scan(node, skip_nested_blocks=True)
         return _transform_children(node, rewriter, block_ptrs)
 
+    # For-statement scoping: the initializer declaration (e.g. int i = 0) is
+    # scoped to the for-statement, not the enclosing block.
+    if node.type == "for_statement":
+        for_ptrs = ptrs.copy()
+        for child in node.children:
+            if child.type == "declaration":
+                for_ptrs.scan(child)
+                break
+        return _transform_children(node, rewriter, for_ptrs)
+
     # Try to rewrite this specific node
     rewritten = try_rewrite(node, rewriter, ptrs)
     if rewritten is not None:
@@ -1324,7 +1311,7 @@ def try_rewrite_binary(node: Node, rewriter: Rewriter, ptrs: PointerTracker) -> 
             right_text = rewriter._strip_markers(right_node.start_byte, right_node.end_byte)
         return f"ckd_ptr_diff({left_text}, {right_text}, {col})"
 
-    is_ptr = (left_is_ptr or right_is_ptr or ptrs.is_assigned_to_pointer(node))
+    is_ptr = (left_is_ptr or right_is_ptr)
 
     if is_ptr:
         if ptr_macro is None:
