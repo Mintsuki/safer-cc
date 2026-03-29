@@ -1,0 +1,48 @@
+=== bitfield simple base compound ok ===
+struct s { unsigned bf : 3; };
+void f(struct s *p) {
+    p->bf += 1;
+}
+---
+struct s { unsigned bf : 3; };
+void f(struct s *p) {
+    ckd_bf_compound_narrow(p->bf, ckd_add, 1, unsigned, 5);
+}
+
+=== bitfield call base compound skip ===
+struct s { unsigned bf : 3; };
+struct s *get(void);
+void f(void) {
+    get()->bf += 1;
+}
+---
+struct s { unsigned bf : 3; };
+struct s *get(void);
+void f(void) {
+    get()->bf += 1;
+}
+
+=== bitfield call base increment skip ===
+struct s { unsigned bf : 3; };
+struct s *get(void);
+void f(void) {
+    get()->bf++;
+}
+---
+struct s { unsigned bf : 3; };
+struct s *get(void);
+void f(void) {
+    get()->bf++;
+}
+
+=== bitfield local var base ok ===
+struct s { unsigned bf : 3; };
+void f(struct s v) {
+    v.bf++;
+}
+---
+struct s { unsigned bf : 3; };
+void f(struct s v) {
+    ckd_bf_preinc(v.bf, 5);
+}
+

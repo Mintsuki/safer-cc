@@ -1526,8 +1526,11 @@ def try_rewrite_compound_assign(node: Node, rewriter: Rewriter, ptrs: PointerTra
         right_text = rewriter._strip_markers(right_node.start_byte, right_node.end_byte)
 
     # Bit-field members: can't take &(lhs), use ckd_bf_compound which evaluates
-    # lhs twice (safe — bit-field access has no side effects).
+    # lhs twice (safe when the base has no side effects). Skip rewrite entirely
+    # if the base contains a call_expression (e.g. get()->bf += 1).
     is_bf = ptrs.is_bitfield_expr(left_node)
+    if is_bf and _bf_base_has_side_effects(left_node):
+        return None
 
     # Emit ckd_compound which captures &(lhs) once, avoiding double evaluation.
     # For narrow LHS types, also check truncation.
@@ -1541,6 +1544,24 @@ def try_rewrite_compound_assign(node: Node, rewriter: Rewriter, ptrs: PointerTra
     if is_bf:
         return f"ckd_bf_compound({left_text}, {macro}, {right_text}, {col})"
     return f"ckd_compound({left_text}, {macro}, {right_text}, {col})"
+
+
+def _has_call_expr(node: Node) -> bool:
+    """Check if a node or any descendant is a call_expression."""
+    if node.type == "call_expression":
+        return True
+    for child in node.children:
+        if _has_call_expr(child):
+            return True
+    return False
+
+
+def _bf_base_has_side_effects(node: Node) -> bool:
+    """Check if a bitfield field_expression has a base with potential side effects.
+    E.g. get()->bf has a call in the base, so evaluating it twice is unsafe."""
+    if node.type == "field_expression" and node.child_count > 0:
+        return _has_call_expr(node.children[0])
+    return False
 
 
 def _update_result_discarded(node: Node) -> bool:
@@ -1587,7 +1608,9 @@ def try_rewrite_update(node: Node, rewriter: Rewriter, ptrs: PointerTracker) -> 
     is_bf = ptrs.is_bitfield_expr(operand)
 
     # Bit-field members: can't take &(lhs), use ckd_bf_ macros.
-    # Bit-fields can't be pointers, so no ptr variants needed.
+    # Skip if the base has side effects (e.g. get()->bf++).
+    if is_bf and _bf_base_has_side_effects(operand):
+        return None
     if is_bf:
         if _update_result_discarded(node) or children[0].type in ("++", "--"):
             bf_macro = "ckd_bf_preinc" if op == "++" else "ckd_bf_predec"
