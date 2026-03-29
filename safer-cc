@@ -1344,6 +1344,8 @@ def try_rewrite(node: Node, rewriter: Rewriter, ptrs: PointerTracker) -> str | N
         return try_rewrite_call_narrow(node, rewriter, ptrs)
     elif node.type == "cast_expression":
         return try_rewrite_cast_narrow(node, rewriter, ptrs)
+    elif node.type == "compound_literal_expression":
+        return try_rewrite_compound_literal_narrow(node, rewriter, ptrs)
     return None
 
 
@@ -2039,6 +2041,104 @@ def try_rewrite_cast_narrow(node: Node, rewriter: Rewriter, ptrs: PointerTracker
         operand_text = rewriter._strip_markers(operand.start_byte, operand.end_byte)
 
     return f"ckd_narrow({operand_text}, {cast_type}, {col})"
+
+
+def try_rewrite_compound_literal_narrow(node: Node, rewriter: Rewriter, ptrs: PointerTracker) -> str | None:
+    """Narrow-check elements of compound literal struct initializers.
+    E.g. (struct s){a, b} → (struct s){ckd_narrow(a, char, col), b}."""
+    if node.child_count < 3 or node.has_error:
+        return None
+
+    # compound_literal_expression: '(' type_descriptor ')' initializer_list
+    type_desc = None
+    init_list = None
+    for child in node.children:
+        if child.type == "type_descriptor":
+            type_desc = child
+        elif child.type == "initializer_list":
+            init_list = child
+
+    if type_desc is None or init_list is None:
+        return None
+
+    # Extract struct name from type_descriptor
+    struct_name = None
+    for child in type_desc.children:
+        if child.type in ("struct_specifier", "union_specifier"):
+            for sc in child.children:
+                if sc.type == "type_identifier":
+                    struct_name = node_text(sc)
+                    break
+            if struct_name is None:
+                struct_name = f"__anon_{child.start_byte}"
+            break
+        if child.type == "type_identifier":
+            type_name = node_text(child)
+            struct_name = ptrs.typedef_struct_names.get(type_name)
+            break
+
+    if struct_name is None:
+        return None
+    fields = ptrs.struct_fields_ordered.get(struct_name, [])
+    if not fields:
+        return None
+
+    # Skip designated initializers
+    if any(c.type == "initializer_pair" for c in init_list.children):
+        return None
+
+    # Check if any element needs narrowing
+    elems = [c for c in init_list.children if c.type not in ("{", "}", ",")]
+    any_narrow = False
+    for i, elem in enumerate(elems):
+        if i < len(fields) and elem.type != "initializer_list":
+            _, narrow_type = fields[i]
+            if narrow_type is not None and not is_const_expr(elem):
+                any_narrow = True
+                break
+    if not any_narrow:
+        return None
+
+    # Rebuild: everything before init_list stays, narrow elements inside
+    parts_init = []
+    prev_end = init_list.start_byte
+    field_idx = 0
+    for child in init_list.children:
+        parts_init.append(rewriter._strip_markers(prev_end, child.start_byte))
+        if child.type not in ("{", "}", ","):
+            narrow_type = None
+            if field_idx < len(fields) and child.type != "initializer_list":
+                _, narrow_type = fields[field_idx]
+            field_idx += 1
+            if narrow_type is not None and not is_const_expr(child):
+                col = child.start_point[1] + 1
+                elem_text = transform(child, rewriter, ptrs)
+                if elem_text is None:
+                    elem_text = rewriter._strip_markers(child.start_byte, child.end_byte)
+                parts_init.append(f"ckd_narrow({elem_text}, {narrow_type}, {col})")
+            else:
+                child_text = transform(child, rewriter, ptrs)
+                if child_text is not None:
+                    parts_init.append(child_text)
+                else:
+                    parts_init.append(rewriter._strip_markers(child.start_byte, child.end_byte))
+        else:
+            parts_init.append(rewriter._strip_markers(child.start_byte, child.end_byte))
+        prev_end = child.end_byte
+    parts_init.append(rewriter._strip_markers(prev_end, init_list.end_byte))
+
+    # Rebuild the full compound literal
+    result = []
+    prev_end = node.start_byte
+    for child in node.children:
+        result.append(rewriter._strip_markers(prev_end, child.start_byte))
+        if child is init_list:
+            result.append("".join(parts_init))
+        else:
+            result.append(rewriter._strip_markers(child.start_byte, child.end_byte))
+        prev_end = child.end_byte
+    result.append(rewriter._strip_markers(prev_end, node.end_byte))
+    return "".join(result)
 
 
 def try_rewrite_call_narrow(node: Node, rewriter: Rewriter, ptrs: PointerTracker) -> str | None:

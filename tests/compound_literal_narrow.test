@@ -1,0 +1,57 @@
+=== compound literal struct narrow ===
+struct s { char x; int y; };
+void f(int a, int b) {
+    struct s v = (struct s){a, b};
+}
+---
+struct s { char x; int y; };
+void f(int a, int b) {
+    struct s v = (struct s){ckd_narrow(a, char, 29), ckd_narrow(b, int, 32)};
+}
+
+=== compound literal skip constants ===
+struct s { char x; char y; };
+void f(void) {
+    struct s v = (struct s){1, 2};
+}
+---
+struct s { char x; char y; };
+void f(void) {
+    struct s v = (struct s){1, 2};
+}
+
+=== compound literal typedef struct ===
+typedef struct { short a; short b; } pair_t;
+void f(int x, int y) {
+    pair_t p = (pair_t){x, y};
+}
+---
+typedef struct { short a; short b; } pair_t;
+void f(int x, int y) {
+    pair_t p = (pair_t){ckd_narrow(x, short, 25), ckd_narrow(y, short, 28)};
+}
+
+=== compound literal in expression ===
+struct s { char x; int y; };
+void g(struct s v);
+void f(int a, int b) {
+    g((struct s){a, b});
+}
+---
+struct s { char x; int y; };
+void g(struct s v);
+void f(int a, int b) {
+    g((struct s){ckd_narrow(a, char, 18), ckd_narrow(b, int, 21)});
+}
+
+=== compound literal pointer field skip ===
+struct s { int *p; char x; };
+void f(int *q, int a) {
+    struct s v = (struct s){q, a};
+}
+---
+struct s { int *p; char x; };
+void f(int *q, int a) {
+    struct s v = (struct s){q, ckd_narrow(a, char, 32)};
+}
+
