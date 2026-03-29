@@ -52,7 +52,7 @@ void f(int x) {
 
 
 
-=== struct init no narrow ===
+=== struct init narrow fields ===
 struct s { int x; int y; };
 void f(int a, int b) {
     struct s p = {a, b};
@@ -60,7 +60,7 @@ void f(int a, int b) {
 ---
 struct s { int x; int y; };
 void f(int a, int b) {
-    struct s p = {a, b};
+    struct s p = {ckd_narrow(a, int, 19), ckd_narrow(b, int, 22)};
 }
 
 

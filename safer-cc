@@ -406,6 +406,10 @@ def preprocess_source(source: bytes) -> tuple[bytes, set[int]]:
     and a set of byte positions where @ markers were found. The @ is replaced
     with a space, and its position is recorded. Operations at these positions
     will not be rewritten.
+
+    Note: In filter mode with un-preprocessed source, __attribute__ inside
+    unexpanded macro arguments could shift argument boundaries when stripped.
+    This is not an issue in compiler wrapper mode (macros are already expanded).
     """
     result = bytearray()
     suppressed: set[int] = set()
@@ -572,6 +576,7 @@ class PointerTracker:
         self.func_param_narrow: dict[str, list[str | None]] = {}  # func name → [integer type or None per param]
         self.bitfield_fields: set[str] = set()  # global (any struct with this bit-field)
         self.struct_bitfield_fields: dict[str, set[str]] = {}  # struct name → {bit-field names}
+        self.struct_fields_ordered: dict[str, list[tuple[str, str | None]]] = {}  # struct name → [(name, narrow_type_or_None)]
 
     def copy(self) -> "PointerTracker":
         """Create a shallow copy for function-local scoping."""
@@ -593,6 +598,7 @@ class PointerTracker:
         new.func_param_narrow = dict(self.func_param_narrow)
         new.bitfield_fields = set(self.bitfield_fields)
         new.struct_bitfield_fields = {k: set(v) for k, v in self.struct_bitfield_fields.items()}
+        new.struct_fields_ordered = {k: list(v) for k, v in self.struct_fields_ordered.items()}
         return new
 
     def scan(self, root: Node, global_only: bool = False,
@@ -954,7 +960,7 @@ class PointerTracker:
 
     def _check_field(self, node: Node):
         """Record struct/union fields: pointer/array status, narrow types,
-        and bit-field status."""
+        bit-field status, and ordered field list for initializer list checking."""
         name = extract_declarator_name(node)
         if name is None:
             return
@@ -970,31 +976,39 @@ class PointerTracker:
                 break
 
         # Check pointer/array status
+        is_ptr_or_arr = False
         for child in node.children:
             if child.type in ("pointer_declarator", "array_declarator",
                               "function_declarator"):
                 if has_pointer_declarator(child) or self._has_array_declarator(child):
+                    is_ptr_or_arr = True
                     self.pointer_fields.add(name)
                     if struct_name is not None:
                         self.struct_pointer_fields.setdefault(struct_name, set()).add(name)
-                    return
+                    break
             if child.type == "type_identifier":
                 if node_text(child) in self.pointer_type_names:
+                    is_ptr_or_arr = True
                     self.pointer_fields.add(name)
                     if struct_name is not None:
                         self.struct_pointer_fields.setdefault(struct_name, set()).add(name)
-                    return
+                    break
 
-        # Not a pointer/array field — check if it's a narrow type
-        if struct_name is None:
-            return
-        for child in node.children:
-            if child.type in ("primitive_type", "sized_type_specifier",
-                              "type_identifier"):
-                type_text = node_text(child)
-                if type_text in NARROW_TYPES or type_text in self.narrow_type_names:
-                    self.struct_narrow_fields.setdefault(struct_name, {})[name] = type_text
-                    return
+        # Check narrow type (only for non-pointer/non-array fields)
+        narrow_type = None
+        if not is_ptr_or_arr and struct_name is not None:
+            for child in node.children:
+                if child.type in ("primitive_type", "sized_type_specifier",
+                                  "type_identifier"):
+                    type_text = node_text(child)
+                    if type_text in NARROW_TYPES or type_text in self.narrow_type_names:
+                        narrow_type = type_text
+                        self.struct_narrow_fields.setdefault(struct_name, {})[name] = type_text
+                        break
+
+        # Record in ordered field list (for struct initializer list narrowing)
+        if struct_name is not None:
+            self.struct_fields_ordered.setdefault(struct_name, []).append((name, narrow_type))
 
     def is_bitfield_expr(self, node: Node) -> bool:
         """Check if this expression accesses a known bit-field member."""
@@ -1679,6 +1693,81 @@ def _get_declaration_type(node: Node) -> str | None:
     return None
 
 
+def _get_struct_type_for_decl(node: Node, ptrs: PointerTracker) -> str | None:
+    """Get the struct/union name for an init_declarator's type, or None."""
+    parent = node.parent
+    if parent is None or parent.type != "declaration":
+        return None
+    for child in parent.children:
+        if child.type in ("struct_specifier", "union_specifier"):
+            for sc in child.children:
+                if sc.type == "type_identifier":
+                    return node_text(sc)
+            # Anonymous struct — use byte offset as key (matches _check_field)
+            return f"__anon_{child.start_byte}"
+        if child.type == "type_identifier":
+            type_name = node_text(child)
+            return ptrs.typedef_struct_names.get(type_name)
+    return None
+
+
+def _rewrite_struct_init_list(node, init_node, fields, eq_idx, rewriter, ptrs):
+    """Rewrite a struct initializer list with narrowing checks on narrow-type fields."""
+    elems = [c for c in init_node.children if c.type not in ("{", "}", ",")]
+
+    # Check if any positional element needs narrowing
+    any_narrow = False
+    for i, elem in enumerate(elems):
+        if i < len(fields) and elem.type != "initializer_list":
+            _, narrow_type = fields[i]
+            if narrow_type is not None and not is_const_expr(elem):
+                any_narrow = True
+                break
+    if not any_narrow:
+        return None
+
+    # Rebuild the initializer list with ckd_narrow on narrow fields
+    parts = []
+    prev_end = init_node.start_byte
+    field_idx = 0
+    for child in init_node.children:
+        parts.append(rewriter._strip_markers(prev_end, child.start_byte))
+        if child.type not in ("{", "}", ","):
+            narrow_type = None
+            if field_idx < len(fields) and child.type != "initializer_list":
+                _, narrow_type = fields[field_idx]
+            field_idx += 1
+            if narrow_type is not None and not is_const_expr(child):
+                col = child.start_point[1] + 1
+                elem_text = transform(child, rewriter, ptrs)
+                if elem_text is None:
+                    elem_text = rewriter._strip_markers(child.start_byte, child.end_byte)
+                parts.append(f"ckd_narrow({elem_text}, {narrow_type}, {col})")
+            else:
+                child_text = transform(child, rewriter, ptrs)
+                if child_text is not None:
+                    parts.append(child_text)
+                else:
+                    parts.append(rewriter._strip_markers(child.start_byte, child.end_byte))
+        else:
+            parts.append(rewriter._strip_markers(child.start_byte, child.end_byte))
+        prev_end = child.end_byte
+    parts.append(rewriter._strip_markers(prev_end, init_node.end_byte))
+
+    # Rebuild the full init_declarator
+    result_parts = []
+    prev_end = node.start_byte
+    for child in node.children:
+        result_parts.append(rewriter._strip_markers(prev_end, child.start_byte))
+        if child is init_node:
+            result_parts.append("".join(parts))
+        else:
+            result_parts.append(rewriter._strip_markers(child.start_byte, child.end_byte))
+        prev_end = child.end_byte
+    result_parts.append(rewriter._strip_markers(prev_end, node.end_byte))
+    return "".join(result_parts)
+
+
 def try_rewrite_init_narrow(node: Node, rewriter: Rewriter, ptrs: PointerTracker) -> str | None:
     """Rewrite init_declarator to add narrowing check when the declared type
     is an integer type. E.g. int x = long_val → int x = ckd_narrow(long_val, int, col)."""
@@ -1710,6 +1799,24 @@ def try_rewrite_init_narrow(node: Node, rewriter: Rewriter, ptrs: PointerTracker
     if eq_idx is None or eq_idx + 1 >= len(node.children):
         return None
 
+    init_node = node.children[eq_idx + 1]
+
+    # Check for struct/union initializer list: narrow-check each positional
+    # element whose corresponding field is a narrow integer type.
+    if (init_node.type == "initializer_list"
+            and not has_pointer_declarator(node)
+            and not PointerTracker._has_array_declarator(node)):
+        struct_name = _get_struct_type_for_decl(node, ptrs)
+        if struct_name is not None:
+            fields = ptrs.struct_fields_ordered.get(struct_name, [])
+            if fields:
+                # Skip designated initializers ({.x = val}) — positional only
+                has_designator = any(c.type == "initializer_pair"
+                                     for c in init_node.children)
+                if not has_designator:
+                    return _rewrite_struct_init_list(
+                        node, init_node, fields, eq_idx, rewriter, ptrs)
+
     # Get the declared type from the parent declaration
     decl_type = _get_declaration_type(node)
     if decl_type is None or (decl_type not in NARROW_TYPES
@@ -1719,8 +1826,6 @@ def try_rewrite_init_narrow(node: Node, rewriter: Rewriter, ptrs: PointerTracker
     # Skip pointer declarations (char *p = expr doesn't narrow)
     if has_pointer_declarator(node):
         return None
-
-    init_node = node.children[eq_idx + 1]
 
     # Skip if initializer is a simple constant (no narrowing risk)
     if is_const_expr(init_node):

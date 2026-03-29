@@ -1,0 +1,84 @@
+=== struct init narrow char ===
+struct s { char x; char y; };
+void f(int a, int b) {
+    struct s v = {a, b};
+}
+---
+struct s { char x; char y; };
+void f(int a, int b) {
+    struct s v = {ckd_narrow(a, char, 19), ckd_narrow(b, char, 22)};
+}
+
+=== struct init mixed types ===
+struct s { char x; int *ptr; short y; };
+void f(int a, int *p, int b) {
+    struct s v = {a, p, b};
+}
+---
+struct s { char x; int *ptr; short y; };
+void f(int a, int *p, int b) {
+    struct s v = {ckd_narrow(a, char, 19), p, ckd_narrow(b, short, 25)};
+}
+
+=== struct init skip constants ===
+struct s { char x; char y; };
+void f(void) {
+    struct s v = {1, 2};
+}
+---
+struct s { char x; char y; };
+void f(void) {
+    struct s v = {1, 2};
+}
+
+=== struct init skip pointer field ===
+struct s { int *p; int x; };
+void f(int *q, int a) {
+    struct s v = {q, a};
+}
+---
+struct s { int *p; int x; };
+void f(int *q, int a) {
+    struct s v = {q, ckd_narrow(a, int, 22)};
+}
+
+=== typedef struct init ===
+typedef struct { short x; short y; } point_t;
+void f(int a, int b) {
+    point_t p = {a, b};
+}
+---
+typedef struct { short x; short y; } point_t;
+void f(int a, int b) {
+    point_t p = {ckd_narrow(a, short, 18), ckd_narrow(b, short, 21)};
+}
+
+=== struct init file scope skip ===
+struct s { char x; };
+struct s g = {42};
+---
+struct s { char x; };
+struct s g = {42};
+
+=== struct init with inner expr ===
+struct s { char x; char y; };
+void f(int a, int b) {
+    struct s v = {a + b, a - b};
+}
+---
+struct s { char x; char y; };
+void f(int a, int b) {
+    struct s v = {ckd_narrow(ckd_add(a, b, 19), char, 19), ckd_narrow(ckd_sub(a, b, 26), char, 26)};
+}
+
+=== struct init partial narrow ===
+struct s { long x; char y; };
+void f(long a, int b) {
+    struct s v = {a, b};
+}
+---
+struct s { long x; char y; };
+void f(long a, int b) {
+    struct s v = {ckd_narrow(a, long, 19), ckd_narrow(b, char, 22)};
+}
+
