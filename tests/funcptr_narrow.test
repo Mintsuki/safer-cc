@@ -1,0 +1,42 @@
+=== function pointer char param ===
+void (*fp)(char c);
+void f(int x) { fp(x); }
+---
+void (*fp)(char c);
+void f(int x) { fp(ckd_narrow(x, char, 20)); }
+
+=== function pointer short param ===
+void (*fp)(short a, short b);
+void f(int x, int y) { fp(x, y); }
+---
+void (*fp)(short a, short b);
+void f(int x, int y) { fp(ckd_narrow(x, short, 27), ckd_narrow(y, short, 30)); }
+
+=== function pointer no narrow ===
+void (*fp)(int x);
+void f(int x) { fp(x); }
+---
+void (*fp)(int x);
+void f(int x) { fp(ckd_narrow(x, int, 20)); }
+
+=== function pointer constant skip ===
+void (*fp)(char c);
+void f(void) { fp(42); }
+---
+void (*fp)(char c);
+void f(void) { fp(42); }
+
+=== function pointer mixed params ===
+void (*fp)(int *p, char c);
+void f(int *q, int x) { fp(q, x); }
+---
+void (*fp)(int *p, char c);
+void f(int *q, int x) { fp(q, ckd_narrow(x, char, 31)); }
+
+=== regular function still works ===
+void g(char c);
+void f(int x) { g(x); }
+---
+void g(char c);
+void f(int x) { g(ckd_narrow(x, char, 19)); }
+

@@ -890,12 +890,15 @@ class PointerTracker:
         if func_decl is None:
             return
 
-        # Get function name
+        # Get function name (may be a direct identifier or nested inside
+        # a parenthesized_declarator for function pointer declarations)
         func_name = None
         param_list = None
         for child in func_decl.children:
             if child.type == "identifier":
                 func_name = node_text(child)
+            elif child.type == "parenthesized_declarator":
+                func_name = extract_declarator_name(child)
             elif child.type == "parameter_list":
                 param_list = child
         if func_name is None or param_list is None:
