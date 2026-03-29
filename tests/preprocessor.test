@@ -1,21 +1,21 @@
 === line directive ===
 # 1 "test.c"
-int x = a + b;
+void f(int a, int b) { int x = a + b; }
 ---
 # 1 "test.c"
-int x = ckd_add(a, b, 9);
+void f(int a, int b) { int x = ckd_narrow(ckd_add(a, b, 32), int, 32); }
 
 
 
 === multi directive ===
 # 1 "a.c"
-int x = a + b;
+void f(int a, int b) { int x = a + b; }
 # 1 "b.h" 1
-int y = c + d;
+void g(int c, int d) { int y = c + d; }
 ---
 # 1 "a.c"
-int x = ckd_add(a, b, 9);
+void f(int a, int b) { int x = ckd_narrow(ckd_add(a, b, 32), int, 32); }
 # 1 "b.h" 1
-int y = ckd_add(c, d, 9);
+void g(int c, int d) { int y = ckd_narrow(ckd_add(c, d, 32), int, 32); }
 
 

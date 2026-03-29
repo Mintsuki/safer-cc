@@ -428,6 +428,23 @@ def preprocess_source(source: bytes) -> tuple[bytes, set[int]]:
     n = len(source)
 
     while i < n:
+        # Strip #line directives (e.g. # 4 "file.c" 3 4) that the preprocessor
+        # inserts. These can split expressions across lines and confuse tree-sitter.
+        # Replace non-newline bytes with spaces to preserve offsets and line numbers.
+        if source[i:i+1] == b'#' and (i == 0 or source[i-1:i] == b'\n'):
+            j = i + 1
+            while j < n and source[j:j+1] in (b' ', b'\t'):
+                j += 1
+            if j < n and source[j:j+1] in (b'0', b'1', b'2', b'3', b'4',
+                                             b'5', b'6', b'7', b'8', b'9'):
+                # This is a line directive — replace until end of line
+                k = i
+                while k < n and source[k:k+1] != b'\n':
+                    result.append(ord(b' '))
+                    k += 1
+                i = k
+                continue
+
         # Strip __attribute__((...))
         if source[i:i+13] == b'__attribute__' or source[i:i+12] == b'__attribute(':
             if source[i:i+13] == b'__attribute__':
@@ -487,6 +504,36 @@ def preprocess_source(source: bytes) -> tuple[bytes, set[int]]:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+FLOAT_TYPES = frozenset({"float", "double", "long double",
+                         "_Float16", "_Float32", "_Float64", "_Float128"})
+
+
+def is_float_expr(node: Node) -> bool:
+    """Check if an expression is floating-point (literal or cast to float type).
+    __builtin_*_overflow requires integral types, so float ops must be skipped."""
+    if node.type == "number_literal":
+        text = node_text(node)
+        # Float literals contain '.', 'e'/'E', or end with 'f'/'F'/'l'/'L' suffix
+        # (but not hex like 0xFF or long like 100L without a dot)
+        if '.' in text or 'e' in text.lower():
+            return True
+        if text[-1:] in ('f', 'F') and not text.startswith('0x'):
+            return True
+    if node.type == "cast_expression":
+        for child in node.children:
+            if child.type == "type_descriptor":
+                for tc in child.children:
+                    if tc.type in ("primitive_type", "sized_type_specifier"):
+                        if node_text(tc) in FLOAT_TYPES:
+                            return True
+    if node.type == "parenthesized_expression" and node.child_count == 3:
+        return is_float_expr(node.children[1])
+    # Binary expression with any float operand propagates float type
+    if node.type == "binary_expression" and node.child_count >= 3:
+        return is_float_expr(node.children[0]) or is_float_expr(node.children[2])
+    return False
+
 
 def is_const_expr(node: Node) -> bool:
     """Check if a node is a compile-time constant expression."""
@@ -1390,6 +1437,24 @@ def try_rewrite_binary(node: Node, rewriter: Rewriter, ptrs: PointerTracker) -> 
     if is_const_expr(left_node) and is_const_expr(right_node):
         return None
 
+    # Skip floating-point arithmetic — __builtin_*_overflow requires integral types
+    if is_float_expr(left_node) or is_float_expr(right_node):
+        return None
+
+    # Skip file-scope expressions — statement expressions aren't valid there
+    # (e.g. enum values computed with arithmetic like _SC_X = _SC_Y + 50)
+    parent = node.parent
+    inside_function = False
+    while parent is not None:
+        if parent.type == "compound_statement":
+            inside_function = True
+            break
+        if parent.type == "translation_unit":
+            break
+        parent = parent.parent
+    if not inside_function:
+        return None
+
     macros = BINARY_OP_MACRO.get(op)
     if macros is None:
         return None
@@ -1458,6 +1523,9 @@ def _get_lhs_narrow_type(left_node: Node, ptrs: PointerTracker) -> str | None:
         base = left_node.children[0]
         if base.type == "identifier":
             name = node_text(base)
+            # Skip if subscript yields a pointer (e.g. char **pp → pp[i] is char *)
+            if name in ptrs.deep_pointer_names:
+                return None
             if (name in ptrs.var_types
                     and (ptrs.var_types[name] in NARROW_TYPES
                          or ptrs.var_types[name] in ptrs.narrow_type_names)):
@@ -2257,6 +2325,10 @@ def try_rewrite_unary_neg(node: Node, rewriter: Rewriter, ptrs: PointerTracker) 
     if is_const_expr(operand):
         return None
 
+    # Skip floating-point negation — __builtin_sub_overflow requires integral types
+    if is_float_expr(operand):
+        return None
+
     col = node.start_point[1] + 1
 
     operand_text = transform(operand, rewriter, ptrs)
@@ -2448,8 +2520,11 @@ def main_cc():
 
         # Point dependency output to sit next to the final .o,
         # and set the target to the .o file (not the temp pp.i).
-        dep_file = os.path.splitext(output_file)[0] + ".d"
-        pp_args += ["-MF", dep_file, "-MT", output_file]
+        # Only add dep file/target if the original args request dep generation.
+        has_dep_gen = any(arg in ("-MMD", "-MD", "-M", "-MM") for arg in other_args)
+        if has_dep_gen:
+            dep_file = os.path.splitext(output_file)[0] + ".d"
+            pp_args += ["-MF", dep_file, "-MT", output_file]
 
         # Step 1: Preprocess
         pp_cmd = [cc] + pp_args + ["-E", source_file, "-o", pp_file]
