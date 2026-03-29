@@ -566,9 +566,9 @@ class PointerTracker:
         If global_only is True, skip function_definition bodies.
         If skip_nested_blocks is True, skip nested compound_statements
         (each block creates its own scope during transform)."""
-        self._scan_root = root
         self._visit(root, skip_func_bodies=global_only,
-                    skip_nested_blocks=skip_nested_blocks)
+                    skip_nested_blocks=skip_nested_blocks,
+                    scan_root=root)
 
     @staticmethod
     def _inside_funcptr_type(node: Node) -> bool:
@@ -583,7 +583,7 @@ class PointerTracker:
         return True
 
     def _visit(self, node: Node, skip_func_bodies: bool = False,
-                skip_nested_blocks: bool = False):
+                skip_nested_blocks: bool = False, scan_root: Node | None = None):
         # In global_only mode, don't recurse into function bodies.
         if skip_func_bodies and node.type == "function_definition":
             self._check_func_return(node)
@@ -593,7 +593,7 @@ class PointerTracker:
         # In block-scan mode, don't recurse into nested compound_statements —
         # each block creates its own scope during transform.
         if (skip_nested_blocks and node.type == "compound_statement"
-                and node is not self._scan_root):
+                and node is not scan_root):
             return
 
         # Variable/parameter declarations with pointer declarators.
@@ -618,7 +618,8 @@ class PointerTracker:
 
         for child in node.children:
             self._visit(child, skip_func_bodies=skip_func_bodies,
-                        skip_nested_blocks=skip_nested_blocks)
+                        skip_nested_blocks=skip_nested_blocks,
+                        scan_root=scan_root)
 
     def _shadow_name(self, name: str):
         """Clear all tracking for a name before re-registering (handles shadowing)."""
@@ -1072,13 +1073,14 @@ class PointerTracker:
 # ---------------------------------------------------------------------------
 
 class Rewriter:
-    """Collects rewrite spans from a tree-sitter AST, then applies them."""
+    """Holds the original source bytes and suppression markers. The recursive
+    transform() / _transform_children() functions stitch rewritten text together
+    directly; this class provides is_suppressed() and _strip_markers() helpers."""
 
     def __init__(self, source_bytes: bytes, suppressed: set[int] | None = None):
         self.source = source_bytes
         self.suppressed = suppressed or set()
         self._sorted_suppressed = sorted(self.suppressed)
-        self.rewrites: list[tuple[int, int, str]] = []
 
     def is_suppressed(self, node: Node) -> bool:
         """Check if any @ marker is adjacent to this node's operator.
@@ -1110,33 +1112,6 @@ class Rewriter:
                 if all(b in b' \t' for b in between):
                     return True
         return False
-
-    def add(self, node: Node, replacement: str):
-        self.rewrites.append((node.start_byte, node.end_byte, replacement))
-
-    def apply(self) -> str:
-        """Apply all rewrites, handling overlaps by keeping outermost."""
-        # Sort by start position, then by size descending (outermost first)
-        self.rewrites.sort(key=lambda r: (r[0], -(r[1] - r[0])))
-
-        # Remove overlapping rewrites (keep the first/outermost one)
-        filtered = []
-        last_end = 0
-        for start, end, repl in self.rewrites:
-            if start >= last_end:
-                filtered.append((start, end, repl))
-                last_end = end
-            # else: skip, it's nested inside a rewrite we already have
-
-        # Build output, stripping only @ markers at known suppressed positions
-        parts = []
-        pos = 0
-        for start, end, repl in filtered:
-            parts.append(self._strip_markers(pos, start))
-            parts.append(repl)
-            pos = end
-        parts.append(self._strip_markers(pos, len(self.source)))
-        return "".join(parts)
 
     def _strip_markers(self, start: int, end: int) -> str:
         """Copy source[start:end] to string, removing @ at suppressed positions."""
@@ -1589,12 +1564,6 @@ def try_rewrite_subscript(node: Node, rewriter: Rewriter, ptrs: PointerTracker) 
             size = dims[depth]  # may be None for unsized dimensions
         # else: more subscripts than dimensions — no check
 
-    # Also handle direct identifier base (depth 0, single-dim or first dim)
-    if chain is None and base.type == "identifier":
-        name = node_text(base)
-        if name in ptrs.array_sizes:
-            size = ptrs.array_sizes[name][0]
-
     if size is None:
         # No known size for this dimension — can't bounds-check,
         # but still recurse into children for inner dimensions
@@ -1789,13 +1758,15 @@ def try_rewrite_return_narrow(node: Node, rewriter: Rewriter, ptrs: PointerTrack
 
     # Rebuild: return ckd_narrow(expr, type, col);
     parts = []
+    prev_end = node.start_byte
     for child in node.children:
-        if parts:
-            parts.append(rewriter._strip_markers(node.children[node.children.index(child) - 1].end_byte if node.children.index(child) > 0 else node.start_byte, child.start_byte))
+        parts.append(rewriter._strip_markers(prev_end, child.start_byte))
         if child is expr_node:
             parts.append(f"ckd_narrow({expr_text}, {ret_type}, {col})")
         else:
             parts.append(rewriter._strip_markers(child.start_byte, child.end_byte))
+        prev_end = child.end_byte
+    parts.append(rewriter._strip_markers(prev_end, node.end_byte))
     return "".join(parts)
 
 
@@ -1901,16 +1872,15 @@ def try_rewrite_call_narrow(node: Node, rewriter: Rewriter, ptrs: PointerTracker
 
     # Rebuild the call with narrowed arguments
     parts = []
+    arg_idx = 0
     prev_end = arg_list.start_byte
     for i, child in enumerate(arg_list.children):
         # Gap before this child
         parts.append(rewriter._strip_markers(prev_end, child.start_byte))
 
         if child.type not in ("(", ")", ","):
-            # This is an actual argument — find its parameter index
-            arg_idx = sum(1 for c in arg_list.children[:arg_list.children.index(child)]
-                         if c.type not in ("(", ")", ","))
             decl_type = param_types[arg_idx] if arg_idx < len(param_types) else None
+            arg_idx += 1
             if (decl_type is not None
                     and not is_const_expr(child)
                     and not (child.type == "cast_expression"
