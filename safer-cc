@@ -409,7 +409,7 @@ def make_preamble(handler: str = DEFAULT_HANDLER) -> str:
 # Attribute stripping
 # ---------------------------------------------------------------------------
 
-def preprocess_source(source: bytes) -> tuple[bytes, set[int]]:
+def preprocess_source(source: bytes) -> tuple[bytes, set[int], list[tuple[int, int]]]:
     """Pre-process source for tree-sitter: strip __attribute__((...)) and
     collect @ suppression markers.
 
@@ -424,6 +424,7 @@ def preprocess_source(source: bytes) -> tuple[bytes, set[int]]:
     """
     result = bytearray()
     suppressed: set[int] = set()
+    block_toggles: list[int] = []
     i = 0
     n = len(source)
 
@@ -488,6 +489,16 @@ def preprocess_source(source: bytes) -> tuple[bytes, set[int]]:
                 i += 1
             continue
 
+        # Strip @@@ block suppression toggles (must check before single @)
+        if source[i:i+3] == b'@@@':
+            block_toggles.append(i)
+            suppressed.add(i)
+            suppressed.add(i + 1)
+            suppressed.add(i + 2)
+            result.extend(b'   ')
+            i += 3
+            continue
+
         # Strip @ suppression markers
         if source[i:i+1] == b'@':
             suppressed.add(i)
@@ -498,7 +509,15 @@ def preprocess_source(source: bytes) -> tuple[bytes, set[int]]:
         result.append(source[i])
         i += 1
 
-    return bytes(result), suppressed
+    # Build disabled byte ranges from @@@ toggle pairs
+    disabled: list[tuple[int, int]] = []
+    for j in range(0, len(block_toggles) - 1, 2):
+        disabled.append((block_toggles[j], block_toggles[j + 1] + 3))
+    # Unpaired trailing @@@ disables to end of file
+    if len(block_toggles) % 2 == 1:
+        disabled.append((block_toggles[-1], n))
+
+    return bytes(result), suppressed, disabled
 
 
 # ---------------------------------------------------------------------------
@@ -1199,10 +1218,19 @@ class Rewriter:
     transform() / _transform_children() functions stitch rewritten text together
     directly; this class provides is_suppressed() and _strip_markers() helpers."""
 
-    def __init__(self, source_bytes: bytes, suppressed: set[int] | None = None):
+    def __init__(self, source_bytes: bytes, suppressed: set[int] | None = None,
+                 disabled: list[tuple[int, int]] | None = None):
         self.source = source_bytes
         self.suppressed = suppressed or set()
         self._sorted_suppressed = sorted(self.suppressed)
+        self.disabled = disabled or []
+
+    def is_disabled(self, node: Node) -> bool:
+        """Check if a node falls within a @@@ block-suppressed region."""
+        for start, end in self.disabled:
+            if node.start_byte >= start and node.end_byte <= end:
+                return True
+        return False
 
     def is_suppressed(self, node: Node) -> bool:
         """Check if any @ marker is adjacent to this node's operator.
@@ -1259,7 +1287,9 @@ def transform(node: Node, rewriter: Rewriter, ptrs: PointerTracker) -> str | Non
     rewriting. Returns None if the subtree is unchanged — the caller
     should use the original source bytes.
     """
-    # Don't recurse into sizeof/alignof/error nodes
+    # Don't recurse into @@@ block-suppressed regions, sizeof/alignof, or error nodes
+    if rewriter.is_disabled(node):
+        return None
     if node.type in SKIP_PARENT_TYPES or node.type == "ERROR" or node.is_error:
         return None
 
@@ -2347,7 +2377,7 @@ def process(source: bytes, emit_preamble: bool = True,
     """Parse and rewrite a preprocessed C source."""
     # Strip __attribute__((...)) and @ suppression markers.
     # Spaces preserve byte offsets so rewrite spans apply to the original.
-    stripped, suppressed = preprocess_source(source)
+    stripped, suppressed, disabled = preprocess_source(source)
 
     parser = Parser(Language(tree_sitter_c.language()))
     tree = parser.parse(stripped)
@@ -2355,7 +2385,7 @@ def process(source: bytes, emit_preamble: bool = True,
     global_ptrs = PointerTracker()
     global_ptrs.scan(tree.root_node, global_only=True)
 
-    rewriter = Rewriter(source, suppressed)
+    rewriter = Rewriter(source, suppressed, disabled)
     root = tree.root_node
     result_text = transform(root, rewriter, global_ptrs)
     if result_text is not None:
