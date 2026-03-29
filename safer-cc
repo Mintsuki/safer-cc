@@ -311,6 +311,34 @@ PREAMBLE_TEMPLATE = r"""
     *ckd_paste(ckd_p_, c) = ckd_narrow(op(*ckd_paste(ckd_p_, c), (rhs), col), type, col); \
 }})
 
+/* --- Bit-field compound assignment (evaluates lhs twice — safe since
+   bit-field access has no side effects). Cannot use ckd_compound because
+   &(lhs) is illegal for bit-field members. --- */
+
+#define ckd_bf_compound(lhs, op, rhs, col) ((void)((lhs) = op((lhs), (rhs), col)))
+#define ckd_bf_compound_narrow(lhs, op, rhs, type, col) \
+    ((void)((lhs) = ckd_narrow(op((lhs), (rhs), col), type, col)))
+
+/* Bit-field increment/decrement (integer only — bit-fields can't be pointers). */
+#define ckd_bf_preinc(a, col) ckd_bf_compound(a, ckd_add, 1, col)
+#define ckd_bf_predec(a, col) ckd_bf_compound(a, ckd_sub, 1, col)
+
+#define ckd_bf_postinc(a, col) ckd_bf_postinc_(a, col, __COUNTER__)
+#define ckd_bf_postinc_(a, col, c) ckd_bf_postinc_impl_(a, col, c)
+#define ckd_bf_postinc_impl_(a, col, c) __extension__({{ \
+    typeof(a) ckd_paste(ckd_old_, c) = (a); \
+    (a) = ckd_add((a), 1, col); \
+    ckd_paste(ckd_old_, c); \
+}})
+
+#define ckd_bf_postdec(a, col) ckd_bf_postdec_(a, col, __COUNTER__)
+#define ckd_bf_postdec_(a, col, c) ckd_bf_postdec_impl_(a, col, c)
+#define ckd_bf_postdec_impl_(a, col, c) __extension__({{ \
+    typeof(a) ckd_paste(ckd_old_, c) = (a); \
+    (a) = ckd_sub((a), 1, col); \
+    ckd_paste(ckd_old_, c); \
+}})
+
 /* --- Increment/decrement (integer, checked) --- */
 
 #define ckd_preinc(a, col) ckd_compound(a, ckd_add, 1, col)
@@ -542,6 +570,8 @@ class PointerTracker:
         self.var_struct_types: dict[str, str] = {}  # variable name → struct name
         self.func_return_type: str | None = None  # return type of current function
         self.func_param_narrow: dict[str, list[str | None]] = {}  # func name → [integer type or None per param]
+        self.bitfield_fields: set[str] = set()  # global (any struct with this bit-field)
+        self.struct_bitfield_fields: dict[str, set[str]] = {}  # struct name → {bit-field names}
 
     def copy(self) -> "PointerTracker":
         """Create a shallow copy for function-local scoping."""
@@ -561,6 +591,8 @@ class PointerTracker:
         new.var_types = dict(self.var_types)
         new.func_return_type = self.func_return_type
         new.func_param_narrow = dict(self.func_param_narrow)
+        new.bitfield_fields = set(self.bitfield_fields)
+        new.struct_bitfield_fields = {k: set(v) for k, v in self.struct_bitfield_fields.items()}
         return new
 
     def scan(self, root: Node, global_only: bool = False,
@@ -921,13 +953,23 @@ class PointerTracker:
         return None
 
     def _check_field(self, node: Node):
-        """Record struct/union fields that are pointers, arrays, or narrow types."""
+        """Record struct/union fields: pointer/array status, narrow types,
+        and bit-field status."""
         name = extract_declarator_name(node)
         if name is None:
             return
 
-        # Check pointer/array status first (takes priority over narrow)
         struct_name = self._enclosing_struct_name(node)
+
+        # Detect bit-field declarations (field_declaration with bitfield_clause child)
+        for child in node.children:
+            if child.type == "bitfield_clause":
+                self.bitfield_fields.add(name)
+                if struct_name is not None:
+                    self.struct_bitfield_fields.setdefault(struct_name, set()).add(name)
+                break
+
+        # Check pointer/array status
         for child in node.children:
             if child.type in ("pointer_declarator", "array_declarator",
                               "function_declarator"):
@@ -944,7 +986,6 @@ class PointerTracker:
                     return
 
         # Not a pointer/array field — check if it's a narrow type
-        struct_name = self._enclosing_struct_name(node)
         if struct_name is None:
             return
         for child in node.children:
@@ -954,6 +995,25 @@ class PointerTracker:
                 if type_text in NARROW_TYPES or type_text in self.narrow_type_names:
                     self.struct_narrow_fields.setdefault(struct_name, {})[name] = type_text
                     return
+
+    def is_bitfield_expr(self, node: Node) -> bool:
+        """Check if this expression accesses a known bit-field member."""
+        if node.type != "field_expression":
+            return False
+        for i, child in enumerate(node.children):
+            if child.type in (".", "->") and i + 1 < len(node.children):
+                field = node.children[i + 1]
+                if field.type == "field_identifier":
+                    field_name = node_text(field)
+                    # Try per-struct lookup first
+                    base = node.children[0] if i > 0 else None
+                    if base is not None and base.type == "identifier":
+                        sname = self.var_struct_types.get(node_text(base))
+                        if sname is not None:
+                            return field_name in self.struct_bitfield_fields.get(sname, set())
+                    # Fallback: global bitfield_fields (unknown struct)
+                    return field_name in self.bitfield_fields
+        return False
 
     def is_pointer_expr(self, node: Node) -> bool:
         """Determine if an expression node is a pointer type."""
@@ -1444,13 +1504,21 @@ def try_rewrite_compound_assign(node: Node, rewriter: Rewriter, ptrs: PointerTra
     if right_text is None:
         right_text = rewriter._strip_markers(right_node.start_byte, right_node.end_byte)
 
+    # Bit-field members: can't take &(lhs), use ckd_bf_compound which evaluates
+    # lhs twice (safe — bit-field access has no side effects).
+    is_bf = ptrs.is_bitfield_expr(left_node)
+
     # Emit ckd_compound which captures &(lhs) once, avoiding double evaluation.
-    # For narrow LHS types, use ckd_compound_narrow to also check truncation.
+    # For narrow LHS types, also check truncation.
     if not is_ptr:
         decl_type = _get_lhs_narrow_type(left_node, ptrs)
         if decl_type is not None:
+            if is_bf:
+                return f"ckd_bf_compound_narrow({left_text}, {macro}, {right_text}, {decl_type}, {col})"
             return f"ckd_compound_narrow({left_text}, {macro}, {right_text}, {decl_type}, {col})"
 
+    if is_bf:
+        return f"ckd_bf_compound({left_text}, {macro}, {right_text}, {col})"
     return f"ckd_compound({left_text}, {macro}, {right_text}, {col})"
 
 
@@ -1495,6 +1563,21 @@ def try_rewrite_update(node: Node, rewriter: Rewriter, ptrs: PointerTracker) -> 
         return None
 
     is_ptr = ptrs.is_pointer_expr(operand)
+    is_bf = ptrs.is_bitfield_expr(operand)
+
+    # Bit-field members: can't take &(lhs), use ckd_bf_ macros.
+    # Bit-fields can't be pointers, so no ptr variants needed.
+    if is_bf:
+        if _update_result_discarded(node) or children[0].type in ("++", "--"):
+            bf_macro = "ckd_bf_preinc" if op == "++" else "ckd_bf_predec"
+        else:
+            bf_macro = "ckd_bf_postinc" if op == "++" else "ckd_bf_postdec"
+        col = node.start_point[1] + 1
+        operand_text = transform(operand, rewriter, ptrs)
+        if operand_text is None:
+            operand_text = rewriter._strip_markers(operand.start_byte, operand.end_byte)
+        return f"{bf_macro}({operand_text}, {col})"
+
     int_pre, int_post, ptr_pre, ptr_post = UPDATE_MACRO[op]
 
     if _update_result_discarded(node):

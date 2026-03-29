@@ -1,0 +1,110 @@
+=== bitfield compound add ===
+struct s { unsigned flags : 3; };
+void f(struct s *p, int v) {
+    p->flags += v;
+}
+---
+struct s { unsigned flags : 3; };
+void f(struct s *p, int v) {
+    ckd_bf_compound_narrow(p->flags, ckd_add, v, unsigned, 5);
+}
+
+=== bitfield compound sub ===
+struct s { unsigned flags : 3; };
+void f(struct s *p, int v) {
+    p->flags -= v;
+}
+---
+struct s { unsigned flags : 3; };
+void f(struct s *p, int v) {
+    ckd_bf_compound_narrow(p->flags, ckd_sub, v, unsigned, 5);
+}
+
+=== bitfield preinc ===
+struct s { unsigned x : 4; };
+void f(struct s *p) {
+    ++p->x;
+}
+---
+struct s { unsigned x : 4; };
+void f(struct s *p) {
+    ckd_bf_preinc(p->x, 5);
+}
+
+=== bitfield postinc ===
+struct s { unsigned x : 4; };
+void f(struct s *p) {
+    int old = p->x++;
+}
+---
+struct s { unsigned x : 4; };
+void f(struct s *p) {
+    int old = ckd_narrow(ckd_bf_postinc(p->x, 15), int, 15);
+}
+
+=== bitfield postdec discarded ===
+struct s { unsigned x : 4; };
+void f(struct s *p) {
+    p->x--;
+}
+---
+struct s { unsigned x : 4; };
+void f(struct s *p) {
+    ckd_bf_predec(p->x, 5);
+}
+
+=== bitfield predec ===
+struct s { unsigned x : 4; };
+void f(struct s *p) {
+    --p->x;
+}
+---
+struct s { unsigned x : 4; };
+void f(struct s *p) {
+    ckd_bf_predec(p->x, 5);
+}
+
+=== bitfield compound shift ===
+struct s { unsigned mask : 8; };
+void f(struct s *p, int n) {
+    p->mask <<= n;
+}
+---
+struct s { unsigned mask : 8; };
+void f(struct s *p, int n) {
+    ckd_bf_compound_narrow(p->mask, ckd_shl, n, unsigned, 5);
+}
+
+=== bitfield plain assign narrow ===
+struct s { unsigned x : 4; };
+void f(struct s *p, int v) {
+    p->x = v;
+}
+---
+struct s { unsigned x : 4; };
+void f(struct s *p, int v) {
+    p->x = ckd_narrow(v, unsigned, 12);
+}
+
+=== non-bitfield compound still uses ckd_compound ===
+struct s { unsigned x; };
+void f(struct s *p, int v) {
+    p->x += v;
+}
+---
+struct s { unsigned x; };
+void f(struct s *p, int v) {
+    ckd_compound_narrow(p->x, ckd_add, v, unsigned, 5);
+}
+
+=== non-bitfield preinc still uses ckd_preinc ===
+struct s { int x; };
+void f(struct s *p) {
+    ++p->x;
+}
+---
+struct s { int x; };
+void f(struct s *p) {
+    ckd_preinc(p->x, 5);
+}
+
