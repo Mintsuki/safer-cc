@@ -60,7 +60,7 @@ void f(int i) {
 ---
 void f(int i) {
     char arr[64];
-    char *p = ckd_ptr_add(arr, i, 15);
+    char *p = ckd_array_ptr(arr, i, 64, 15);
     char c = ckd_narrow(ckd_bounds(arr, ckd_neg(i, 18), 64, 14), char, 14);
 }
 

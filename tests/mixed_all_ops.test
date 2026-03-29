@@ -38,7 +38,7 @@ void f(int a, int b) { int x = ckd_narrow(ckd_div(ckd_neg(a, 32), b, 32), int, 3
 === ptr add with bounds ===
 void f(int i) { int arr[10]; int *p = arr + i; }
 ---
-void f(int i) { int arr[10]; int *p = ckd_ptr_add(arr, i, 39); }
+void f(int i) { int arr[10]; int *p = ckd_array_ptr(arr, i, 10, 39); }
 
 
 

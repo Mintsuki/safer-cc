@@ -1,0 +1,40 @@
+=== array plus index ===
+void f(int i) { int arr[10]; int *p = arr + i; }
+---
+void f(int i) { int arr[10]; int *p = ckd_array_ptr(arr, i, 10, 39); }
+
+=== index plus array ===
+void f(int i) { int arr[10]; int *p = i + arr; }
+---
+void f(int i) { int arr[10]; int *p = ckd_array_ptr(arr, i, 10, 39); }
+
+=== deref array plus index ===
+void f(int i) { int arr[10]; int v = *(arr + i); }
+---
+void f(int i) { int arr[10]; int v = ckd_narrow(*(ckd_array_ptr(arr, i, 10, 40)), int, 38); }
+
+=== array plus constant ===
+void f(void) { int arr[10]; int *p = arr + 5; }
+---
+void f(void) { int arr[10]; int *p = ckd_array_ptr(arr, 5, 10, 38); }
+
+=== unsized array no bounds ===
+void f(int i) { extern int arr[]; int *p = arr + i; }
+---
+void f(int i) { extern int arr[]; int *p = ckd_ptr_add(arr, i, 44); }
+
+=== non-array pointer still uses ptr_add ===
+void f(int *p, int i) { int *q = p + i; }
+---
+void f(int *p, int i) { int *q = ckd_ptr_add(p, i, 34); }
+
+=== param array bounds ===
+void f(int arr[20], int i) { int *p = arr + i; }
+---
+void f(int arr[20], int i) { int *p = ckd_array_ptr(arr, i, 20, 39); }
+
+=== subscript still uses ckd_bounds ===
+void f(int i) { int arr[10]; int v = arr[i]; }
+---
+void f(int i) { int arr[10]; int v = ckd_narrow(ckd_bounds(arr, i, 10, 38), int, 38); }
+

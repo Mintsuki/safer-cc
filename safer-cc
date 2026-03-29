@@ -290,6 +290,17 @@ PREAMBLE_TEMPLATE = r"""
     &(arr)[ckd_paste(ckd_i_, c)]; \
 }}))
 
+/* Array pointer arithmetic: bounds-checked arr + idx, returns a pointer.
+   Used for pointer arithmetic on decayed arrays with known sizes. */
+#define ckd_array_ptr(arr, idx, size, col) ckd_array_ptr_(arr, idx, size, col, __COUNTER__)
+#define ckd_array_ptr_(arr, idx, size, col, c) ckd_array_ptr_impl_(arr, idx, size, col, c)
+#define ckd_array_ptr_impl_(arr, idx, size, col, c) __extension__({{ \
+    __auto_type ckd_paste(ckd_i_, c) = (idx); \
+    if ((__SIZE_TYPE__)ckd_paste(ckd_i_, c) > (__SIZE_TYPE__)(size)) \
+        ckd_overflow_handler_("array out of bounds", col); \
+    &(arr)[ckd_paste(ckd_i_, c)]; \
+}})
+
 /* --- Compound assignment (single-evaluation of LHS) --- */
 
 /* Generic compound: captures &(lhs) once, applies op(read, rhs, col), writes back.
@@ -1418,6 +1429,17 @@ def try_rewrite_binary(node: Node, rewriter: Rewriter, ptrs: PointerTracker) -> 
 
     if is_ptr and op == "+" and right_is_ptr and not left_is_ptr:
         left_text, right_text = right_text, left_text
+
+    # Pointer arithmetic on a known-size array: emit bounds check instead of
+    # just null/wrap detection. arr + i checks i <= size (one-past-end is valid).
+    if is_ptr and op == "+":
+        arr_node = left_node if left_is_ptr else right_node
+        if arr_node.type == "identifier":
+            arr_name = node_text(arr_node)
+            if arr_name in ptrs.array_sizes:
+                dims = ptrs.array_sizes[arr_name]
+                if dims and dims[0] is not None:
+                    return f"ckd_array_ptr({left_text}, {right_text}, {dims[0]}, {col})"
 
     return f"{macro}({left_text}, {right_text}, {col})"
 

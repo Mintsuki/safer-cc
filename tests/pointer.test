@@ -120,7 +120,7 @@ void f(void) { int x; int *p = ckd_ptr_add(&x, 1, 32); }
 === array decay ===
 void f(void) { char arr[10]; char *p = arr + 5; }
 ---
-void f(void) { char arr[10]; char *p = ckd_ptr_add(arr, 5, 40); }
+void f(void) { char arr[10]; char *p = ckd_array_ptr(arr, 5, 10, 40); }
 
 
 

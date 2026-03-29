@@ -71,7 +71,7 @@ void f(int a, int b, int c, int d, int e, int f_) { int x = ckd_narrow(ckd_add(c
 === array decay add ===
 void f(void) { int arr[10]; int *p = arr + 5; }
 ---
-void f(void) { int arr[10]; int *p = ckd_ptr_add(arr, 5, 38); }
+void f(void) { int arr[10]; int *p = ckd_array_ptr(arr, 5, 10, 38); }
 
 
 
