@@ -1,0 +1,30 @@
+=== neg signed int ===
+void f(int x) { int y = -x; }
+---
+void f(int x) { int y = ckd_narrow(ckd_neg(x, 25), int, 25); }
+
+=== neg signed long ===
+void f(long x) { long y = -x; }
+---
+void f(long x) { long y = ckd_narrow(ckd_neg(x, 27), long, 27); }
+
+=== neg unsigned int ===
+void f(unsigned x) { unsigned y = -x; }
+---
+void f(unsigned x) { unsigned y = ckd_narrow(ckd_neg(x, 35), unsigned, 35); }
+
+=== neg unsigned long ===
+void f(unsigned long x) { unsigned long y = -x; }
+---
+void f(unsigned long x) { unsigned long y = ckd_narrow(ckd_neg(x, 45), unsigned long, 45); }
+
+=== neg constant skip ===
+void f(void) { int y = -42; }
+---
+void f(void) { int y = -42; }
+
+=== neg suppress ===
+void f(int x) { int y = @-x; }
+---
+void f(int x) { int y = ckd_narrow(-x, int, 26); }
+

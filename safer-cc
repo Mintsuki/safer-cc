@@ -184,6 +184,8 @@ PREAMBLE_TEMPLATE = r"""
 #define ckd_ptr_diff_impl_(a, b, col, c) __extension__({{ \
     __auto_type ckd_paste(ckd_a_, c) = (a); \
     __auto_type ckd_paste(ckd_b_, c) = (b); \
+    ckd_nullptr_check_(ckd_paste(ckd_a_, c), col); \
+    ckd_nullptr_check_(ckd_paste(ckd_b_, c), col); \
     __PTRDIFF_TYPE__ ckd_paste(ckd_r_, c) = ckd_paste(ckd_a_, c) - ckd_paste(ckd_b_, c); \
     if ((__UINTPTR_TYPE__)ckd_paste(ckd_a_, c) >= (__UINTPTR_TYPE__)ckd_paste(ckd_b_, c) \
         ? ckd_paste(ckd_r_, c) < 0 \
@@ -257,7 +259,8 @@ PREAMBLE_TEMPLATE = r"""
     typeof(-ckd_paste(ckd_a_, c)) ckd_paste(ckd_r_, c); \
     if (__builtin_sub_overflow( \
             (typeof(ckd_paste(ckd_a_, c)))0, ckd_paste(ckd_a_, c), \
-            &ckd_paste(ckd_r_, c))) \
+            &ckd_paste(ckd_r_, c)) && \
+        (typeof(ckd_paste(ckd_a_, c)))(-1) < 0) \
         ckd_overflow_handler_("negation overflow", col); \
     ckd_paste(ckd_r_, c); \
 }})
