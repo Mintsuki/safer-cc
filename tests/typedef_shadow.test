@@ -1,0 +1,102 @@
+=== variable shadows file typedef ===
+typedef int t; void f(int x) { int t = x; int y = t + 1; }
+---
+typedef int t; void f(int x) { int t = ckd_narrow(x, int, 40); int y = ckd_narrow(ckd_add(t, 1, 51), int, 51); }
+
+
+
+=== parameter shadows file typedef ===
+typedef int t; void f(int t) { int x = t + 1; }
+---
+typedef int t; void f(int t) { int x = ckd_narrow(ckd_add(t, 1, 40), int, 40); }
+
+
+
+=== pointer typedef shadowed by int variable ===
+typedef int *pi; void f(int x) { int pi = 5; int y = pi + 1; }
+---
+typedef int *pi; void f(int x) { int pi = 5; int y = ckd_narrow(ckd_add(pi, 1, 54), int, 54); }
+
+
+
+=== typedef and variable with same name across functions ===
+typedef int byte; void f(int x) { byte y = x; int byte = 5; int z = byte + 1; }
+---
+typedef int byte; void f(int x) { byte y = ckd_narrow(x, byte, 44); int byte = 5; int z = ckd_narrow(ckd_add(byte, 1, 69), int, 69); }
+
+
+
+=== file typedef restored after shadow ===
+typedef int t; void f(int x) { int t = 5; int y = t + x; } void g(int x) { t y = x; }
+---
+typedef int t; void f(int x) { int t = 5; int y = ckd_narrow(ckd_add(t, x, 51), int, 51); } void g(int x) { t y = ckd_narrow(x, t, 82); }
+
+
+
+=== parameter typedef shadow used in ptr arith ===
+typedef int T; void g(T *p, int i) { int *q = p + i; } void f(int T) { int x = T * 2; }
+---
+typedef int T; void g(T *p, int i) { int *q = ckd_ptr_add(p, i, 47); } void f(int T) { int x = ckd_narrow(ckd_mul(T, 2, 80), int, 80); }
+
+
+
+=== pointer typedef shadow var arith restored next fn ===
+typedef int *pi; void f(pi p, int i) { int *q = p + i; } void g(void) { int pi = 5; int x = pi + 1; }
+---
+typedef int *pi; void f(pi p, int i) { int *q = ckd_ptr_add(p, i, 49); } void g(void) { int pi = 5; int x = ckd_narrow(ckd_add(pi, 1, 93), int, 93); }
+
+
+
+=== typedef chain pointer shadowed ===
+typedef int *pi; typedef pi pj; void f(pj p, int i) { int *q = p + i; } void g(int pj) { int x = pj + 1; }
+---
+typedef int *pi; typedef pi pj; void f(pj p, int i) { int *q = ckd_ptr_add(p, i, 64); } void g(int pj) { int x = ckd_narrow(ckd_add(pj, 1, 98), int, 98); }
+
+
+
+=== narrow typedef followed by shadow call ===
+typedef char byte; void g(byte c); void f(int x) { byte y = 10; g(y); } void h(int byte) { int y = byte; }
+---
+typedef char byte; void g(byte c); void f(int x) { byte y = 10; g(ckd_narrow(y, byte, 67)); } void h(int byte) { int y = ckd_narrow(byte, int, 100); }
+
+
+
+=== struct ptr typedef shadowed by int param ===
+struct N { int v; }; typedef struct N *np; void f(int x) { np n = 0; int y = x * 2; } void g(int np) { int x = np + 1; }
+---
+struct N { int v; }; typedef struct N *np; void f(int x) { np n = 0; int y = ckd_narrow(ckd_mul(x, 2, 78), int, 78); } void g(int np) { int x = ckd_narrow(ckd_add(np, 1, 112), int, 112); }
+
+
+
+=== local typedef shadowed within same function by var ===
+void f(int x) { typedef int T; T a = x; int T = x; int b = T + 1; }
+---
+void f(int x) { typedef int T; T a = ckd_narrow(x, T, 38); int T = ckd_narrow(x, int, 49); int b = ckd_narrow(ckd_add(T, 1, 60), int, 60); }
+
+
+
+=== file pointer typedef shadowed inside block ===
+typedef int *P; void f(int x) { P p; int P = x; int y = P + 1; }
+---
+typedef int *P; void f(int x) { P p; int P = ckd_narrow(x, int, 46); int y = ckd_narrow(ckd_add(P, 1, 57), int, 57); }
+
+
+
+=== parameter shadow used in arithmetic ===
+typedef short s16; void f(int s16) { int x = s16 + s16; }
+---
+typedef short s16; void f(int s16) { int x = ckd_narrow(ckd_add(s16, s16, 46), int, 46); }
+
+
+
+=== shadow with string pointer typedef ===
+void f(int x) { typedef char *str; str s = 0; int y = x + 1; } void g(int str) { int y = str + 1; }
+---
+void f(int x) { typedef char *str; str s = 0; int y = ckd_narrow(ckd_add(x, 1, 55), int, 55); } void g(int str) { int y = ckd_narrow(ckd_add(str, 1, 90), int, 90); }
+
+
+
+=== typedef name used as loop variable ===
+typedef int i32; void f(int n) { for (int i32 = 0; i32 < n; i32++) { int x = i32 * 2; } }
+---
+typedef int i32; void f(int n) { for (int i32 = 0; i32 < n; ckd_preinc(i32, 61)) { int x = ckd_narrow(ckd_mul(i32, 2, 78), int, 78); } }

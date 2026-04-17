@@ -1,0 +1,95 @@
+=== typedef chain in nested scopes separate functions ===
+typedef int base; void f(int x) { typedef base derived; derived d = x; } void g(int x) { typedef char derived; derived d = x; }
+---
+typedef int base; void f(int x) { typedef base derived; derived d = ckd_narrow(x, derived, 69); } void g(int x) { typedef char derived; derived d = ckd_narrow(x, derived, 124); }
+
+
+
+=== typedef in switch body cases ===
+void f(int x, int s) { switch (s) { case 1: { typedef int t; t y = x; break; } case 2: { typedef char t; t y = x; break; } } }
+---
+void f(int x, int s) { switch (s) { case 1: { typedef int t; t y = ckd_narrow(x, t, 68); break; } case 2: { typedef char t; t y = ckd_narrow(x, t, 112); break; } } }
+
+
+
+=== typedef in do-while body ===
+void f(int x) { do { typedef int t; t y = x; x--; } while (x > 0); }
+---
+void f(int x) { do { typedef int t; t y = ckd_narrow(x, t, 43); ckd_predec(x, 46); } while (x > 0); }
+
+
+
+=== typedef in while body preserves outer ===
+void f(int n) { typedef char b; b a = 0; while (n > 0) { b x = a; n--; } b z = a; }
+---
+void f(int n) { typedef char b; b a = 0; while (n > 0) { b x = ckd_narrow(a, b, 64); ckd_predec(n, 67); } b z = ckd_narrow(a, b, 80); }
+
+
+
+=== nested typedef struct with field access ===
+void f(int x) { typedef struct { char c; } S; S s = {0}; int y = x * 2; }
+---
+void f(int x) { typedef struct { char c; } S; S s = {0}; int y = ckd_narrow(ckd_mul(x, 2, 66), int, 66); }
+
+
+
+=== typedef struct then shadow tag with var ===
+struct T { int v; }; typedef struct T T; void f(int x) { T t; int y = x + 1; } void g(int T) { int x = T + 1; }
+---
+struct T { int v; }; typedef struct T T; void f(int x) { T t; int y = ckd_narrow(ckd_add(x, 1, 71), int, 71); } void g(int T) { int x = ckd_narrow(ckd_add(T, 1, 104), int, 104); }
+
+
+
+=== typedef fn pointer shadowed by int param ===
+typedef int (*fp)(int); void f(int fp) { int x = fp + 1; }
+---
+typedef int (*fp)(int); void f(int fp) { int x = ckd_narrow(ckd_add(fp, 1, 50), int, 50); }
+
+
+
+=== typedef for return type triggers return narrowing ===
+typedef short s; s f(int x) { return x; }
+---
+typedef short s; s f(int x) { return ckd_narrow(x, s, 38); }
+
+
+
+=== inner typedef does not affect outer prototype ===
+void f(int x) { typedef short s; } s g(int x); void h(int x) { int s = x; int y = s + 1; }
+---
+void f(int x) { typedef short s; } s g(int x); void h(int x) { int s = ckd_narrow(x, int, 72); int y = ckd_narrow(ckd_add(s, 1, 83), int, 83); }
+
+
+
+=== outer file typedef visible in function body ===
+typedef char C; void f(C a, int x) { C b = x; }
+---
+typedef char C; void f(C a, int x) { C b = ckd_narrow(x, C, 44); }
+
+
+
+=== six-level deep typedef nesting ===
+void f(int x) { typedef long L; { typedef int L; { typedef short L; { typedef char L; { L a = x; } L b = x; } L c = x; } L d = x; } L e = x; }
+---
+void f(int x) { typedef long L; { typedef int L; { typedef short L; { typedef char L; { L a = ckd_narrow(x, L, 95); } L b = ckd_narrow(x, L, 106); } L c = ckd_narrow(x, L, 117); } L d = ckd_narrow(x, L, 128); } L e = ckd_narrow(x, L, 139); }
+
+
+
+=== typedef in arms of if-else ===
+void f(int x, int c) { if (c) { typedef int t; t a = x; } else { typedef char t; t a = x; } int t = x; int z = t + 1; }
+---
+void f(int x, int c) { if (c) { typedef int t; t a = ckd_narrow(x, t, 54); } else { typedef char t; t a = ckd_narrow(x, t, 88); } int t = ckd_narrow(x, int, 101); int z = ckd_narrow(ckd_add(t, 1, 112), int, 112); }
+
+
+
+=== typedef in statement expression ===
+void f(int x) { int y = ({ typedef int t; t a = x; a; }); }
+---
+void f(int x) { int y = ckd_narrow(({ typedef int t; t a = ckd_narrow(x, t, 49); a; }), int, 25); }
+
+
+
+=== typedef as narrow return type then shadow in body ===
+typedef char ret_t; ret_t f(int x) { int ret_t = x; return ret_t; }
+---
+typedef char ret_t; ret_t f(int x) { int ret_t = ckd_narrow(x, int, 50); return ckd_narrow(ret_t, ret_t, 60); }

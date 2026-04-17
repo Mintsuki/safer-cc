@@ -1,0 +1,144 @@
+=== typedef does not leak to sibling function ===
+int f(int x){typedef int a;a y=x;return y;}int main(){int a=5;a*f(5);}
+---
+int f(int x){typedef int a;a y=ckd_narrow(x, a, 32);return ckd_narrow(y, int, 41);}int main(){int a=5;ckd_mul(a, f(5), 63);}
+
+
+
+=== typedef does not leak after function ===
+void f(int x) { typedef char byte; byte b = x; } void g(int byte) { int y = byte + 1; }
+---
+void f(int x) { typedef char byte; byte b = ckd_narrow(x, byte, 45); } void g(int byte) { int y = ckd_narrow(ckd_add(byte, 1, 77), int, 77); }
+
+
+
+=== typedef scoped to nested block ===
+void f(int x) { { typedef int t; t y = x; } int a = x * 2; }
+---
+void f(int x) { { typedef int t; t y = ckd_narrow(x, t, 40); } int a = ckd_narrow(ckd_mul(x, 2, 53), int, 53); }
+
+
+
+=== typedef in if body does not leak ===
+void f(int x) { if (x) { typedef int t; t y = x; } int t = 5; int z = t + 1; }
+---
+void f(int x) { if (x) { typedef int t; t y = ckd_narrow(x, t, 47); } int t = 5; int z = ckd_narrow(ckd_add(t, 1, 71), int, 71); }
+
+
+
+=== typedef in for body does not leak ===
+void f(int x) { for (int i = 0; i < 10; i++) { typedef int t; t y = x; } int t = 5; int z = t + 1; }
+---
+void f(int x) { for (int i = 0; i < 10; ckd_preinc(i, 41)) { typedef int t; t y = ckd_narrow(x, t, 69); } int t = 5; int z = ckd_narrow(ckd_add(t, 1, 93), int, 93); }
+
+
+
+=== two functions same typedef different types ===
+void f(int x) { typedef int t; t a = x; } void g(int x) { typedef char t; t a = x; }
+---
+void f(int x) { typedef int t; t a = ckd_narrow(x, t, 38); } void g(int x) { typedef char t; t a = ckd_narrow(x, t, 81); }
+
+
+
+=== file typedef visible in all functions ===
+typedef char byte; void f(int x) { byte b = x; } void g(int x) { byte b = x; }
+---
+typedef char byte; void f(int x) { byte b = ckd_narrow(x, byte, 45); } void g(int x) { byte b = ckd_narrow(x, byte, 75); }
+
+
+
+=== file typedef not used by other function after leak attempt ===
+typedef int T; void f(T x) { int y = x + 1; } void g(int x) { int T = x; int y = T + 1; }
+---
+typedef int T; void f(T x) { int y = ckd_narrow(ckd_add(x, 1, 38), int, 38); } void g(int x) { int T = ckd_narrow(x, int, 71); int y = ckd_narrow(ckd_add(T, 1, 82), int, 82); }
+
+
+
+=== typedef in outer block seen in inner block ===
+void f(int x) { typedef int t; { t y = x; { t z = x; } } }
+---
+void f(int x) { typedef int t; { t y = ckd_narrow(x, t, 40); { t z = ckd_narrow(x, t, 51); } } }
+
+
+
+=== inner typedef shadows outer then restores ===
+void f(int x) { typedef int a; { typedef char a; a y = x; } a z = x; }
+---
+void f(int x) { typedef int a; { typedef char a; a y = ckd_narrow(x, a, 56); } a z = ckd_narrow(x, a, 67); }
+
+
+
+=== three-level typedef shadowing restores outward ===
+typedef long T; void f(int x) { typedef int T; { typedef char T; T a = x; } T b = x; }
+---
+typedef long T; void f(int x) { typedef int T; { typedef char T; T a = ckd_narrow(x, T, 72); } T b = ckd_narrow(x, T, 83); }
+
+
+
+=== typedef in for init not seen after loop ===
+void f(int x) { for (int i = 0; i < 10; i++) { int a = x + i; } int a = x; }
+---
+void f(int x) { for (int i = 0; i < 10; ckd_preinc(i, 41)) { int a = ckd_narrow(ckd_add(x, i, 56), int, 56); } int a = ckd_narrow(x, int, 73); }
+
+
+
+=== typedef declared then used in same function body ===
+void f(int x) { typedef int t; typedef char b; t aa = x; b bb = x; }
+---
+void f(int x) { typedef int t; typedef char b; t aa = ckd_narrow(x, t, 55); b bb = ckd_narrow(x, b, 65); }
+
+
+
+=== typedef redeclared at same scope ===
+void f(int x) { typedef int t; typedef int t; t y = x; }
+---
+void f(int x) { typedef int t; typedef int t; t y = ckd_narrow(x, t, 53); }
+
+
+
+=== typedef chain entirely file-scope ===
+typedef int num; typedef num num2; void f(int x) { num2 y = x; }
+---
+typedef int num; typedef num num2; void f(int x) { num2 y = ckd_narrow(x, num2, 61); }
+
+
+
+=== deep four-level nested typedef shadowing ===
+void f(int a, int b) { { typedef int t; { typedef char t; { t x = a + b; } t y = a + b; } t z = a + b; } }
+---
+void f(int a, int b) { { typedef int t; { typedef char t; { t x = ckd_narrow(ckd_add(a, b, 67), t, 67); } t y = ckd_narrow(ckd_add(a, b, 82), t, 82); } t z = ckd_narrow(ckd_add(a, b, 97), t, 97); } }
+
+
+
+=== typedef in function body not visible in prototype after ===
+void f(int x) { typedef int my_int; my_int y = x; } void g(int my_int) { int x = my_int + 1; }
+---
+void f(int x) { typedef int my_int; my_int y = ckd_narrow(x, my_int, 48); } void g(int my_int) { int x = ckd_narrow(ckd_add(my_int, 1, 82), int, 82); }
+
+
+
+=== multiple nested scopes re-use typedef name ===
+void f(int x) { { typedef int a; a y = x; } { typedef char a; a y = x; } int a = x; int z = a + 1; }
+---
+void f(int x) { { typedef int a; a y = ckd_narrow(x, a, 40); } { typedef char a; a y = ckd_narrow(x, a, 69); } int a = ckd_narrow(x, int, 82); int z = ckd_narrow(ckd_add(a, 1, 93), int, 93); }
+
+
+
+=== typedef at file scope with narrow typedef chain ===
+typedef char byte; typedef byte my_byte; void f(int x) { my_byte b = x; }
+---
+typedef char byte; typedef byte my_byte; void f(int x) { my_byte b = ckd_narrow(x, my_byte, 70); }
+
+
+
+=== sibling functions typedef different widths ===
+void f(int x) { typedef short t; t y = x; } void g(int x) { typedef long t; t y = x; }
+---
+void f(int x) { typedef short t; t y = ckd_narrow(x, t, 40); } void g(int x) { typedef long t; t y = ckd_narrow(x, t, 83); }
+
+
+
+=== typedef in function then declared variable same name ===
+void f(int x) { typedef int T; T a = x; int T = x; int b = T + 1; }
+---
+void f(int x) { typedef int T; T a = ckd_narrow(x, T, 38); int T = ckd_narrow(x, int, 49); int b = ckd_narrow(ckd_add(T, 1, 60), int, 60); }

@@ -1,0 +1,151 @@
+=== many typedefs one after another ===
+void f(int x) { typedef int a; typedef int b; typedef int c; typedef int d; a A = x; b B = x; c C = x; d D = x; }
+---
+void f(int x) { typedef int a; typedef int b; typedef int c; typedef int d; a A = ckd_narrow(x, a, 83); b B = ckd_narrow(x, b, 92); c C = ckd_narrow(x, c, 101); d D = ckd_narrow(x, d, 110); }
+
+
+
+=== alternating typedef and use ===
+void f(int x) { typedef int t1; t1 v1 = x; typedef int t2; t2 v2 = x; typedef int t3; t3 v3 = x; }
+---
+void f(int x) { typedef int t1; t1 v1 = ckd_narrow(x, t1, 41); typedef int t2; t2 v2 = ckd_narrow(x, t2, 68); typedef int t3; t3 v3 = ckd_narrow(x, t3, 95); }
+
+
+
+=== sibling functions reuse typedef name with different widths ===
+void a(int x) { typedef int T; T v = x; } void b(int x) { typedef char T; T v = x; } void c(int x) { typedef long T; T v = x; } void d(int x) { typedef short T; T v = x; }
+---
+void a(int x) { typedef int T; T v = ckd_narrow(x, T, 38); } void b(int x) { typedef char T; T v = ckd_narrow(x, T, 81); } void c(int x) { typedef long T; T v = ckd_narrow(x, T, 124); } void d(int x) { typedef short T; T v = ckd_narrow(x, T, 168); }
+
+
+
+=== typedef in sizeof does not rewrite ===
+typedef int t; void f(void) { int x = sizeof(t); }
+---
+typedef int t; void f(void) { int x = sizeof(t); }
+
+
+
+=== typedef chain across multiple functions ===
+typedef int a; void f(int x) { typedef a b; b y = x; } void g(int x) { typedef a c; c y = x; }
+---
+typedef int a; void f(int x) { typedef a b; b y = ckd_narrow(x, b, 51); } void g(int x) { typedef a c; c y = ckd_narrow(x, c, 91); }
+
+
+
+=== typedef pointer chain ===
+typedef int *pi; typedef pi *ppi; void f(ppi p, int i) { int **q = p + i; }
+---
+typedef int *pi; typedef pi *ppi; void f(ppi p, int i) { int **q = ckd_ptr_add(p, i, 68); }
+
+
+
+=== shadow param in callee does not affect caller typedef ===
+typedef int t; void g(int t) { int x = t + 1; } void f(int x) { t y = x; }
+---
+typedef int t; void g(int t) { int x = ckd_narrow(ckd_add(t, 1, 40), int, 40); } void f(int x) { t y = ckd_narrow(x, t, 71); }
+
+
+
+=== typedef to sized unsigned long in scope ===
+void f(int x) { typedef unsigned long ul; ul y = x; }
+---
+void f(int x) { typedef unsigned long ul; ul y = ckd_narrow(x, ul, 50); }
+
+
+
+=== typedef used only inside nested block then shadow after ===
+void f(int x) { { typedef int inner; inner y = x; } int inner = 5; int z = inner + 1; }
+---
+void f(int x) { { typedef int inner; inner y = ckd_narrow(x, inner, 48); } int inner = 5; int z = ckd_narrow(ckd_add(inner, 1, 76), int, 76); }
+
+
+
+=== shadow after use removes typedef in remainder of block ===
+void f(int x) { typedef int T; T a = x; int T = 5; T c = 7; }
+---
+void f(int x) { typedef int T; T a = ckd_narrow(x, T, 38); int T = 5; T c = 7; }
+
+
+
+=== typedef in loop re-evaluated each function ===
+void a(int n) { typedef int t; for (t i = 0; i < n; i++) {} } void b(int t) { for (int i = 0; i < t; i++) {} }
+---
+void a(int n) { typedef int t; for (t i = 0; i < n; ckd_preinc(i, 53)) {} } void b(int t) { for (int i = 0; i < t; ckd_preinc(i, 102)) {} }
+
+
+
+=== typedef shadowed by for-loop induction variable ===
+typedef int idx; void f(int n) { for (int idx = 0; idx < n; idx++) { int x = idx * 2; } }
+---
+typedef int idx; void f(int n) { for (int idx = 0; idx < n; ckd_preinc(idx, 61)) { int x = ckd_narrow(ckd_mul(idx, 2, 78), int, 78); } }
+
+
+
+=== multiple typedefs shadowed then restored by block ===
+typedef int A; typedef int B; void f(int x) { { int A = x; int B = x; int y = A + B; } A a = x; B b = x; }
+---
+typedef int A; typedef int B; void f(int x) { { int A = ckd_narrow(x, int, 57); int B = ckd_narrow(x, int, 68); int y = ckd_narrow(ckd_add(A, B, 79), int, 79); } A a = ckd_narrow(x, A, 94); B b = ckd_narrow(x, B, 103); }
+
+
+
+=== typedef pointer then shadow var then ptr again ===
+typedef int *P; void f(P p, int i) { int P = 5; int y = P + i; } void g(P p, int i) { int *q = p + i; }
+---
+typedef int *P; void f(P p, int i) { int P = 5; int y = ckd_narrow(ckd_add(P, i, 57), int, 57); } void g(P p, int i) { int *q = ckd_ptr_add(p, i, 96); }
+
+
+
+=== innermost typedef shadows all levels above ===
+typedef long A; void f(int x) { typedef int A; { typedef short A; { typedef char A; A v = x; } } }
+---
+typedef long A; void f(int x) { typedef int A; { typedef short A; { typedef char A; A v = ckd_narrow(x, A, 91); } } }
+
+
+
+=== typedef not used keeps other rewrites working ===
+void f(int x) { typedef int unused; int y = x * 2; }
+---
+void f(int x) { typedef int unused; int y = ckd_narrow(ckd_mul(x, 2, 45), int, 45); }
+
+
+
+=== two nested blocks each with own typedef of same name ===
+void f(int x) { { typedef int t; t y = x; } { typedef char t; t z = x; } }
+---
+void f(int x) { { typedef int t; t y = ckd_narrow(x, t, 40); } { typedef char t; t z = ckd_narrow(x, t, 69); } }
+
+
+
+=== typedef with compound assignment on variable ===
+typedef int acc_t; void f(int x) { acc_t a = 0; a += x; }
+---
+typedef int acc_t; void f(int x) { acc_t a = 0; ckd_compound_narrow(a, ckd_add, x, acc_t, 49); }
+
+
+
+=== typedef followed by cast narrow ===
+typedef char byte; void f(int x) { byte b = (byte)x; int y = x; }
+---
+typedef char byte; void f(int x) { byte b = ckd_narrow(x, byte, 45); int y = ckd_narrow(x, int, 62); }
+
+
+
+=== typedef struct pointer with field ptr arithmetic ===
+typedef struct { char *data; int len; } buf_t; void f(buf_t *b, int i) { char *p = b->data + i; }
+---
+typedef struct { char *data; int len; } buf_t; void f(buf_t *b, int i) { char *p = ckd_ptr_add(b->data, i, 84); }
+
+
+
+=== shadow typedef with unused variable ===
+typedef int T; void f(void) { int T; } void g(int x) { T y = x; }
+---
+typedef int T; void f(void) { int T; } void g(int x) { T y = ckd_narrow(x, T, 62); }
+
+
+
+=== typedef chain mutated across blocks ===
+typedef int base; void f(int x) { typedef base mid; { typedef mid inner; inner v = x; } mid m = x; base b = x; }
+---
+typedef int base; void f(int x) { typedef base mid; { typedef mid inner; inner v = ckd_narrow(x, inner, 84); } mid m = ckd_narrow(x, mid, 97); base b = ckd_narrow(x, base, 109); }

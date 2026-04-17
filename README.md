@@ -1,8 +1,14 @@
 # safer-cc
 
-A compile-time C source rewriting tool that instruments code with runtime safety checks. It parses C source using [tree-sitter](https://tree-sitter.github.io/tree-sitter/) and rewrites arithmetic, pointer, array, and type conversion operations to include overflow, bounds, and narrowing checks.
+A compile-time C source rewriting tool that instruments code with runtime safety checks. It parses C source with a built-in C99 parser and rewrites arithmetic, pointer, array, and type conversion operations to include overflow, bounds, and narrowing checks.
 
-safer-cc can be used as a drop-in compiler wrapper or as a standalone source filter.
+safer-cc can be used as a drop-in compiler wrapper or as a standalone source filter. It is distributed as a single self-contained C99 source file with no external dependencies.
+
+## Build
+
+```sh
+cc -std=c99 -O2 -o safer-cc safer-cc.c
+```
 
 ## Checks
 
@@ -88,10 +94,8 @@ If no handler is specified, `__builtin_trap()` is used.
 
 ## Requirements
 
-- Python 3.10+
-- [tree-sitter](https://pypi.org/project/tree-sitter/) Python bindings
-- [tree-sitter-c](https://pypi.org/project/tree-sitter-c/) grammar
-- GCC or Clang (for `__extension__`, `__auto_type`, `typeof`, `__builtin_*_overflow`, `__COUNTER__`)
+- A C99 compiler to build `safer-cc` itself (any modern `cc`).
+- GCC or Clang to compile the generated code (for `__extension__`, `__auto_type`, `typeof`, `__builtin_*_overflow`, `__COUNTER__`).
 
 ## Testing
 

@@ -22,7 +22,7 @@ run_test() {
     input="$2"
     expected="$3"
 
-    actual="$(printf '%s' "$input" | python3 "$CKDOPSPP" --no-preamble 2>&1)" || {
+    actual="$(printf '%s' "$input" | "$CKDOPSPP" --no-preamble 2>&1)" || {
         FAIL=$((FAIL + 1))
         ERRORS="${ERRORS}\nFAIL: ${name} (safer-cc crashed)"
         return
