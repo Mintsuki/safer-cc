@@ -1,5 +1,7 @@
 # safer-cc
 
+### WARNING! This project is vibecoded, proceed with caution!
+
 A compile-time C source rewriting tool that instruments code with runtime safety checks. It parses C source with a built-in C99 parser and rewrites arithmetic, pointer, array, and type conversion operations to include overflow, bounds, and narrowing checks.
 
 safer-cc can be used as a drop-in compiler wrapper or as a standalone source filter. It is distributed as a single self-contained C99 source file with no external dependencies.
